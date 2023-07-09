@@ -1,4 +1,5 @@
-use crate::domain::{todo::Todo, auth::Auth};
+use crate::domain::todo::Todo;
+use auth::domain::auth::Auth;
 
 use super::super::port::driven::todo_repository::TodoRepository;
 

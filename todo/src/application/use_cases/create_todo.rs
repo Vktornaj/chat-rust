@@ -1,5 +1,6 @@
 use super::super::port::driven::todo_repository::{TodoRepository, FindTodo};
-use crate::{domain::{todo::Todo, auth::Auth}, application::port::driven::errors::RepoSelectError};
+use crate::{domain::todo::Todo, application::port::driven::errors::RepoSelectError};
+use auth::domain::auth::Auth;
 
 
 #[derive(Debug)]

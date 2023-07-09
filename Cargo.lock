@@ -95,16 +95,9 @@ checksum = "c59bdb34bc650a32731b31bd8f0829cc15d24a708ee31559e0bb34f2bc320cba"
 name = "auth"
 version = "0.1.0"
 dependencies = [
- "argon2",
- "async-trait",
  "chrono",
- "dotenv",
- "dotenvy",
  "jsonwebtoken",
- "rand_core",
  "serde",
- "serde_json",
- "serde_with",
  "toml",
 ]
 
@@ -233,20 +226,11 @@ dependencies = [
 name = "common"
 version = "0.1.0"
 dependencies = [
- "argon2",
- "chrono",
  "diesel",
- "diesel_derives",
- "diesel_migrations",
- "dotenv",
  "dotenvy",
- "jsonwebtoken",
- "rand_core",
  "rocket",
  "rocket_sync_db_pools",
  "serde",
- "serde_json",
- "serde_with",
  "toml",
 ]
 
@@ -403,12 +387,6 @@ dependencies = [
  "crypto-common",
  "subtle",
 ]
-
-[[package]]
-name = "dotenv"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "dotenvy"
@@ -819,22 +797,10 @@ dependencies = [
 name = "launcher"
 version = "0.1.0"
 dependencies = [
- "argon2",
- "async-trait",
- "chrono",
  "common",
  "diesel",
- "diesel_derives",
  "diesel_migrations",
- "dotenv",
- "dotenvy",
- "jsonwebtoken",
- "rand_core",
  "rocket",
- "rocket_sync_db_pools",
- "serde",
- "serde_json",
- "serde_with",
  "todo",
  "toml",
  "user",
@@ -1742,21 +1708,14 @@ dependencies = [
 name = "todo"
 version = "0.1.0"
 dependencies = [
- "argon2",
  "async-trait",
+ "auth",
  "chrono",
  "common",
  "diesel",
- "diesel_derives",
  "diesel_migrations",
- "dotenv",
- "dotenvy",
- "jsonwebtoken",
- "rand_core",
  "rocket",
- "rocket_sync_db_pools",
  "serde",
- "serde_json",
  "serde_with",
  "toml",
 ]
@@ -1974,20 +1933,11 @@ dependencies = [
  "argon2",
  "async-trait",
  "auth",
- "chrono",
  "common",
  "diesel",
- "diesel_derives",
  "diesel_migrations",
- "dotenv",
- "dotenvy",
- "jsonwebtoken",
- "rand_core",
  "rocket",
- "rocket_sync_db_pools",
  "serde",
- "serde_json",
- "serde_with",
  "toml",
 ]
 

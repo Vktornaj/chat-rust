@@ -1,7 +1,8 @@
 use chrono::Utc;
 
 use super::super::port::driven::todo_repository::{TodoRepository};
-use crate::{domain::{{todo::Todo, todo::Status}, auth::Auth}, application::port::driven::todo_repository::UpdateTodo};
+use crate::{domain::{todo::Todo, todo::Status}, application::port::driven::todo_repository::UpdateTodo};
+use auth::domain::auth::Auth;
 
 
 #[derive(Debug)]

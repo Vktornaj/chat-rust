@@ -1,7 +1,6 @@
 use rocket::{Request, catch, catchers, options, get};
 use cors::CORS;
 use rocket::{launch, routes};
-use dotenv::dotenv;
 
 mod cors;
 
@@ -28,7 +27,6 @@ pub fn get_root() -> &'static str {
 
 #[launch]
 pub fn rocket() -> _ {
-    dotenv().ok();
     rocket::custom(config::from_env())
         .attach(CORS)
         .mount(

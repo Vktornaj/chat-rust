@@ -1,5 +1,6 @@
 use super::super::port::driven::todo_repository::{TodoRepository, FindTodo};
-use crate::domain::{todo::Status, auth::Auth};
+use crate::domain::todo::Status;
+use auth::domain::auth::Auth;
 
 
 #[derive(Debug)]
