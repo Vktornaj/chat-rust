@@ -1,4 +1,4 @@
-use diesel::{PgConnection};
+use diesel::PgConnection;
 use diesel_migrations::{MigrationHarness, EmbeddedMigrations};
 // use todo_rust;
 use common::config::establish_connection_pg;
