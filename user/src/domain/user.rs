@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use argon2::{
     password_hash::{
         rand_core::OsRng,
@@ -8,10 +9,16 @@ use argon2::{
 
 pub struct User {
     pub id: Option<i32>,
-    pub username: String,
+    pub email: Option<String>,
+    pub phone_number: Option<String>,
+    pub password: String,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
-    pub password: String,
+    pub birthday: Option<DateTime<Utc>>,
+    pub nationality: String,
+    pub languages: Option<Vec<String>>,
+    pub created_at:  Option<DateTime<Utc>>,
+    pub updated_at:  Option<DateTime<Utc>>,
 }
 
 impl User {
@@ -33,4 +40,15 @@ impl User {
             &parsed_hash
         )
     }
+}
+
+pub struct NewUser {
+    pub email: Option<String>,
+    pub phone_number: Option<String>,
+    pub password: String,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub birthday: DateTime<Utc>,
+    pub nationality: Option<String>,
+    pub languages: Option<Vec<String>>,
 }

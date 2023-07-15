@@ -1,4 +1,4 @@
-use super::super::port::driven::user_repository::UserRepository;
+use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::domain::user::User;
 use super::is_user_exist;
 
@@ -10,7 +10,7 @@ pub enum CreateError {
     Conflict(String)
 }
 
-pub async fn execute<T>(conn: &T, repo: &impl UserRepository<T>, mut user: User) -> Result<User, CreateError> {
+pub async fn execute<T>(conn: &T, repo: &impl UserRepositoryTrait<T>, mut user: User) -> Result<User, CreateError> {
     if is_user_exist::execute(conn, repo, &user.username).await {
         return Err(CreateError::Conflict("Username is already in use".to_string()))
     }

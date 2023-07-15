@@ -1,4 +1,4 @@
-use super::super::port::driven::user_repository::UserRepository;
+use super::super::port::driven::user_repository::UserRepositoryTrait;
 use auth::domain::auth::Auth;
 
 
@@ -11,7 +11,7 @@ pub enum LoginError {
 
 pub async fn execute<T>(
     conn: &T, 
-    repo: &impl UserRepository<T>, 
+    repo: &impl UserRepositoryTrait<T>, 
     secret: &[u8],
     username: &String, password: &String
 ) -> Result<String, LoginError> {

@@ -10,7 +10,7 @@ use crate::application::use_cases;
 use common::{config::AppState, token::Token, db::Db};
 
 // Persistence
-use crate::adapter::driven::persistence::pgsql::user_repository::UserRepository;
+use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 
 
 #[post("/register", format = "json", data = "<user>")]

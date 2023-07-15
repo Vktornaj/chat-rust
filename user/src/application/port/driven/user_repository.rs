@@ -11,9 +11,14 @@ use crate::domain::user::User;
 
 
 #[async_trait]
-pub trait UserRepository<T> {
+pub trait UserRepositoryTrait<T> {
     /// Find and return one single record from the persistence system    
-    async fn find_one(&self, conn: &T, username: &String) -> Result<User, RepoSelectError>;
+    async fn find_one(
+        &self, 
+        conn: &T, 
+        email: &Option<String>, 
+        phone_number: &Option<String>
+    ) -> Result<User, RepoSelectError>;
 
     /// Insert the received entity in the persistence system
     async fn create(&self, conn: &T, user: User) -> Result<User, RepoCreateError>;

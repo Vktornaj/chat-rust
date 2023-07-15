@@ -1,7 +1,7 @@
 use auth::domain::auth::Auth;
 use crate::domain::user::User;
 
-use super::super::port::driven::user_repository::UserRepository;
+use super::super::port::driven::user_repository::UserRepositoryTrait;
 
 
 #[derive(Debug)]
@@ -12,7 +12,7 @@ pub enum FindError {
 
 pub async fn execute<T>(
     conn: &T,
-    repo: &impl UserRepository<T>,
+    repo: &impl UserRepositoryTrait<T>,
     secret: &[u8],
     token: &String
 ) -> Result<User, FindError> {
