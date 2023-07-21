@@ -67,7 +67,7 @@ sql_function! {
 pub struct TodoRepository {}
 
 #[async_trait]
-impl todo_repository::TodoRepository<Db> for TodoRepository {
+impl todo_repository::TodoRepositoryTrait<Db> for TodoRepository {
     async fn find_one(&self, conn: &Db,  id: i32) -> Result<TodoDomain, errors::RepoSelectError> {
         match conn.run(move |c| {
             let res = _todo.find(id)

@@ -1,4 +1,4 @@
-use super::super::port::driven::todo_repository::{TodoRepository, FindTodo};
+use super::super::port::driven::todo_repository::{TodoRepositoryTrait, FindTodo};
 use crate::{domain::todo::Todo, application::port::driven::errors::RepoSelectError};
 use auth::domain::auth::Auth;
 
@@ -13,7 +13,7 @@ pub enum CreateError {
 
 pub async fn execute<T>(
     conn: &T,
-    repo: &impl TodoRepository<T>,
+    repo: &impl TodoRepositoryTrait<T>,
     secret: &[u8],
     token: &String,
     todo: Todo

@@ -36,7 +36,7 @@ pub struct UpdateTodo {
 }
 
 #[async_trait]
-pub trait TodoRepository<T> {
+pub trait TodoRepositoryTrait<T> {
     /// Find and return one single record from the persistence system
     async fn find_one(&self, conn: &T, id: i32) -> Result<Todo, RepoSelectError>;
 

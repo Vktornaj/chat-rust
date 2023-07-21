@@ -1,6 +1,6 @@
 use chrono::Utc;
 
-use super::super::port::driven::todo_repository::{TodoRepository};
+use super::super::port::driven::todo_repository::{TodoRepositoryTrait};
 use crate::{domain::{todo::Todo, todo::Status}, application::port::driven::todo_repository::UpdateTodo};
 use auth::domain::auth::Auth;
 
@@ -14,7 +14,7 @@ pub enum UpdateError {
 
 pub async fn execute<T>(
     conn: &T,
-    repo: &impl TodoRepository<T>,
+    repo: &impl TodoRepositoryTrait<T>,
     secret: &[u8],
     token: &String,
     mut update_todo: UpdateTodo

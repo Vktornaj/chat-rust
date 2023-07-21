@@ -1,48 +1,48 @@
 -- Add up migration script here
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    email VARCHAR UNIQUE,
-    phone_number VARCHAR UNIQUE,
-    password VARCHAR NOT NULL,
-    first_name VARCHAR,
-    last_name VARCHAR,
+    email TEXT UNIQUE,
+    phone_number TEXT UNIQUE,
+    password TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT,
     birthday TIMESTAMPTZ NOT NULL,
-    nationality VARCHAR NOT NULL,
+    nationality TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE languages (
-    id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-    name VARCHAR NOT NULL UNIQUE
+    id TEXT NOT NULL UNIQUE PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE users_languages (
     user_id INTEGER NOT NULL REFERENCES users(id),
-    language_id VARCHAR NOT NULL REFERENCES languages(id),
+    language_id TEXT NOT NULL REFERENCES languages(id),
     CONSTRAINT users_languages_pkey PRIMARY KEY (user_id, language_id)
 );
 
 --=================== Functions ===================--
 CREATE FUNCTION insert_user(
-    p_email VARCHAR,
-    p_phone_number VARCHAR,
-    p_password VARCHAR,
-    p_first_name VARCHAR,
-    p_last_name VARCHAR,
+    p_email TEXT,
+    p_phone_number TEXT,
+    p_password TEXT,
+    p_first_name TEXT,
+    p_last_name TEXT,
     p_birthday TIMESTAMPTZ,
-    p_nationality VARCHAR,
-    p_languages VARCHAR[]
+    p_nationality TEXT,
+    p_languages TEXT[]
 )
 RETURNS TABLE (
     id INTEGER,
-    email VARCHAR,
-    phone_number VARCHAR,
-    password VARCHAR,
-    first_name VARCHAR,
-    last_name VARCHAR,
+    email TEXT,
+    phone_number TEXT,
+    password TEXT,
+    first_name TEXT,
+    last_name TEXT,
     birthday TIMESTAMPTZ,
-    nationality VARCHAR,
+    nationality TEXT,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ
 ) AS $$
@@ -63,30 +63,61 @@ RETURNS TABLE (
         RETURN NEXT;
     END;
 $$ LANGUAGE plpgsql;
--- CREATE FUNCTION find_user_by_email(_email VARCHAR)
--- RETURNS TABLE (
---     id integer,
---     first_name varchar,
---     last_name varchar
--- ) AS $$
---     BEGIN
---         RETURN QUERY
---         SELECT u.id, u.first_name, u.last_name
---         FROM users AS u
---         WHERE u.username = _username;
---     END;
--- $$ LANGUAGE plpgsql;
 
--- CREATE FUNCTION find_user_by_phone_number(_email VARCHAR)
--- RETURNS TABLE (
---     id integer,
---     first_name varchar,
---     last_name varchar
--- ) AS $$
---     BEGIN
---         RETURN QUERY
---         SELECT u.id, u.first_name, u.last_name
---         FROM users AS u
---         WHERE u.username = _username;
---     END;
--- $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION update_user(
+    p_id INTEGER,
+    p_email TEXT,
+    p_phone_number TEXT,
+    p_password TEXT,
+    p_first_name TEXT,
+    p_last_name TEXT,
+    p_birthday TIMESTAMPTZ,
+    p_nationality TEXT,
+    p_languages TEXT[]
+)
+RETURNS TABLE (
+    id INTEGER,
+    email TEXT,
+    phone_number TEXT,
+    password TEXT,
+    first_name TEXT,
+    last_name TEXT,
+    birthday TIMESTAMPTZ,
+    nationality TEXT,
+    created_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ
+)
+AS $$
+BEGIN
+    UPDATE _todo AS t
+    SET
+        username = t.username,
+        title = COALESCE(p_title, t.title),
+        description = COALESCE(p_description, t.description),
+        status = COALESCE(p_status, t.status),
+        done_date = COALESCE(p_done_date, t.done_date),
+    WHERE t.id = p_id
+    RETURNING
+        t.id,
+        t.username,
+        t.title,
+        t.description,
+        t.status,
+        t.create_date,
+        t.done_date,
+        t.deadline
+    INTO
+        id,
+        username,
+        title,
+        description,
+        status,
+        create_date,
+        done_date,
+        deadline;
+
+    RETURN NEXT;
+
+    RETURN;
+END;
+$$ LANGUAGE plpgsql;

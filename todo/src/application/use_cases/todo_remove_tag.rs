@@ -1,7 +1,7 @@
 use crate::domain::todo::Todo;
 use auth::domain::auth::Auth;
 
-use super::super::port::driven::todo_repository::TodoRepository;
+use super::super::port::driven::todo_repository::TodoRepositoryTrait;
 
 
 #[derive(Debug)]
@@ -14,7 +14,7 @@ pub enum UpdateError {
 
 pub async fn execute<T>(
     conn: &T,
-    repo: &impl TodoRepository<T>, 
+    repo: &impl TodoRepositoryTrait<T>, 
     secret: &[u8],
     token: &String, 
     todo_id: i32, 

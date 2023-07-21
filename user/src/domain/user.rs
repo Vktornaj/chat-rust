@@ -25,7 +25,7 @@ impl User {
     // TODO: Reduce the runtime; 1.3 seconds
     pub fn hash_password_mut(&mut self) -> Result<(), Error>{
         let salt = SaltString::generate(&mut OsRng);
-
+        
         let argon2 = Argon2::default();
         self.password = argon2.hash_password(self.password.as_bytes(), &salt)?
             .to_string();

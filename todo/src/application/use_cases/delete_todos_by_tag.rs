@@ -1,6 +1,6 @@
 use auth::domain::auth::Auth;
 
-use super::super::port::driven::todo_repository::{TodoRepository, FindTodo};
+use super::super::port::driven::todo_repository::{TodoRepositoryTrait, FindTodo};
 
 
 #[derive(Debug)]
@@ -13,7 +13,7 @@ pub enum DeleteError {
 
 async fn execute<T>(
     conn: &T,
-    repo: &impl TodoRepository<T>,
+    repo: &impl TodoRepositoryTrait<T>,
     secret: &[u8],
     token: &String,
     tag: &String
