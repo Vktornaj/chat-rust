@@ -4,10 +4,11 @@ use rocket::{launch, routes};
 
 mod cors;
 
-// use adapter::driving::web::routes;
+use sqlx::PgPool;
 use user::routes as user_routes;
 use todo::routes as todo_routes;
 use common::{config, db};
+
 
 #[catch(404)]
 fn not_found(req: &Request) -> String {
@@ -26,7 +27,8 @@ pub fn get_root() -> &'static str {
 }
 
 #[launch]
-pub fn rocket() -> _ {
+pub async fn rocket() -> _ {
+    let sqlx_pool = db::create_pool().await;
     rocket::custom(config::from_env())
         .attach(CORS)
         .mount(
@@ -51,7 +53,8 @@ pub fn rocket() -> _ {
                 all_options,
             ]
         )
-        .attach(db::Db::fairing())
+        .manage::<PgPool>(sqlx_pool)
+        // .attach(db::Db::fairing())
         .attach(config::AppState::manage())
         .register("/", catchers![not_found])
 }

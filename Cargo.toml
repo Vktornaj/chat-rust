@@ -28,6 +28,6 @@ members = [
   "auth",
   "todo",
   "user",
-  "launcher",
+  "entry",
   "common",
 ]

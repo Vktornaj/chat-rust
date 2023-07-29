@@ -7,7 +7,7 @@ use crate::domain::user::User as UserDomain;
 use super::models::user::{User as UserDB, NewUser as NewUserDB};
 use crate::application::port::driven::errors;
 use common::db::Db;
-use crate::adapter::driven::persistence::pgsql::schema;
+use crate::adapter::driven::persistence::diesel::schema;
 use self::schema::_user::dsl::{
     username as _username, 
     _user,

@@ -4,20 +4,21 @@ use rocket::http::{Status, ContentType};
 use rocket::response::status;
 use rocket::{get, post, State};
 use rocket::serde::{json::Json, Serialize, Deserialize};
+use sqlx::PgPool;
 
 use crate::adapter::driving::web::schemas::user::{NewUserJson, UserJson};
 use crate::application::use_cases;
-use common::{config::AppState, token::Token, db::Db};
+use common::{config::AppState, token::Token};
 
 // Persistence
-use crate::adapter::driven::persistence::pgsql::user_repository::UserRepository;
+use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 
 
 #[post("/register", format = "json", data = "<user>")]
-pub async fn create_user(connection: Db, user: Json<NewUserJson>) -> Result<Json<UserJson>, Status>  {
+pub async fn create_user(pool: &rocket::State<PgPool>, user: Json<NewUserJson>) -> Result<Json<UserJson>, Status>  {
     match use_cases::create_user::execute(
-        &connection, 
-        &UserRepository {}, 
+        pool.inner(),
+        &UserRepository {},
         user.to_user()
     ).await {
         Ok(user) => Ok(Json(UserJson::from_user(user))),
@@ -29,12 +30,17 @@ pub async fn create_user(connection: Db, user: Json<NewUserJson>) -> Result<Json
     }
 }
 
-#[get("/username-availability/<username>")]
-pub async fn username_available(connection: Db, username: String) -> (Status, (ContentType, String)) {
+#[get("/email-availability/<email>/<phone_number>")]
+pub async fn username_available(
+    pool: &rocket::State<PgPool>, 
+    email: String, 
+    phone_number: String
+) -> (Status, (ContentType, String)) {
     let is_available = !use_cases::is_user_exist::execute(
-        &connection,
+        pool.inner(),
         &UserRepository {}, 
-        &username
+        &Some(email),
+        &Some(phone_number)
     ).await;
     (
         Status::Ok,
@@ -44,12 +50,12 @@ pub async fn username_available(connection: Db, username: String) -> (Status, (C
 
 #[get("/user/info")]
 pub async fn get_user_info(
-    connection: Db, 
+    pool: &rocket::State<PgPool>,
     state: &State<AppState>, 
     token: Token
 ) -> Result<Json<UserJson>, Status> {
     match use_cases::get_user_info::execute(
-        &connection,
+        pool.inner(),
         &UserRepository {},
         &state.secret,
         &token.value
@@ -64,7 +70,8 @@ pub async fn get_user_info(
 
 #[derive(Deserialize)]
 pub struct Credentials {
-    username: String,
+    email: String,
+    phone_number: String,
     password: String,
 }
 #[derive(Serialize, Deserialize)]
@@ -75,18 +82,19 @@ pub struct JsonToken {
 }
 #[post("/login", format = "json", data = "<credentials>")]
 pub async fn login(
-    connection: Db,
+    pool: &rocket::State<PgPool>,
     state: &State<AppState>,
     credentials: Json<Credentials>,
 ) -> Result<Json<JsonToken>, status::Unauthorized<String>> {
     let invalid_msg = "invalid credentials".to_string();
 
     match use_cases::login_user::execute(
-        &connection,
+        pool.inner(),
         &UserRepository {},
         &state.secret,
-        &credentials.username, 
-        &credentials.password
+        &Some(credentials.0.email), 
+        &Some(credentials.0.phone_number), 
+        &credentials.0.password
     ).await {
         Ok(token) => Ok(Json(JsonToken { 
             authorization_token: token, 
