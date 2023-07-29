@@ -10,7 +10,7 @@ edition = "2021"
 common = { path = "../common"}
 auth = { path = "../auth"}
 #
-rocket = { version = "0.5.0-rc.2", features=["json"]}
+rocket = { version = "0.5.0-rc.3", features=["json"]}
 chrono = { version = "0.4.24", features = ["serde"] }
 sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }
 toml = "0.7.1"
