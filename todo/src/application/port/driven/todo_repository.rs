@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use async_trait::async_trait;
+use uuid::Uuid;
 
 
 use super::errors::{
@@ -13,7 +14,7 @@ use crate::domain::todo::{Todo, Status};
 
 
 pub struct FindTodo {
-    pub username: String,
+    pub user_id: Uuid,
     pub title: Option<String>,
     pub description: Option<String>,
     pub status: Option<Status>,
@@ -38,45 +39,45 @@ pub struct UpdateTodo {
 #[async_trait]
 pub trait TodoRepositoryTrait<T> {
     /// Find and return one single record from the persistence system
-    async fn find_one(&self, conn: &T, id: i32) -> Result<Todo, RepoSelectError>;
+    async fn find_by_id(&self, conn: &T, id: i32) -> Result<Todo, RepoSelectError>;
 
     /// Find and return all records corresponding to the user
     async fn find_all(
         &self, 
         conn: &T, 
-        username: &String, 
-        from: i32, 
-        to: i32
+        user_id: &Uuid, 
+        from: i64, 
+        to: i64
     ) -> Result<Vec<Todo>, RepoFindAllError>;
     
     /// Find and return one single record from the persistence system
     async fn find_one_criteria(
         &self, 
         conn: &T, 
-        username: &String, 
+        user_id: &Uuid, 
         find_todo: FindTodo
     ) -> Result<Todo, RepoSelectError>;
 
     /// Find and return all records corresponding to the search criteria from the persistence system
     async fn find_all_criteria(
         &self, conn: &T, 
-        username: &String,
-        from: i32, 
-        to: i32, 
+        user_id: &Uuid,
+        from: i64, 
+        to: i64, 
         find_todo: FindTodo
     ) -> Result<Vec<Todo>, RepoFindAllError>;
     
-    /// Find and return all records corresponding to the search criteria from the persistence system
+    // Find and return all records corresponding to the search criteria from the persistence system
     // async fn find_all_date_range(
     //     &self, conn: &T, 
-    //     username: &String, 
-    //     from: i32, 
-    //     to: i32,
+    //     user_id: &Uuid, 
+    //     from: i64, 
+    //     to: i64,
     //     find_todo_by_date_range: FindTodoByDateRange
     // ) -> Result<Vec<Todo>, RepoFindAllError>;
 
     /// Insert the received entity in the persistence system
-    async fn create(&self, conn: &T, username: &String, todo: Todo) -> Result<Todo, RepoCreateError>;
+    async fn create(&self, conn: &T, user_id: &Uuid, todo: Todo) -> Result<Todo, RepoCreateError>;
 
     /// Update one single record already present in the persistence system
     async fn update(

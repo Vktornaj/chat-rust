@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
 use super::errors::{
     RepoCreateError, 
@@ -22,7 +23,7 @@ pub struct FindUser {
 }
 
 pub struct UpdateUser {
-    pub id: i32,
+    pub id: Uuid,
     pub email: Option<Option<String>>,
     pub phone_number: Option<Option<String>>,
     pub password: Option<Option<String>>,
@@ -33,13 +34,14 @@ pub struct UpdateUser {
     pub languages: Option<Option<Vec<String>>>,
 }
 
+// TODO: implement criteria
 #[async_trait]
 pub trait UserRepositoryTrait<T> {
     /// Find and return one single record from the persistence system    
     async fn find_by_id(
         &self, 
         conn: &T, 
-        id: i32
+        id: Uuid
     ) -> Result<User, RepoSelectError>;
     
     async fn find_one_by_email(
@@ -61,5 +63,5 @@ pub trait UserRepositoryTrait<T> {
     async fn update(&self, conn: &T, user: UpdateUser) -> Result<User, RepoUpdateError>;
 
     /// Delete one single record from the persistence system
-    async fn delete(&self, conn: &T, id: i32) -> Result<User, RepoDeleteError>;
+    async fn delete(&self, conn: &T, id: Uuid) -> Result<User, RepoDeleteError>;
 }

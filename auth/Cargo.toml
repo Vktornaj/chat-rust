@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 chrono = { version = "0.4.24", features = ["serde"] }
 toml = "0.7.1"
-serde = "1.0.152"
+serde = { version = "1.0.152"}
 jsonwebtoken = "8.3.0"
+uuid = { version = "1.4.1", features = ["serde"]}

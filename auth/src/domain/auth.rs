@@ -2,6 +2,7 @@ use jsonwebtoken as jwt;
 use jwt::{EncodingKey, DecodingKey};
 use serde::{Deserialize, Serialize};
 use chrono::{Duration, Utc, TimeZone};
+use uuid::Uuid;
 
 
 #[derive(Debug)]
@@ -16,14 +17,14 @@ pub struct Auth {
     /// timestamp
     pub exp: i64,
     /// user id
-    pub username: String,
+    pub id: Uuid,
 }
 
 impl Auth {
-    pub fn new(username: &String) -> Self {
+    pub fn new(id: &Uuid) -> Self {
         Auth { 
             exp: (Utc::now() + Duration::days(60)).timestamp(), 
-            username: username.to_owned() 
+            id: id.to_owned() 
         }
     }
 

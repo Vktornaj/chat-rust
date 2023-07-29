@@ -6,9 +6,10 @@ use argon2::{
     },
     Argon2
 };
+use uuid::Uuid;
 
 pub struct User {
-    pub id: Option<i32>,
+    pub id: Option<Uuid>,
     pub email: Option<String>,
     pub phone_number: Option<String>,
     pub password: String,

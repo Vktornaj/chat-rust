@@ -20,7 +20,7 @@ async fn execute<T>(
     if Auth::from_token(token, secret).is_err() {
         return Err(FindError::Unauthorized("Invalid token".to_string()));
     };
-    match repo.find_one(conn, id).await.ok() {
+    match repo.find_by_id(conn, id).await.ok() {
         Some(todo) => Ok(todo),
         None => Err(FindError::Unknown("not found".to_string())),
     }

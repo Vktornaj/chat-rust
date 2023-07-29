@@ -18,21 +18,21 @@ pub async fn execute<T>(
     token: &String,
     todo: Todo
 ) -> Result<Todo, CreateError> {
-    let username = if let Ok(auth) = Auth::from_token(token, secret) {
-        auth.username
+    let user_id = if let Ok(auth) = Auth::from_token(token, secret) {
+        auth.id
     } else {
         return Err(CreateError::Unautorized("Invalid token".to_string()));
     };
     let find_todo = FindTodo {
-        username: (&username).to_owned(),
+        user_id: (&user_id).to_owned(),
         title: Some(todo.title.to_owned()),
         description: None,
         status: None,
         tags: None,
     };
     println!("Begining");
-    println!("user: {}", &username);
-    let res = repo.find_one_criteria(conn, &username, find_todo).await;
+    println!("user: {}", &user_id);
+    let res = repo.find_one_criteria(conn, &user_id, find_todo).await;
     println!("res: {:?}", res);
     if res.is_ok() {
         return Err(CreateError::Conflict("Title already exist".to_string()));
@@ -42,7 +42,7 @@ pub async fn execute<T>(
         return Err(CreateError::Unknown(msg));
     }
     println!("RepoSelectError");
-    match repo.create(conn, &username, todo).await {
+    match repo.create(conn, &user_id, todo).await {
         Ok(todo) => Ok(todo),
         Err(error) => Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     }

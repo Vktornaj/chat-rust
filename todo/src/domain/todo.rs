@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
+use uuid::Uuid;
 
 
 #[derive(Debug, PartialEq)]
@@ -43,11 +44,38 @@ impl TryFrom<i32> for Status {
 #[derive(Debug)]
 pub struct Todo {
     pub id: Option<i32>,
+    pub user_id: Option<Uuid>,
     pub title: String,
     pub description: Option<String>,
     pub status: Status,
     pub create_date: Option<DateTime<Utc>>,
     pub done_date: Option<DateTime<Utc>>,
     pub deadline: Option<DateTime<Utc>>,
-    pub tags: Vec<String>,
+    pub tags: Option<Vec<String>>,
+}
+
+
+pub struct NewTodo {
+    pub username: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub status: i32,
+    pub deadline: Option<DateTime<Utc>>,
+}
+
+impl NewTodo {
+    pub fn from_domain_todo(todo: Todo, username: &String) -> Self {
+        NewTodo {
+            username: username.to_owned(),
+            title: todo.title,
+            description: todo.description,
+            status: todo.status as i32,
+            deadline: todo.deadline,
+        }
+    }
+}
+
+pub struct NewTodoTag {
+    pub todo_id: i32,
+    pub tag_id: i32
 }

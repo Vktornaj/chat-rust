@@ -18,12 +18,12 @@ pub async fn execute<T>(
     from: i32, 
     to: i32
 ) -> Result<Vec<Todo>, FindAllError> {
-    let username = if let Ok(auth) = Auth::from_token(token, secret) {
-        auth.username
+    let user_id = if let Ok(auth) = Auth::from_token(token, secret) {
+        auth.id
     } else {
         return Err(FindAllError::Unautorized("Invalid token".to_string()));
     };
-    match repo.find_all(conn, &username, from, from + to).await.ok() {
+    match repo.find_all(conn, &user_id, from, from + to).await.ok() {
         Some(todo) => Ok(todo),
         None => Err(FindAllError::Unknown("not found".to_string())),
     }

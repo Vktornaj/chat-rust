@@ -1,23 +1,24 @@
 use async_trait::async_trait;
 use sqlx::query_builder::QueryBuilder;
 use sqlx::{Postgres, Pool};
+use uuid::Uuid;
 
 use crate::application::port::driven::user_repository::{UserRepositoryTrait, UpdateUser};
 use crate::application::port::driven::errors::{
     RepoCreateError, 
     RepoDeleteError, 
     RepoSelectError, 
-    RepoUpdateError
+    RepoUpdateError,
 };
 use crate::domain::user::User as UserDomain;
-use crate::adapter::driven::persistence::sqlx::models::user::User as UserDB;
+use super::models::user::User as UserDB;
 
 
 pub struct UserRepository();
 
 #[async_trait]
 impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
-    async fn find_by_id(&self, conn: &Pool<Postgres>, id: i32) -> Result<UserDomain, RepoSelectError> {
+    async fn find_by_id(&self, conn: &Pool<Postgres>, id: Uuid) -> Result<UserDomain, RepoSelectError> {
         let user = sqlx::query_as!(
             UserDB,
             r#"
@@ -32,13 +33,13 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             }
         }
         let user = user.unwrap();
-        Ok(user.to_user_domain(Some(get_languages(conn, user.id)
-            .await.unwrap_or(Vec::new()))))
+        let languages = get_languages(conn, &user.id).await.unwrap_or(Vec::new());
+        Ok(user.to_user_domain(Some(languages)))
     }
 
     async fn find_one_by_email(
         &self, 
-        conn: &Pool<Postgres>, 
+        conn: &Pool<Postgres>,
         email: &String
     ) -> Result<UserDomain, RepoSelectError> {
         let user = sqlx::query_as!(
@@ -55,13 +56,13 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             }
         }
         let user = user.unwrap();
-        Ok(user.to_user_domain(Some(get_languages(conn, user.id)
-            .await.unwrap_or(Vec::new()))))
+        let languages = get_languages(conn, &user.id).await.unwrap_or(Vec::new());
+        Ok(user.to_user_domain(Some(languages)))
     }
     
     async fn find_one_by_phone_number(
         &self, 
-        conn: &Pool<Postgres>, 
+        conn: &Pool<Postgres>,
         phone_number: &String
     ) -> Result<UserDomain, RepoSelectError> {
         let user = sqlx::query_as!(
@@ -78,8 +79,8 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             }
         }
         let user = user.unwrap();
-        Ok(user.to_user_domain(Some(get_languages(conn, user.id)
-            .await.unwrap_or(Vec::new()))))
+        let languages = get_languages(conn, &user.id).await.unwrap_or(Vec::new());
+        Ok(user.to_user_domain(Some(languages)))
     }
 
     async fn create(&self, conn: &Pool<Postgres>, user: UserDomain) -> Result<UserDomain, RepoCreateError> {
@@ -110,7 +111,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                     created_at: result.created_at.unwrap(),
                     updated_at: result.updated_at.unwrap()
                 };
-                Ok(user.to_user_domain(Some(get_languages(conn, result.id.unwrap())
+                Ok(user.to_user_domain(Some(get_languages(conn, &result.id.unwrap())
                     .await.unwrap_or(Vec::new()))))
             },
             Err(err) => Err(RepoCreateError::Unknown(err.to_string()))
@@ -169,7 +170,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         }
     }
 
-    async fn delete(&self, conn: &Pool<Postgres>, id: i32) -> Result<UserDomain, RepoDeleteError> {
+    async fn delete(&self, conn: &Pool<Postgres>, id: Uuid) -> Result<UserDomain, RepoDeleteError> {
         let result = sqlx::query_as!(
             UserDB,
             r#"
@@ -190,9 +191,8 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         match result {
             Ok(result) => {
                 if let Some(user) = result {
-                    return Ok(user
-                        .to_user_domain(Some(get_languages(conn, user.id)
-                        .await.unwrap_or(vec![]))));
+                    let languages = get_languages(conn, &user.id).await.unwrap_or(Vec::new());
+                    return Ok(user.to_user_domain(Some(languages)));
                 } else {
                     return Err(RepoDeleteError::NotFound);
                 }
@@ -202,7 +202,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
     }
 }
 
-async fn get_languages(conn: &Pool<Postgres>, user_id: i32) -> Result<Vec<String>, RepoSelectError> {
+async fn get_languages(conn: &Pool<Postgres>, user_id: &Uuid) -> Result<Vec<String>, RepoSelectError> { 
     let languages = sqlx::query!(
         r#"
             SELECT l.id

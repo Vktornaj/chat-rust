@@ -9,6 +9,7 @@ pub enum UpdateError {
     InvalidData(String),
     Unknown(String),
     Conflict(String),
+    NotFound(String),
     Unautorized(String),
 }
 
@@ -20,21 +21,22 @@ pub async fn execute<T>(
     todo_id: i32, 
     tag: &String
 ) -> Result<Todo, UpdateError> {
-    let username = if let Ok(auth) = Auth::from_token(token, secret) {
-        auth.username
+    let user_id = if let Ok(auth) = Auth::from_token(token, secret) {
+        auth.id
     } else {
         return Err(UpdateError::Unautorized("Invalid token".to_string()));
     };
-    let todo = if let Ok(todo) = repo.find_one(conn, todo_id).await {
+    let todo = if let Ok(todo) = repo.find_by_id(conn, todo_id).await {
         todo
     } else {
-        return Err(UpdateError::Unknown(format!("Unknown error")));
+        return Err(UpdateError::NotFound(format!("")));
     };
-
-    if !todo.tags.contains(tag) {
-        return Err(UpdateError::Conflict(format!("Tag not found")));
+    if todo.user_id != Some(user_id) {
+        return Err(UpdateError::NotFound(format!("")));
     }
-
+    if !todo.tags.is_some_and(|x| x.contains(tag)) {
+        return Err(UpdateError::InvalidData(format!("Tag not found")));
+    }
     match repo.remove_tag(conn, todo_id, &tag).await {
         Ok(todo) => Ok(todo),
         Err(error) => Err(UpdateError::Unknown(format!("Unknown error: {:?}", error))),

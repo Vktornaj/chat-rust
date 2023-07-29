@@ -57,7 +57,7 @@ impl TodoJson {
                 .and_then(|x| Some(x.format(DATE_FORMAT).to_string()))), 
             deadline: Some(todo.deadline
                 .and_then(|x| Some(x.format(DATE_FORMAT).to_string()))), 
-            tags: Some(todo.tags) 
+            tags: todo.tags 
         }
     }
 
@@ -65,6 +65,7 @@ impl TodoJson {
     pub fn to_domain_todo(self) -> TodoDomain {
         TodoDomain {
             id: None,
+            user_id: None,
             title: self.title.unwrap(),
             description: self.description,
             status: self.status.unwrap_or(Status::PENDING),
@@ -75,7 +76,7 @@ impl TodoJson {
             deadline: self.deadline
                 .and_then(|x| x
                     .and_then(|x| Utc.datetime_from_str(&x, DATE_FORMAT).ok())),
-            tags: self.tags.unwrap_or(Vec::new()),
+            tags: self.tags,
         }
     }
 
