@@ -462,6 +462,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "entry"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "rocket",
+ "sqlx",
+ "todo",
+ "toml",
+ "user",
+]
+
+[[package]]
 name = "equivalent"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -971,18 +983,6 @@ dependencies = [
  "serde",
  "serde_json",
  "simple_asn1",
-]
-
-[[package]]
-name = "launcher"
-version = "0.1.0"
-dependencies = [
- "common",
- "rocket",
- "sqlx",
- "todo",
- "toml",
- "user",
 ]
 
 [[package]]
