@@ -15,8 +15,8 @@ pub async fn execute<T>(
     repo: &impl TodoRepositoryTrait<T>, 
     secret: &[u8],
     token: &String, 
-    from: i32, 
-    to: i32
+    from: i64, 
+    to: i64
 ) -> Result<Vec<Todo>, FindAllError> {
     let user_id = if let Ok(auth) = Auth::from_token(token, secret) {
         auth.id

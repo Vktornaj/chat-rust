@@ -85,8 +85,8 @@ impl TodoRepositoryTrait<Pool<Postgres>> for TodoRepository {
     async fn find_all_criteria(
         &self, conn: &Pool<Postgres>,
         user_id: &Uuid,
-        from: i32, 
-        to: i32, 
+        from: i64, 
+        to: i64, 
         find_todo: FindTodo
     ) -> Result<Vec<TodoDomain>, RepoFindAllError> {
         todo!();

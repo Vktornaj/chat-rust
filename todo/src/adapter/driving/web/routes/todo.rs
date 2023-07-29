@@ -96,8 +96,8 @@ pub async fn get_todos(
     pool: &rocket::State<PgPool>,
     state: &State<AppState>, 
     token: Token,
-    from: i32, 
-    to: i32
+    from: i64, 
+    to: i64
 ) -> Result<Json<Vec<TodoJson>>, Status> {
     match use_cases::find_todos::execute(
         pool.inner(),
