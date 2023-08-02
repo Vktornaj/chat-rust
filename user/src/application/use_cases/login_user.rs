@@ -1,3 +1,12 @@
+use argon2::{
+    password_hash::{
+        PasswordHash, PasswordVerifier, Error
+    },
+    Argon2
+};
+
+use crate::application::port::driven::user_repository::FindUser;
+
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use auth::domain::auth::Auth;
 
@@ -18,29 +27,33 @@ pub async fn execute<T>(
     phone_number: &Option<String>,
     password: &String
 ) -> Result<String, LoginError> {
-    let user = {
-        if let Some(email) = email {
-            if let Ok(user) = repo.find_one_by_email(conn, email).await {
-                user
-            } else {
-                return Err(LoginError::InvalidData("User not found".to_string()));
-            }
-        } else if let Some(phone_number) = phone_number {
-            if let Ok(user) = repo.find_one_by_phone_number(conn, phone_number).await {
-                user
-            } else {
-                return Err(LoginError::InvalidData("User not found".to_string()));
-            }
-        } else {
-            return Err(LoginError::InvalidData(
-                "A email or phone number must be specified".to_string())
-            )
-        }
+    let find_user = FindUser {
+        email: email.to_owned(),
+        phone_number: phone_number.to_owned(),
+        birthday: None,
+        nationality: None,
+        languages: None,
+        created_at: None,
     };
-
-    if user.verify_password(password).is_ok() {
-        Ok(Auth::new(&user.id.unwrap()).token(secret))
-    } else  {
-        Err(LoginError::InvalidData("Invalid password".to_string()))
+    if let Ok(users) = repo.find_by_criteria(conn, &find_user, 0, 1).await {
+        if users.len() < 1 {
+            return Err(LoginError::InvalidData("User not found".to_string()));
+        }
+        if verify_password(&users[0].password, password).is_ok() {
+            Ok(Auth::new(&users[0].id.unwrap()).token(secret))
+        } else  {
+            Err(LoginError::InvalidData("Invalid password".to_string()))
+        }
+    } else {
+        Err(LoginError::InvalidData("User not found".to_string()))
     }
+}
+
+// TODO: Reduce the runtime; 1.2 seconds
+pub fn verify_password(user_password: &String, password: &String) -> Result<(), Error> {
+    let parsed_hash = PasswordHash::new(&user_password)?;
+    Argon2::default().verify_password(
+        password.as_bytes(), 
+        &parsed_hash
+    )
 }

@@ -1,8 +1,8 @@
-use chrono::{Utc, TimeZone};
+use chrono::{Utc, TimeZone, ParseError};
 use serde::{Serialize, Deserialize};
 
 use common::config::DATE_FORMAT;
-use crate::domain::user::User;
+use crate::{domain::user::User, application::port::driven::user_repository::NewUser};
 
 
 #[derive(Serialize, Deserialize)]
@@ -35,19 +35,16 @@ pub struct NewUserJson {
 }
 
 impl NewUserJson {
-    pub fn to_user(&self) -> User {
-        User {
-            id: None,
+    pub fn to_new_user(&self) -> Result<NewUser, ParseError> {
+        Ok(NewUser {
             email: self.email.clone(),
             phone_number: self.phone_number.clone(),
             password: self.password.clone(),
-            first_name: Some(self.first_name.clone()),
-            last_name: Some(self.last_name.clone()),
-            birthday: Utc.datetime_from_str(&self.birthday, DATE_FORMAT).ok(),
+            first_name: self.first_name.clone(),
+            last_name: self.last_name.clone(),
+            birthday: Utc.datetime_from_str(&self.birthday, DATE_FORMAT)?,
             nationality: self.nationality.clone(),
-            languages:  Some(self.languages.clone()),
-            created_at: None,
-            updated_at: None,
-        }
+            languages:  self.languages.clone(),
+        })
     }
 }

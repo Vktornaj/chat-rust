@@ -40,7 +40,8 @@ pub async fn rocket() -> _ {
         .mount(
             "/api", 
             routes![
-                user_routes::user::username_available,
+                user_routes::user::email_available,
+                user_routes::user::phone_number_available,
                 user_routes::user::create_user,
                 user_routes::user::login,
                 user_routes::user::get_user_info,

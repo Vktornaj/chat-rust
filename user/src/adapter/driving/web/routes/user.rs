@@ -16,30 +16,60 @@ use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 
 #[post("/register", format = "json", data = "<user>")]
 pub async fn create_user(pool: &rocket::State<PgPool>, user: Json<NewUserJson>) -> Result<Json<UserJson>, Status>  {
+    let new_user = if let Ok(new_user) = user.to_new_user() {
+        new_user
+    } else {
+        return Err(Status::BadRequest);
+    };
     match use_cases::create_user::execute(
         pool.inner(),
         &UserRepository {},
-        user.to_user()
+        new_user
     ).await {
         Ok(user) => Ok(Json(UserJson::from_user(user))),
         Err(error) => match error {
-            use_cases::create_user::CreateError::InvalidData(_) => Err(Status::BadRequest),
-            use_cases::create_user::CreateError::Unknown(_) => Err(Status::InternalServerError),
-            use_cases::create_user::CreateError::Conflict(_) => Err(Status::Conflict),
+            use_cases::create_user::CreateError::InvalidData(err) => {
+                println!("{err}");
+                Err(Status::BadRequest)
+            },
+            use_cases::create_user::CreateError::Unknown(err) => {
+                println!("{err}");
+                Err(Status::InternalServerError)
+            },
+            use_cases::create_user::CreateError::Conflict(err) => {
+                println!("{err}");
+                Err(Status::Conflict)
+            },
         }
     }
 }
 
-#[get("/email-availability/<email>/<phone_number>")]
-pub async fn username_available(
+#[get("/email-availability/<email>")]
+pub async fn email_available(
     pool: &rocket::State<PgPool>, 
     email: String, 
-    phone_number: String
 ) -> (Status, (ContentType, String)) {
     let is_available = !use_cases::is_user_exist::execute(
         pool.inner(),
         &UserRepository {}, 
         &Some(email),
+        &None
+    ).await;
+    (
+        Status::Ok,
+        (ContentType::JSON, format!("{{ \"isAvailable\": \"{is_available}\" }}"))
+    )
+}
+
+#[get("/phone-availability/<phone_number>")]
+pub async fn phone_number_available(
+    pool: &rocket::State<PgPool>, 
+    phone_number: String
+) -> (Status, (ContentType, String)) {
+    let is_available = !use_cases::is_user_exist::execute(
+        pool.inner(),
+        &UserRepository {}, 
+        &None,
         &Some(phone_number)
     ).await;
     (
@@ -69,9 +99,10 @@ pub async fn get_user_info(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Credentials {
-    email: String,
-    phone_number: String,
+    email: Option<String>,
+    phone_number: Option<String>,
     password: String,
 }
 #[derive(Serialize, Deserialize)]
@@ -92,8 +123,8 @@ pub async fn login(
         pool.inner(),
         &UserRepository {},
         &state.secret,
-        &Some(credentials.0.email), 
-        &Some(credentials.0.phone_number), 
+        &credentials.0.email, 
+        &credentials.0.phone_number, 
         &credentials.0.password
     ).await {
         Ok(token) => Ok(Json(JsonToken { 

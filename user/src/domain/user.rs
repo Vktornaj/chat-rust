@@ -1,12 +1,11 @@
 use chrono::{DateTime, Utc};
-use argon2::{
-    password_hash::{
-        rand_core::OsRng,
-        PasswordHash, PasswordHasher, PasswordVerifier, SaltString, Error
-    },
-    Argon2
-};
 use uuid::Uuid;
+
+
+pub enum Error {
+    Invalid,
+    Unknown
+}
 
 pub struct User {
     pub id: Option<Uuid>,
@@ -22,34 +21,33 @@ pub struct User {
     pub updated_at:  Option<DateTime<Utc>>,
 }
 
+// TODO: add validations
 impl User {
-    // TODO: Reduce the runtime; 1.3 seconds
-    pub fn hash_password_mut(&mut self) -> Result<(), Error>{
-        let salt = SaltString::generate(&mut OsRng);
-        
-        let argon2 = Argon2::default();
-        self.password = argon2.hash_password(self.password.as_bytes(), &salt)?
-            .to_string();
-        Ok(())
+    pub fn new(
+        id: Option<Uuid>,
+        email: Option<String>,
+        phone_number: Option<String>,
+        password: String,
+        first_name: Option<String>,
+        last_name: Option<String>,
+        birthday: Option<DateTime<Utc>>,
+        nationality: String,
+        languages: Option<Vec<String>>,
+        created_at:  Option<DateTime<Utc>>,
+        updated_at:  Option<DateTime<Utc>>,
+    ) -> Result<Self, Error> {
+        Ok(User { 
+            id, 
+            email, 
+            phone_number, 
+            password, 
+            first_name, 
+            last_name, 
+            birthday, 
+            nationality, 
+            languages, 
+            created_at, 
+            updated_at 
+        })
     }
-
-    // TODO: Reduce the runtime; 1.2 seconds
-    pub fn verify_password(&self, password: &String) -> Result<(), Error> {
-        let parsed_hash = PasswordHash::new(&self.password)?;
-        Argon2::default().verify_password(
-            password.as_bytes(), 
-            &parsed_hash
-        )
-    }
-}
-
-pub struct NewUser {
-    pub email: Option<String>,
-    pub phone_number: Option<String>,
-    pub password: String,
-    pub first_name: Option<String>,
-    pub last_name: Option<String>,
-    pub birthday: DateTime<Utc>,
-    pub nationality: Option<String>,
-    pub languages: Option<Vec<String>>,
 }

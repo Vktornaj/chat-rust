@@ -12,14 +12,26 @@ use super::errors::{
 use crate::domain::user::User;
 
 
+pub struct DateRange(pub Option<DateTime<Utc>>, pub Option<DateTime<Utc>>);
+
+pub struct NewUser {
+    pub email: Option<String>,
+    pub phone_number: Option<String>,
+    pub password: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub birthday: DateTime<Utc>,
+    pub nationality: String,
+    pub languages: Vec<String>,
+}
+
 pub struct FindUser {
     pub email: Option<String>,
     pub phone_number: Option<String>,
-    pub first_name: Option<String>,
-    pub last_name: Option<String>,
+    pub birthday: Option<DateRange>,
     pub nationality: Option<String>,
     pub languages: Option<Vec<String>>,
-    pub created_at: Option<String>
+    pub created_at: Option<DateRange>,
 }
 
 pub struct UpdateUser {
@@ -34,30 +46,23 @@ pub struct UpdateUser {
     pub languages: Option<Option<Vec<String>>>,
 }
 
-// TODO: implement criteria
+// TODO: improve criteria
 #[async_trait]
 pub trait UserRepositoryTrait<T> {
-    /// Find and return one single record from the persistence system    
-    async fn find_by_id(
-        &self, 
-        conn: &T, 
-        id: Uuid
-    ) -> Result<User, RepoSelectError>;
+    /// Find and return one single record from the persistence system by id
+    async fn find_by_id(&self, conn: &T, id: Uuid) -> Result<User, RepoSelectError>;
     
-    async fn find_one_by_email(
+    /// Find and return some records from the persistence system by criteria
+    async fn find_by_criteria(
         &self, 
         conn: &T, 
-        email: &String
-    ) -> Result<User, RepoSelectError>;
-   
-    async fn find_one_by_phone_number(
-        &self, 
-        conn: &T, 
-        phone_number: &String
-    ) -> Result<User, RepoSelectError>;
+        find_user: &FindUser,
+        offset: i64,
+        limit: i64,
+    ) -> Result<Vec<User>, RepoSelectError>;
 
     /// Insert the received entity in the persistence system
-    async fn create(&self, conn: &T, user: User) -> Result<User, RepoCreateError>;
+    async fn create(&self, conn: &T, user: NewUser) -> Result<User, RepoCreateError>;
 
     /// Update one single record already present in the persistence system
     async fn update(&self, conn: &T, user: UpdateUser) -> Result<User, RepoUpdateError>;

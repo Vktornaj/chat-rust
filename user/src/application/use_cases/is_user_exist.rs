@@ -1,3 +1,5 @@
+use crate::application::port::driven::user_repository::FindUser;
+
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 
 
@@ -7,15 +9,14 @@ pub async fn execute<T>(
     email: &Option<String>, 
     phone_number: &Option<String>
 ) -> bool {
-    if let Some(email) = email {
-        if repo.find_one_by_email(conn, email).await.is_ok() {
-            return true;
-        }
-    }
-    if let Some(phone_number) = phone_number {
-        if repo.find_one_by_phone_number(conn, phone_number).await.is_ok() {
-            return true;
-        }
-    }
-    false
+    let find_user =  FindUser { 
+        email: email.to_owned(),
+        phone_number: phone_number.to_owned(),
+        birthday: None,
+        nationality: None,
+        languages: None,
+        created_at: None
+    };
+    repo.find_by_criteria(conn, &find_user, 0, 1).await
+        .is_ok_and(|x| x.len() > 0)
 }

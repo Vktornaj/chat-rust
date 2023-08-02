@@ -1,9 +1,10 @@
 use async_trait::async_trait;
+use rocket::futures::future::join_all;
 use sqlx::query_builder::QueryBuilder;
-use sqlx::{Postgres, Pool};
+use sqlx::{Postgres, Pool, Row};
 use uuid::Uuid;
 
-use crate::application::port::driven::user_repository::{UserRepositoryTrait, UpdateUser};
+use crate::application::port::driven::user_repository::{UserRepositoryTrait, UpdateUser, NewUser, FindUser};
 use crate::application::port::driven::errors::{
     RepoCreateError, 
     RepoDeleteError, 
@@ -26,64 +27,90 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             "#,
             id
         ).fetch_one(conn).await;
-        if let Err(err) = user {
-            return match err {
+        match user {
+            Ok(user) => {
+                let user_id = user.id;
+                Ok(user.to_user_domain(get_languages(conn, &user_id).await.ok()))
+            },
+            Err(err) => match err {
                 sqlx::Error::RowNotFound => Err(RepoSelectError::NotFound),
                 _ => Err(RepoSelectError::Unknown(err.to_string())),
             }
         }
-        let user = user.unwrap();
-        let languages = get_languages(conn, &user.id).await.unwrap_or(Vec::new());
-        Ok(user.to_user_domain(Some(languages)))
     }
 
-    async fn find_one_by_email(
+    // TODO: terminate this function
+    async fn find_by_criteria(
         &self, 
         conn: &Pool<Postgres>,
-        email: &String
-    ) -> Result<UserDomain, RepoSelectError> {
-        let user = sqlx::query_as!(
-            UserDB,
-            r#"
-                SELECT * FROM users WHERE email = $1
-            "#,
-            email,
-        ).fetch_one(conn).await;
-        if let Err(err) = user {
-            return match err {
-                sqlx::Error::RowNotFound => Err(RepoSelectError::NotFound),
-                _ => Err(RepoSelectError::Unknown(err.to_string())),
-            }
-        }
-        let user = user.unwrap();
-        let languages = get_languages(conn, &user.id).await.unwrap_or(Vec::new());
-        Ok(user.to_user_domain(Some(languages)))
-    }
+        find_user: &FindUser,
+        offset: i64,
+        limit: i64,        
+    ) -> Result<Vec<UserDomain>, RepoSelectError> {
+        let mut query = QueryBuilder::new("SELECT * FROM users WHERE");
     
-    async fn find_one_by_phone_number(
-        &self, 
-        conn: &Pool<Postgres>,
-        phone_number: &String
-    ) -> Result<UserDomain, RepoSelectError> {
-        let user = sqlx::query_as!(
-            UserDB,
-            r#"
-                SELECT * FROM users WHERE phone_number = $1
-            "#,
-            phone_number
-        ).fetch_one(conn).await;
-        if let Err(err) = user {
-            return match err {
-                sqlx::Error::RowNotFound => Err(RepoSelectError::NotFound),
-                _ => Err(RepoSelectError::Unknown(err.to_string())),
-            }
+        if let Some(email) = &find_user.email {
+            query.push(" email = ");
+            query.push_bind(email);
         }
-        let user = user.unwrap();
-        let languages = get_languages(conn, &user.id).await.unwrap_or(Vec::new());
-        Ok(user.to_user_domain(Some(languages)))
+        if let Some(phone_number) = &find_user.phone_number {
+            query.push(" phone_number = ");
+            query.push_bind(phone_number);
+        }
+        if let Some(birthday) = &find_user.birthday {
+            query.push(" birthday >= ");
+            query.push_bind(birthday.0);
+            query.push(" birthday < ");
+            query.push_bind(birthday.1);
+        }
+        if let Some(nationality) = &find_user.nationality {
+            query.push(" nationality = ");
+            query.push_bind(nationality);
+        }
+        if let Some(languages) = &find_user.languages {
+            query.push(" languages = ");
+            query.push_bind(languages);
+        }
+        if let Some(created_at) = &find_user.created_at {
+            query.push(" created_at >= ");
+            query.push_bind(created_at.0);
+            query.push(" created_at < ");
+            query.push_bind(created_at.1);
+        }
+        if let Some(languages) = &find_user.languages {
+            query.push(" languages = ");
+            query.push_bind(languages);
+        }
+
+        // Execute the update query
+        match query.build().fetch_all(conn).await {
+            Ok(result) => {
+                let users = result.iter().map(|x| UserDB {
+                    id: x.get("id"),
+                    email: x.get("email"),
+                    phone_number: x.get("phone_number"),
+                    password: x.get("password"),
+                    first_name: x.get("first_name"),
+                    last_name: x.get("last_name"),
+                    birthday: x.get("birthday"),
+                    nationality: x.get("nationality"),
+                    created_at: x.get("created_at"),
+                    updated_at: x.get("updated_at"),
+                }).collect::<Vec<UserDB>>();
+                let futures = users.iter()
+                    .map(|x| get_languages(conn, &x.id));
+                let every_languages = join_all(futures).await;
+                Ok(users.into_iter().zip(every_languages)
+                    .map(|(user, tags)| {
+                        user.to_user_domain(tags.ok())
+                }).collect())
+            },
+            Err(err) => return Err(RepoSelectError::Unknown(err.to_string())),
+        }
     }
 
-    async fn create(&self, conn: &Pool<Postgres>, user: UserDomain) -> Result<UserDomain, RepoCreateError> {
+    // TODO: fix this function
+    async fn create(&self, conn: &Pool<Postgres>, user: NewUser) -> Result<UserDomain, RepoCreateError> {
         let result = sqlx::query!(
             r#"
                 SELECT * FROM insert_user($1, $2, $3, $4, $5, $6, $7, $8);
@@ -95,7 +122,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             user.last_name,
             user.birthday,
             user.nationality,
-            &user.languages.unwrap_or(vec![]),
+            &user.languages,
         ).fetch_one(conn).await;
         match result {
             Ok(result) => {
