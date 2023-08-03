@@ -8,15 +8,23 @@ use crate::{domain::user::User, application::port::driven::user_repository::NewU
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserJson {
-    pub first_name: String,
-    pub last_name: String,
+    pub email: Option<String>,
+    pub phone_number: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub nationality: Option<String>,
+    pub languages: Option<Vec<String>>,
 }
 
 impl UserJson {
     pub fn from_user(user: User) -> Self {
         UserJson { 
-            first_name: user.first_name.unwrap_or("".to_string()), 
-            last_name: user.last_name.unwrap_or("".to_string())
+            email: user.email,
+            phone_number: user.phone_number,
+            first_name: user.first_name, 
+            last_name: user.last_name,
+            nationality: Some(user.nationality),
+            languages: user.languages,
         }
     }
 }

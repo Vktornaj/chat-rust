@@ -16,13 +16,14 @@ CREATE TABLE users (
 );
 
 CREATE TABLE languages (
-    id TEXT NOT NULL UNIQUE PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    code TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE users_languages (
     user_id UUID NOT NULL REFERENCES users(id),
-    language_id TEXT NOT NULL REFERENCES languages(id),
+    language_id INTEGER NOT NULL REFERENCES languages(id),
     CONSTRAINT users_languages_pkey PRIMARY KEY (user_id, language_id)
 );
 -- Todo 
@@ -84,19 +85,24 @@ RETURNS TABLE (
 ) AS $$
     DECLARE
         _language_id INTEGER;
-        _user_id UUID;
+        _language_code TEXT;
+        id UUID;
     BEGIN
         INSERT INTO users (email, phone_number, password, first_name, last_name, birthday, nationality)
-        VALUES (p_email, p_phone_number, p_password, p_first_name, p_last_name, p_birthday, nationality) 
-        RETURNING id, email, phone_number, password, first_name, last_name, birthday, nationality, created_at, updated_at
+        VALUES (p_email, p_phone_number, p_password, p_first_name, p_last_name, p_birthday, p_nationality) 
+        RETURNING users.id, users.email, users.phone_number, users.password, users.first_name, users.last_name, users.birthday, users.nationality, users.created_at, users.updated_at
         INTO id, email, phone_number, password, first_name, last_name, birthday, nationality, created_at, updated_at;
 
-        FOR _language_id IN SELECT unnest(p_languages) LOOP
-            INSERT INTO user_languages (user_id, language_id)
-            VALUES (_user_id, _language_id);
+        FOR _language_code IN SELECT unnest(p_languages) LOOP
+            SELECT l.id into _language_id
+            FROM languages AS l
+            WHERE l.code = _language_code;
+
+            INSERT INTO users_languages (user_id, language_id)
+            VALUES (id, _language_id);
         END LOOP;
 
-        RETURN NEXT;
+        RETURN QUERY SELECT id, email, phone_number, password, first_name, last_name, birthday, nationality, created_at, updated_at;
     END;
 $$ LANGUAGE plpgsql;
 
@@ -227,3 +233,52 @@ BEGIN
     RETURN;
 END;
 $$ LANGUAGE plpgsql; 
+
+INSERT INTO languages (code, name)
+VALUES
+    ('AR', 'Arabic'),
+    ('BE', 'Belarusian'),
+    ('BG', 'Bulgarian'),
+    ('CS', 'Czech'),
+    ('CY', 'Welsh'),
+    ('DA', 'Danish'),
+    ('DE', 'German'),
+    ('EL', 'Greek'),
+    ('EN', 'English'),
+    ('EO', 'Esperanto'),
+    ('ES', 'Spanish'),
+    ('ET', 'Estonian'),
+    ('FI', 'Finnish'),
+    ('FR', 'French'),
+    ('GA', 'Irish'),
+    ('GD', 'Scottish Gaelic'),
+    ('HU', 'Hungarian'),
+    ('HY', 'Armenian'),
+    ('ID', 'Indonesian'),
+    ('IS', 'Icelandic'),
+    ('IT', 'Italian'),
+    ('JA', 'Japanese'),
+    ('KO', 'Korean'),
+    ('LT', 'Lithuanian'),
+    ('LV', 'Latvian'),
+    ('MK/SL', 'Macedonian/Slovenian'),
+    ('MN', 'Mongolian'),
+    ('MO', 'Moldavian'),
+    ('NE', 'Nepali'),
+    ('NL', 'Dutch'),
+    ('NN', 'Norwegian'),
+    ('PL', 'Polish'),
+    ('PT', 'Portuguese'),
+    ('RO', 'Romanian'),
+    ('RU', 'Russian'),
+    ('SK', 'Slovak'),
+    ('SL', 'Slovenian'),
+    ('SQ', 'Albanian'),
+    ('SR', 'Serbian'),
+    ('SV', 'Swedish'),
+    ('TH', 'Thai'),
+    ('TR', 'Turkish'),
+    ('UK', 'Ukrainian'),
+    ('VI', 'Vietnamese'),
+    ('YI', 'Yiddish'),
+    ('ZH', 'Chinese');

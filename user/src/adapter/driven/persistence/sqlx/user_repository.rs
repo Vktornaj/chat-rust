@@ -109,7 +109,6 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         }
     }
 
-    // TODO: fix this function
     async fn create(&self, conn: &Pool<Postgres>, user: NewUser) -> Result<UserDomain, RepoCreateError> {
         let result = sqlx::query!(
             r#"
@@ -122,7 +121,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             user.last_name,
             user.birthday,
             user.nationality,
-            &user.languages,
+            &user.languages
         ).fetch_one(conn).await;
         match result {
             Ok(result) => {
@@ -232,7 +231,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
 async fn get_languages(conn: &Pool<Postgres>, user_id: &Uuid) -> Result<Vec<String>, RepoSelectError> { 
     let languages = sqlx::query!(
         r#"
-            SELECT l.id
+            SELECT l.code
             FROM users AS u
             JOIN users_languages AS ul ON ul.user_id = u.id
             JOIN languages AS l ON l.id = ul.language_id
@@ -242,7 +241,7 @@ async fn get_languages(conn: &Pool<Postgres>, user_id: &Uuid) -> Result<Vec<Stri
     ).fetch_all(conn).await;
     match languages {
         Ok(languages) => Ok(languages.iter()
-            .map(|l| l.id.to_string()).collect()),
+            .map(|l| l.code.to_owned()).collect()),
         Err(err) => match err {
             sqlx::Error::RowNotFound => Err(RepoSelectError::NotFound),
             _ => Err(RepoSelectError::Unknown(err.to_string())),
