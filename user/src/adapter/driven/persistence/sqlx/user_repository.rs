@@ -39,7 +39,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         }
     }
 
-    // TODO: terminate this function
+    // TODO: test this function
     async fn find_by_criteria(
         &self, 
         conn: &Pool<Postgres>,
@@ -47,40 +47,46 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         offset: i64,
         limit: i64,        
     ) -> Result<Vec<UserDomain>, RepoSelectError> {
-        let mut query = QueryBuilder::new("SELECT * FROM users WHERE");
+        let mut query = QueryBuilder::new("SELECT users.* FROM users");
     
+        if find_user.languages.is_some() {
+            query.push(" INNER JOIN users_languages ON users.id = users_languages.user_id ");
+            query.push(" INNER JOIN languages ON users_languages.language_id = languages.id ");
+        }
+        query.push(" WHERE TRUE ");
+        if let Some(languages) = &find_user.languages {
+            query.push(" AND languages.code = ANY(");
+            query.push_bind(languages);
+            query.push(")");
+        }
         if let Some(email) = &find_user.email {
-            query.push(" email = ");
+            query.push(" AND email = ");
             query.push_bind(email);
         }
         if let Some(phone_number) = &find_user.phone_number {
-            query.push(" phone_number = ");
+            query.push(" AND phone_number = ");
             query.push_bind(phone_number);
         }
         if let Some(birthday) = &find_user.birthday {
-            query.push(" birthday >= ");
+            query.push(" AND birthday >= ");
             query.push_bind(birthday.0);
-            query.push(" birthday < ");
+            query.push(" AND birthday < ");
             query.push_bind(birthday.1);
         }
         if let Some(nationality) = &find_user.nationality {
-            query.push(" nationality = ");
+            query.push(" AND nationality = ");
             query.push_bind(nationality);
         }
-        if let Some(languages) = &find_user.languages {
-            query.push(" languages = ");
-            query.push_bind(languages);
-        }
         if let Some(created_at) = &find_user.created_at {
-            query.push(" created_at >= ");
+            query.push(" AND created_at >= ");
             query.push_bind(created_at.0);
-            query.push(" created_at < ");
+            query.push(" AND created_at < ");
             query.push_bind(created_at.1);
         }
-        if let Some(languages) = &find_user.languages {
-            query.push(" languages = ");
-            query.push_bind(languages);
-        }
+        query.push(" OFFSET ");
+        query.push_bind(offset);
+        query.push(" LIMIT ");
+        query.push_bind(limit);
 
         // Execute the update query
         match query.build().fetch_all(conn).await {
@@ -105,7 +111,10 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                         user.to_user_domain(tags.ok())
                 }).collect())
             },
-            Err(err) => return Err(RepoSelectError::Unknown(err.to_string())),
+            Err(err) => {
+                println!("{}", err.to_string());
+                Err(RepoSelectError::Unknown(err.to_string()))
+            },
         }
     }
 
