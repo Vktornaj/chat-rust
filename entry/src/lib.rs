@@ -6,6 +6,7 @@ mod cors;
 
 use sqlx::PgPool;
 use user::routes as user_routes;
+use user::MIGRATOR as USER_MIGRATOR;
 use todo::routes as todo_routes;
 use common::{config, db};
 
@@ -26,9 +27,15 @@ pub fn get_root() -> &'static str {
     "{ \"msg\": \"ok\" }"
 }
 
+async fn run_migrations(pool: &PgPool) {
+    USER_MIGRATOR.run(pool).await.expect("USER_MIGRATOR failed");
+}
+
 #[launch]
 pub async fn rocket() -> _ {
     let sqlx_pool = db::create_pool().await;
+    run_migrations(&sqlx_pool).await;
+
     rocket::custom(config::from_env())
         .attach(CORS)
         .mount(
@@ -55,7 +62,6 @@ pub async fn rocket() -> _ {
             ]
         )
         .manage::<PgPool>(sqlx_pool)
-        // .attach(db::Db::fairing())
         .attach(config::AppState::manage())
         .register("/", catchers![not_found])
 }
