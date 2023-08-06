@@ -1,7 +1,18 @@
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use crate::domain::user::User as UserDomain;
+use crate::domain::user::{
+    User as UserDomain, 
+    Id, 
+    Email, 
+    PhoneNumber, 
+    Password, 
+    FirstName, 
+    LastName, 
+    Birthday, 
+    Nationality, 
+    Language
+};
 
 
 pub struct User {
@@ -20,15 +31,17 @@ pub struct User {
 impl User {
     pub fn to_user_domain(self, languages:Option<Vec<String>>) -> UserDomain {
         UserDomain {
-            id: Some(self.id),
-            email: self.email,
-            phone_number: self.phone_number,
-            password: self.password,
-            first_name: self.first_name,
-            last_name: self.last_name,
-            birthday: Some(self.birthday),
-            nationality: self.nationality,
-            languages,
+            id: Some(Id::try_from(self.id).unwrap()),
+            email: self.email.map(|x| Email::try_from(x).unwrap()),
+            phone_number: self.phone_number.map(|x| PhoneNumber::try_from(x).unwrap()),
+            password: Password::try_from(self.password).unwrap(),
+            first_name: self.first_name.map(|x| FirstName::try_from(x).unwrap()),
+            last_name: self.last_name.map(|x| LastName::try_from(x).unwrap()),
+            birthday: Some(Birthday::try_from(self.birthday).unwrap()),
+            nationality: Nationality::try_from(self.nationality).unwrap(),
+            languages: languages.map(|x| x.into_iter()
+                .map(|x| Language::try_from(x).unwrap())
+                .collect::<Vec<Language>>()),
             created_at: Some(self.created_at),
             updated_at: Some(self.updated_at)
         }

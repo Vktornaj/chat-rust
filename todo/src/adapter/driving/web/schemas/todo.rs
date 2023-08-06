@@ -1,9 +1,9 @@
 use chrono::{Utc, TimeZone};
 use serde::{Serialize, Deserialize};
+use common::config::DATE_FORMAT;
 
 use crate::{
     domain::todo::{Todo as TodoDomain, Status},
-    config::DATE_FORMAT, 
     application::port::driven::todo_repository::UpdateTodo
 };
 

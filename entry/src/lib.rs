@@ -1,12 +1,12 @@
 use rocket::{Request, catch, catchers, options, get};
 use cors::CORS;
 use rocket::{launch, routes};
+use sqlx::migrate::Migrator;
 
 mod cors;
 
 use sqlx::PgPool;
 use user::routes as user_routes;
-use user::MIGRATOR as USER_MIGRATOR;
 use todo::routes as todo_routes;
 use common::{config, db};
 
@@ -28,7 +28,8 @@ pub fn get_root() -> &'static str {
 }
 
 async fn run_migrations(pool: &PgPool) {
-    USER_MIGRATOR.run(pool).await.expect("USER_MIGRATOR failed");
+    static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
+    MIGRATOR.run(pool).await.expect("USER_MIGRATOR failed");
 }
 
 #[launch]

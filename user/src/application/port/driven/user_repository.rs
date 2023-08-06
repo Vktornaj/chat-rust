@@ -25,6 +25,10 @@ pub struct NewUser {
     pub languages: Vec<String>,
 }
 
+impl NewUser {
+    
+}
+
 pub struct FindUser {
     pub email: Option<String>,
     pub phone_number: Option<String>,

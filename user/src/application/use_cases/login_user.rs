@@ -35,12 +35,12 @@ pub async fn execute<T>(
         languages: None,
         created_at: None,
     };
-    if let Ok(users) = repo.find_by_criteria(conn, &find_user, 0, 1).await {
+    if let Ok(mut users) = repo.find_by_criteria(conn, &find_user, 0, 1).await {
         if users.len() < 1 {
             return Err(LoginError::InvalidData("User not found".to_string()));
         }
-        if verify_password(&users[0].password, password).is_ok() {
-            Ok(Auth::new(&users[0].id.unwrap()).token(secret))
+        if verify_password(&users.swap_remove(0).password.into(), password).is_ok() {
+            Ok(Auth::new(&users.swap_remove(0).id.unwrap().into()).token(secret))
         } else  {
             Err(LoginError::InvalidData("Invalid password".to_string()))
         }

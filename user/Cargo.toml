@@ -18,4 +18,5 @@ async-trait = "0.1.71"
 sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }
 dotenv = "0.15.0"
 chrono = { version = "0.4.24", features = ["serde"] }
-uuid = "1.4.1"
+uuid = { version = "1.4.1", features = ["v4"] }
+regex = "1.9.1"

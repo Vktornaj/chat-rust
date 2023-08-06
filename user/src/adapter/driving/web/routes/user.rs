@@ -15,11 +15,11 @@ use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 
 
 #[post("/register", format = "json", data = "<user>")]
-pub async fn create_user(pool: &rocket::State<PgPool>, user: Json<NewUserJson>) -> Result<Json<UserJson>, Status>  {
+pub async fn create_user(pool: &rocket::State<PgPool>, user: Json<NewUserJson>) -> Result<Json<UserJson>, (Status, String)>  {
     let new_user = if let Ok(new_user) = user.to_new_user() {
         new_user
     } else {
-        return Err(Status::BadRequest);
+        return Err((Status::BadRequest, "Invalid data".to_string()));
     };
     match use_cases::create_user::execute(
         pool.inner(),
@@ -28,18 +28,9 @@ pub async fn create_user(pool: &rocket::State<PgPool>, user: Json<NewUserJson>) 
     ).await {
         Ok(user) => Ok(Json(UserJson::from_user(user))),
         Err(error) => match error {
-            use_cases::create_user::CreateError::InvalidData(err) => {
-                println!("{err}");
-                Err(Status::BadRequest)
-            },
-            use_cases::create_user::CreateError::Unknown(err) => {
-                println!("{err}");
-                Err(Status::InternalServerError)
-            },
-            use_cases::create_user::CreateError::Conflict(err) => {
-                println!("{err}");
-                Err(Status::Conflict)
-            },
+            use_cases::create_user::CreateError::InvalidData(err) => Err((Status::BadRequest, err)),
+            use_cases::create_user::CreateError::Unknown(err) => Err((Status::InternalServerError, err)),
+            use_cases::create_user::CreateError::Conflict(err) => Err((Status::Conflict, err)),
         }
     }
 }

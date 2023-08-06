@@ -19,12 +19,13 @@ pub struct UserJson {
 impl UserJson {
     pub fn from_user(user: User) -> Self {
         UserJson { 
-            email: user.email,
-            phone_number: user.phone_number,
-            first_name: user.first_name, 
-            last_name: user.last_name,
-            nationality: Some(user.nationality),
-            languages: user.languages,
+            email: user.email.map(|x| x.into()),
+            phone_number: user.phone_number.map(|x| x.into()),
+            first_name: user.first_name.map(|x| x.into()), 
+            last_name: user.last_name.map(|x| x.into()),
+            nationality: Some(user.nationality.into()),
+            languages: user.languages.map(|x| x.into_iter()
+                .map(|x| x.into()).collect()),
         }
     }
 }
