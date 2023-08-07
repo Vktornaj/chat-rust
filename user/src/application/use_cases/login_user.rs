@@ -39,7 +39,7 @@ pub async fn execute<T>(
         if users.len() < 1 {
             return Err(LoginError::InvalidData("User not found".to_string()));
         }
-        if verify_password(&users.swap_remove(0).password.into(), password).is_ok() {
+        if verify_password(&users.swap_remove(0).hashed_password.unwrap(), password).is_ok() {
             Ok(Auth::new(&users.swap_remove(0).id.unwrap().into()).token(secret))
         } else  {
             Err(LoginError::InvalidData("Invalid password".to_string()))

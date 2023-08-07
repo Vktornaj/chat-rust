@@ -2,6 +2,7 @@
 pub enum RepoCreateError {
     InvalidData(String),
     Unknown(String),
+    Conflict(String),
 }
 
 #[derive(Debug)]

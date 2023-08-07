@@ -13,6 +13,7 @@ impl fmt::Display for ErrorMsg {
     }
 }
 
+#[derive(Clone)]
 pub struct Id(Uuid);
 
 impl TryFrom<Uuid> for Id {
@@ -45,7 +46,7 @@ mod tests_id {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Email(String);
 
 impl TryFrom<String> for Email {
@@ -82,7 +83,7 @@ mod tests_email {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct PhoneNumber(String);
 
 impl TryFrom<String> for PhoneNumber {
@@ -123,7 +124,7 @@ mod tests_phone_number {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Password(String);
 
 impl TryFrom<String> for Password {
@@ -196,7 +197,7 @@ mod tests_password {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct FirstName(String);
 
 impl TryFrom<String> for FirstName {
@@ -242,7 +243,7 @@ mod tests_first_name {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct LastName(String);
 
 impl TryFrom<String> for LastName {
@@ -288,7 +289,7 @@ mod tests_last_name {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Birthday(DateTime<Utc>);
 
 impl TryFrom<DateTime<Utc>> for Birthday {
@@ -372,7 +373,7 @@ mod tests_birthday {
 }
 
 // alpha-3 code (ISO 3166)
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Nationality(String);
 
 impl TryFrom<String> for Nationality {
@@ -416,7 +417,7 @@ mod tests_nationality {
 }
 
 // alpha-2 code (ISO 639-1)
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Language(String);
 
 impl TryFrom<String> for Language {
@@ -457,11 +458,13 @@ mod tests_language {
     }
 }
 
+#[derive(Clone)]
 pub struct User {
     pub id: Option<Id>,
     pub email: Option<Email>,
     pub phone_number: Option<PhoneNumber>,
-    pub password: Password,
+    pub password: Option<Password>,
+    pub hashed_password: Option<String>,
     pub first_name: Option<FirstName>,
     pub last_name: Option<LastName>,
     pub birthday: Option<Birthday>,
