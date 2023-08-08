@@ -90,7 +90,6 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             id: Some(Id::try_from(uuid::Uuid::new_v4()).unwrap()),
             email: Some(Email::try_from(new_user.email.unwrap()).unwrap()),
             phone_number: Some(PhoneNumber::try_from(new_user.phone_number.unwrap()).unwrap()),
-            // TODO: find a solution for hashed password
             password: None,
             hashed_password: Some(new_user.password),
             first_name: Some(FirstName::try_from(new_user.first_name).unwrap()),
