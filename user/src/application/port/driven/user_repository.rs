@@ -17,7 +17,7 @@ pub struct DateRange(pub Option<DateTime<Utc>>, pub Option<DateTime<Utc>>);
 pub struct NewUser {
     pub email: Option<String>,
     pub phone_number: Option<String>,
-    pub password: String,
+    pub hashed_password: String,
     pub first_name: String,
     pub last_name: String,
     pub birthday: DateTime<Utc>,
@@ -42,7 +42,7 @@ pub struct UpdateUser {
     pub id: Uuid,
     pub email: Option<Option<String>>,
     pub phone_number: Option<Option<String>>,
-    pub password: Option<Option<String>>,
+    pub hashed_password: Option<Option<String>>,
     pub first_name: Option<Option<String>>,
     pub last_name: Option<Option<String>>,
     pub birthday: Option<Option<DateTime<Utc>>>,    

@@ -4,14 +4,28 @@ use chrono::{Utc, DateTime};
 use uuid::Uuid;
 
 use super::{user_repository::{UserRepositoryTrait, NewUser, UpdateUser, FindUser}, errors};
-use crate::domain::user::{User as UserDomain, Email, PhoneNumber, Id, Password, FirstName, LastName, Birthday, Nationality, Language};
+use crate::domain::user::{User as UserDomain, Email, PhoneNumber, Id, FirstName, LastName, Birthday, Nationality, Language, Password};
 
 pub struct InMemoryRepository();
 
 #[async_trait]
 impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
     async fn find_by_id(&self, conn: &Mutex<Vec<UserDomain>>, id: Uuid) -> Result<UserDomain, errors::RepoSelectError> {
-        todo!()
+        let lock = match conn.lock() {
+            Ok(lock) => lock,
+            Err(_) => return Err(errors::RepoSelectError::Unknown("Failed to lock mutex".to_string()))
+        };
+        let id_ = if let Ok(id) = Id::try_from(id) {
+            id
+        } else {
+            return Err(errors::RepoSelectError::Unknown("Failed to convert id".to_string()))
+        };
+        let res = lock.iter().filter(|x| x.id.as_ref().unwrap() == &id_)
+            .map(|x| x.clone()).collect::<Vec<UserDomain>>();
+        if res.len() == 0 {
+            return Err(errors::RepoSelectError::NotFound)
+        }
+        Ok(res[0].clone())
     }
 
     async fn find_by_criteria(
@@ -91,7 +105,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             email: Some(Email::try_from(new_user.email.unwrap()).unwrap()),
             phone_number: Some(PhoneNumber::try_from(new_user.phone_number.unwrap()).unwrap()),
             password: None,
-            hashed_password: Some(new_user.password),
+            hashed_password: Some(new_user.hashed_password),
             first_name: Some(FirstName::try_from(new_user.first_name).unwrap()),
             last_name: Some(LastName::try_from(new_user.last_name).unwrap()),
             birthday: Some(Birthday::try_from(new_user.birthday).unwrap()),
@@ -104,11 +118,54 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
         Ok(user)
     }
 
-    async fn update(&self, conn: &Mutex<Vec<UserDomain>>, user: UpdateUser) -> Result<UserDomain, errors::RepoUpdateError> {
-        todo!()
+    async fn update(&self, conn: &Mutex<Vec<UserDomain>>, update_user: UpdateUser) -> Result<UserDomain, errors::RepoUpdateError> {
+        let mut lock: std::sync::MutexGuard<'_, Vec<UserDomain>> = match conn.lock() {
+            Ok(lock) => lock,
+            Err(_) => return Err(errors::RepoUpdateError::Unknown("Failed to lock mutex".to_string()))
+        };
+        let id = if let Ok(id) = Id::try_from(update_user.id) {
+            id
+        } else {
+            return Err(errors::RepoUpdateError::Unknown("Failed to convert id".to_string()))
+        };
+
+        let mut user = lock.iter_mut().find(|x| x.id.as_ref().unwrap() == &id).unwrap();
+
+        if let Some(email) = update_user.email {
+            user.email = email.map(|x| Email::try_from(x).unwrap());
+        }
+        if let Some(phone_number) = update_user.phone_number {
+            user.phone_number = Some(PhoneNumber::try_from(phone_number.unwrap()).unwrap());
+        }
+        if let Some(hashed_password) = update_user.hashed_password {
+            user.hashed_password = Some(hashed_password.unwrap());
+        }
+        if let Some(first_name) = update_user.first_name {
+            user.first_name = Some(FirstName::try_from(first_name.unwrap()).unwrap());
+        }
+        if let Some(last_name) = update_user.last_name {
+            user.last_name = Some(LastName::try_from(last_name.unwrap()).unwrap());
+        }
+        if let Some(birthday) = update_user.birthday {
+            user.birthday = Some(Birthday::try_from(birthday.unwrap()).unwrap());
+        }
+        if let Some(nationality) = update_user.nationality {
+            user.nationality = Nationality::try_from(nationality.unwrap()).unwrap();
+        }
+        Ok(user.clone())
     }
 
     async fn delete(&self, conn: &Mutex<Vec<UserDomain>>, id: Uuid) -> Result<UserDomain, errors::RepoDeleteError> {
-        todo!()
+        let mut lock: std::sync::MutexGuard<'_, Vec<UserDomain>> = match conn.lock() {
+            Ok(lock) => lock,
+            Err(_) => return Err(errors::RepoDeleteError::Unknown("Failed to lock mutex".to_string()))
+        };
+        let id = if let Ok(id) = Id::try_from(id) {
+            id
+        } else {
+            return Err(errors::RepoDeleteError::Unknown("Failed to convert id".to_string()))
+        };
+        let index = lock.iter().position(|x| x.id.as_ref().unwrap() == &id).unwrap();
+        Ok(lock.remove(index))  
     }
 }

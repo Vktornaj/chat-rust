@@ -13,7 +13,7 @@ impl fmt::Display for ErrorMsg {
     }
 }
 
-#[derive(Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Id(Uuid);
 
 impl TryFrom<Uuid> for Id {
