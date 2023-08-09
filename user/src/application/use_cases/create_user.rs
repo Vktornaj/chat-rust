@@ -32,11 +32,12 @@ pub async fn execute<T>(conn: &T, repo: &impl UserRepositoryTrait<T>, mut new_us
         return Err(CreateError::Conflict("email or phone already in use".to_string()))
     }
     // hash password
-    new_user.password = if let Ok(hashed_password) = hash_password(new_user.password) {
-        hashed_password
+    new_user.hashed_password = if let Ok(hashed_password) = hash_password(new_user.password.unwrap()) {
+        Some(hashed_password)
     } else {
         return Err(CreateError::InvalidData("Invalid password".to_string()));
     };
+    new_user.password = None;
     // create user
     match repo.create(conn, new_user).await {
         Ok(user) => Ok(user),
@@ -55,7 +56,7 @@ fn hash_password(password: String) -> Result<String, Error>{
 fn validate_data(mut new_user: NewUser) -> Result<NewUser, CreateError> {
     new_user.email = evaluate::<Email, String>(new_user.email)?;
     new_user.phone_number = evaluate::<PhoneNumber, String>(new_user.phone_number)?;
-    new_user.password = evaluate::<Password, String>(Some(new_user.password))?.unwrap();
+    new_user.password = evaluate::<Password, String>(new_user.password)?;
     new_user.first_name = evaluate::<FirstName, String>(Some(new_user.first_name))?.unwrap();
     new_user.last_name = evaluate::<LastName, String>(Some(new_user.last_name))?.unwrap();
     new_user.birthday = evaluate::<Birthday, DateTime<Utc>>(Some(new_user.birthday))?.unwrap();
@@ -165,7 +166,8 @@ mod tests {
         let new_user = NewUser {
             email: Some("some_2@some.some".to_string()),
             phone_number: Some("+528331114146".to_string()),
-            password: "Password123!".to_string(),
+            password: Some("Password123!".to_string()),
+            hashed_password: None,
             first_name: "Victor Eduardo".to_string(),
             last_name: "Garcia Najera".to_string(),
             birthday: NaiveDate::from_ymd_opt(1990, 1, 1)

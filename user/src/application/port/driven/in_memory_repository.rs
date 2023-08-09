@@ -105,7 +105,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             email: Some(Email::try_from(new_user.email.unwrap()).unwrap()),
             phone_number: Some(PhoneNumber::try_from(new_user.phone_number.unwrap()).unwrap()),
             password: None,
-            hashed_password: Some(new_user.hashed_password),
+            hashed_password: new_user.hashed_password,
             first_name: Some(FirstName::try_from(new_user.first_name).unwrap()),
             last_name: Some(LastName::try_from(new_user.last_name).unwrap()),
             birthday: Some(Birthday::try_from(new_user.birthday).unwrap()),
