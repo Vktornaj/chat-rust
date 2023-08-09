@@ -1,13 +1,6 @@
-use argon2::{
-    password_hash::{
-        PasswordHash, PasswordVerifier, Error
-    },
-    Argon2
-};
-
 use crate::application::port::driven::user_repository::FindUser;
 
-use super::super::port::driven::user_repository::UserRepositoryTrait;
+use super::{super::port::driven::user_repository::UserRepositoryTrait, utils};
 use auth::domain::auth::Auth;
 
 
@@ -40,7 +33,7 @@ pub async fn execute<T>(
             return Err(LoginError::InvalidData("User not found".to_string()));
         }
         let user = users.swap_remove(0);
-        if verify_password(&user.hashed_password.unwrap(), password).is_ok() {
+        if utils::verify_password(&user.hashed_password.unwrap(), password).is_ok() {
             Ok(Auth::new(&user.id.unwrap().into()).token(secret))
         } else  {
             Err(LoginError::InvalidData("Invalid password".to_string()))
@@ -50,11 +43,3 @@ pub async fn execute<T>(
     }
 }
 
-// TODO: Reduce the runtime; 1.2 seconds
-pub fn verify_password(user_password: &String, password: &String) -> Result<(), Error> {
-    let parsed_hash = PasswordHash::new(&user_password)?;
-    Argon2::default().verify_password(
-        password.as_bytes(), 
-        &parsed_hash
-    )
-}
