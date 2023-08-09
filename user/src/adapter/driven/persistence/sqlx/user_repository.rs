@@ -95,7 +95,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                     id: x.get("id"),
                     email: x.get("email"),
                     phone_number: x.get("phone_number"),
-                    password: x.get("password"),
+                    hashed_password: x.get("hashed_password"),
                     first_name: x.get("first_name"),
                     last_name: x.get("last_name"),
                     birthday: x.get("birthday"),
@@ -125,7 +125,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             "#,
             user.email,
             user.phone_number,
-            user.password,
+            user.hashed_password,
             user.first_name,
             user.last_name,
             user.birthday,
@@ -138,7 +138,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                     id: result.id.unwrap(),
                     email: result.email,
                     phone_number: result.phone_number,
-                    password: result.password.unwrap(),
+                    hashed_password: result.hashed_password.unwrap(),
                     first_name: result.first_name,
                     last_name: result.last_name,
                     birthday: result.birthday.unwrap(),
@@ -164,9 +164,9 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             query.push(" phone_number = ");
             query.push_bind(phone_number);
         }
-        if let Some(password) = user.password {
-            query.push(" password = ");
-            query.push_bind(password);
+        if let Some(hashed_password) = user.hashed_password {
+            query.push(" hashed_password = ");
+            query.push_bind(hashed_password);
         }
         if let Some(first_name) = user.first_name {
             query.push(" first_name = ");
@@ -213,7 +213,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                 id, 
                 email, 
                 phone_number, 
-                password, 
+                hashed_password, 
                 first_name, 
                 last_name, 
                 birthday, 

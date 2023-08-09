@@ -48,7 +48,8 @@ impl NewUserJson {
         Ok(NewUser {
             email: self.email.clone(),
             phone_number: self.phone_number.clone(),
-            password: self.password.clone(),
+            password: Some(self.password.clone()),
+            hashed_password: None,
             first_name: self.first_name.clone(),
             last_name: self.last_name.clone(),
             birthday: Utc.datetime_from_str(&self.birthday, DATE_FORMAT)?,

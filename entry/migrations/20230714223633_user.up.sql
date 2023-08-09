@@ -6,7 +6,7 @@ CREATE TABLE users (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     email TEXT UNIQUE,
     phone_number TEXT UNIQUE,
-    password TEXT NOT NULL,
+    hashed_password TEXT NOT NULL,
     first_name TEXT,
     last_name TEXT,
     birthday TIMESTAMPTZ NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE users_languages (
 CREATE FUNCTION insert_user(
     p_email TEXT,
     p_phone_number TEXT,
-    p_password TEXT,
+    p_hashed_password TEXT,
     p_first_name TEXT,
     p_last_name TEXT,
     p_birthday TIMESTAMPTZ,
@@ -43,7 +43,7 @@ RETURNS TABLE (
     id UUID,
     email TEXT,
     phone_number TEXT,
-    password TEXT,
+    hashed_password TEXT,
     first_name TEXT,
     last_name TEXT,
     birthday TIMESTAMPTZ,
@@ -56,10 +56,10 @@ RETURNS TABLE (
         _language_code TEXT;
         id UUID;
     BEGIN
-        INSERT INTO users (email, phone_number, password, first_name, last_name, birthday, nationality)
-        VALUES (p_email, p_phone_number, p_password, p_first_name, p_last_name, p_birthday, p_nationality) 
-        RETURNING users.id, users.email, users.phone_number, users.password, users.first_name, users.last_name, users.birthday, users.nationality, users.created_at, users.updated_at
-        INTO id, email, phone_number, password, first_name, last_name, birthday, nationality, created_at, updated_at;
+        INSERT INTO users (email, phone_number, hashed_password, first_name, last_name, birthday, nationality)
+        VALUES (p_email, p_phone_number, p_hashed_password, p_first_name, p_last_name, p_birthday, p_nationality) 
+        RETURNING users.id, users.email, users.phone_number, users.hashed_password, users.first_name, users.last_name, users.birthday, users.nationality, users.created_at, users.updated_at
+        INTO id, email, phone_number, hashed_password, first_name, last_name, birthday, nationality, created_at, updated_at;
 
         FOR _language_code IN SELECT unnest(p_languages) LOOP
             SELECT l.id into _language_id
@@ -70,7 +70,7 @@ RETURNS TABLE (
             VALUES (id, _language_id);
         END LOOP;
 
-        RETURN QUERY SELECT id, email, phone_number, password, first_name, last_name, birthday, nationality, created_at, updated_at;
+        RETURN QUERY SELECT id, email, phone_number, hashed_password, first_name, last_name, birthday, nationality, created_at, updated_at;
     END;
 $$ LANGUAGE plpgsql;
 
