@@ -1,49 +1,51 @@
--- Your SQL goes here
-CREATE TABLE _status (
+-- Add up migration script here
+
+CREATE TABLE status (
     id SERIAL PRIMARY KEY,
-    status_value VARCHAR NOT NULL
+    status_value TEXT NOT NULL
 );
 
-CREATE TABLE _tag (
+CREATE TABLE tags (
     id SERIAL PRIMARY KEY,
-    username VARCHAR NOT NULL,
-    tag_value VARCHAR NOT NULL,
-    CONSTRAINT fk_user FOREIGN KEY(username) REFERENCES _user(username)
+    user_id UUID NOT NULL,
+    tag_value TEXT NOT NULL,
+    CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
-CREATE TABLE _todo (
+CREATE TABLE todos (
     id SERIAL PRIMARY KEY,
-    username VARCHAR NOT NULL,
-    title VARCHAR NOT NULL,
-    description VARCHAR,
+    user_id UUID NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
     status INT NOT NULL,
     create_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     done_date TIMESTAMP WITH TIME ZONE,
     deadline TIMESTAMP WITH TIME ZONE,
-    CONSTRAINT fk_user FOREIGN KEY(username) REFERENCES _user(username)
+    CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
-CREATE TABLE _todo_tag (
+CREATE TABLE todo_tag (
     todo_id INTEGER NOT NULL,
     tag_id INTEGER NOT NULL,
     PRIMARY KEY (todo_id, tag_id),
-    CONSTRAINT fk_todo FOREIGN KEY(todo_id) REFERENCES _todo(id),
-    CONSTRAINT fk_tag FOREIGN KEY(tag_id) REFERENCES _tag(id)
+    CONSTRAINT fk_todo FOREIGN KEY(todo_id) REFERENCES todos(id),
+    CONSTRAINT fk_tag FOREIGN KEY(tag_id) REFERENCES tags(id)
 );
 
--- Functions
+--=================== Functions ===================--
+
 CREATE OR REPLACE FUNCTION find_todo_sql(
-    p_username varchar,
-    p_title varchar,
-    p_description varchar,
+    p_user_id UUID,
+    p_title TEXT,
+    p_description TEXT,
     p_status INT,
-    p_tags varchar[]
+    p_tags TEXT[]
 )
 RETURNS TABLE (
     id INT,
-    username varchar,
-    title varchar,
-    description varchar,
+    user_id UUID,
+    title TEXT,
+    description TEXT,
     status INT,
     create_date TIMESTAMPTZ,
     done_date TIMESTAMPTZ,
@@ -52,49 +54,48 @@ RETURNS TABLE (
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT t.id, t.username, t.title, t.description, t.status, t.create_date, t.done_date, t.deadline
-    FROM _todo AS t
+    SELECT t.id, t.user_id, t.title, t.description, t.status, t.create_date, t.done_date, t.deadline
+    FROM todos AS t
     WHERE
         (p_title IS NULL OR p_title = t.title) AND
         (p_description IS NULL OR p_description = t.description) AND
         (p_status IS NULL OR p_status = t.status) AND
---         (p_tags IS NULL OR p_tags @> t.tags) AND
-        (p_username = t.username)
+        (p_user_id = t.user_id)
     LIMIT 1;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION find_tags_sql(p_todo_id INT)
-RETURNS VARCHAR[]
+RETURNS TEXT[]
 AS $$
 DECLARE
-    tags VARCHAR[];
+    tags TEXT[];
 BEGIN
     SELECT array_agg(t.tag_value)
     INTO tags
-    FROM _tag AS t
-    JOIN _todo_tag AS tt ON tt.tag_id = t.id
+    FROM tags AS t
+    JOIN todo_tag AS tt ON tt.tag_id = t.id
     WHERE tt.todo_id = p_todo_id;
 
     RETURN tags;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION create_tag(p_tag_value VARCHAR, p_username VARCHAR)
-RETURNS TABLE (id INT, tag_value VARCHAR)
+CREATE OR REPLACE FUNCTION create_tag(p_tag_value TEXT, p_user_id UUID)
+RETURNS TABLE (id INT, tag_value TEXT)
 AS $$
 DECLARE
-    tag_entry _tag;
+    tag_entry tags;
 BEGIN
     SELECT *
     INTO tag_entry
-    FROM _tag AS t
-    JOIN _user AS u ON u.username = t.username
+    FROM tags AS t
+    JOIN users AS u ON u.user_id = t.user_id
     WHERE t.tag_value = p_tag_value;
     IF tag_entry IS NULL THEN
-        INSERT INTO _tag (tag_value, username)
-        VALUES (p_tag_value, p_username)
-        RETURNING _tag.id, _tag.username, _tag.tag_value INTO tag_entry;
+        INSERT INTO tags (tag_value, user_id)
+        VALUES (p_tag_value, p_user_id)
+        RETURNING tags.id, tags.user_id, tags.tag_value INTO tag_entry;
     END IF;
     RETURN QUERY SELECT tag_entry.id, tag_entry.tag_value;
 END;
@@ -102,17 +103,17 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION update_todo(
     p_id INT,
-    p_title VARCHAR,
-    p_description VARCHAR,
+    p_title TEXT,
+    p_description TEXT,
     p_status INT,
     p_done_date TIMESTAMPTZ DEFAULT '9999-12-31 23:59:59.999999+00',
     p_deadline TIMESTAMPTZ DEFAULT '9999-12-31 23:59:59.999999+00'
 )
 RETURNS TABLE (
     id INT,
-    username VARCHAR,
-    title VARCHAR,
-    description VARCHAR,
+    user_id UUID,
+    title TEXT,
+    description TEXT,
     status INT,
     create_date TIMESTAMPTZ,
     done_date TIMESTAMPTZ,
@@ -120,9 +121,9 @@ RETURNS TABLE (
 )
 AS $$
 BEGIN
-    UPDATE _todo AS t
+    UPDATE todos AS t
     SET
-        username = t.username,
+        user_id = t.user_id,
         title = COALESCE(p_title, t.title),
         description = COALESCE(p_description, t.description),
         status = COALESCE(p_status, t.status),
@@ -137,7 +138,7 @@ BEGIN
     WHERE t.id = p_id
     RETURNING
         t.id,
-        t.username,
+        t.user_id,
         t.title,
         t.description,
         t.status,
@@ -146,7 +147,7 @@ BEGIN
         t.deadline
     INTO
         id,
-        username,
+        user_id,
         title,
         description,
         status,
@@ -158,8 +159,4 @@ BEGIN
 
     RETURN;
 END;
-$$ LANGUAGE plpgsql;
-
-
--- Add a primary key column to the tag_entry table
--- ALTER IF EXISTS TABLE tag_entry ADD COLUMN tag_entry_id SERIAL PRIMARY KEY;
+$$ LANGUAGE plpgsql; 

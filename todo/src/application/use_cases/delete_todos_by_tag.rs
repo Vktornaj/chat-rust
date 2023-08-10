@@ -1,6 +1,6 @@
 use auth::domain::auth::Auth;
 
-use super::super::port::driven::todo_repository::{TodoRepository, FindTodo};
+use super::super::port::driven::todo_repository::{TodoRepositoryTrait, FindTodo};
 
 
 #[derive(Debug)]
@@ -13,18 +13,18 @@ pub enum DeleteError {
 
 async fn execute<T>(
     conn: &T,
-    repo: &impl TodoRepository<T>,
+    repo: &impl TodoRepositoryTrait<T>,
     secret: &[u8],
     token: &String,
     tag: &String
 ) -> Result<(), DeleteError> {
-    let username = if let Ok(auth) = Auth::from_token(token, secret) {
-        auth.username
+    let user_id = if let Ok(auth) = Auth::from_token(token, secret) {
+        auth.id
     } else {
         return Err(DeleteError::Unautorized("Invalid token".to_string()));
     };
     let find_todo = FindTodo {
-        username: (&username).to_owned(),
+        user_id: (&user_id).to_owned(),
         title: None,
         description: None,
         status: None,

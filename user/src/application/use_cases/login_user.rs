@@ -1,4 +1,6 @@
-use super::super::port::driven::user_repository::UserRepository;
+use crate::application::port::driven::user_repository::FindUser;
+
+use super::{super::port::driven::user_repository::UserRepositoryTrait, utils};
 use auth::domain::auth::Auth;
 
 
@@ -9,21 +11,35 @@ pub enum LoginError {
     Conflict(String)
 }
 
+// TODO: improve when criteria will implemented onto the traid
 pub async fn execute<T>(
-    conn: &T, 
-    repo: &impl UserRepository<T>, 
+    conn: &T,
+    repo: &impl UserRepositoryTrait<T>, 
     secret: &[u8],
-    username: &String, password: &String
+    email: &Option<String>,
+    phone_number: &Option<String>,
+    password: &String
 ) -> Result<String, LoginError> {
-    let user = if let Ok(user) = repo.find_one(conn, username).await {
-        user
-    } else {
-        return Err(LoginError::InvalidData("User not found".to_string()));
+    let find_user = FindUser {
+        email: email.to_owned(),
+        phone_number: phone_number.to_owned(),
+        birthday: None,
+        nationality: None,
+        languages: None,
+        created_at: None,
     };
-
-    if user.verify_password(password).is_ok() {
-        Ok(Auth::new(&user.username).token(secret))
-    } else  {
-        Err(LoginError::InvalidData("Invalid password".to_string()))
+    if let Ok(mut users) = repo.find_by_criteria(conn, &find_user, 0, 1).await {
+        if users.len() < 1 {
+            return Err(LoginError::InvalidData("User not found".to_string()));
+        }
+        let user = users.swap_remove(0);
+        if utils::verify_password(&user.hashed_password.unwrap(), password).is_ok() {
+            Ok(Auth::new(&user.id.unwrap().into()).token(secret))
+        } else  {
+            Err(LoginError::InvalidData("Invalid password".to_string()))
+        }
+    } else {
+        Err(LoginError::InvalidData("User not found".to_string()))
     }
 }
+
