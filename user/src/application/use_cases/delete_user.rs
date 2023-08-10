@@ -53,13 +53,14 @@ mod tests {
     use crate::{
         application::{
             port::driven::{
-                in_memory_repository::InMemoryRepository, 
-                user_repository::NewUser, errors::RepoSelectError
+                user_repository::NewUser, 
+                errors::RepoSelectError
             }, 
             use_cases::create_user
         }, 
         domain::user::Id
     };
+    use crate::adapter::driven::persistence::in_memory_repository::InMemoryRepository;
 
     #[tokio::test]
     async fn delete_user_successful() {

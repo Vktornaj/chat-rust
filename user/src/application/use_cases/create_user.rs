@@ -100,7 +100,9 @@ mod tests {
     use rocket::tokio;
     use uuid::Uuid;
     use super::*;
-    use crate::{application::port::driven::in_memory_repository::InMemoryRepository, domain::user::Id};
+    use crate::domain::user::Id;
+    use crate::adapter::driven::persistence::in_memory_repository::InMemoryRepository;
+    
 
     // #[test]
     // fn it_should_return_a_bad_request_error_when_request_is_invalid() {

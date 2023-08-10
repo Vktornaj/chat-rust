@@ -3,8 +3,18 @@ use async_trait::async_trait;
 use chrono::{Utc, DateTime};
 use uuid::Uuid;
 
-use super::{user_repository::{UserRepositoryTrait, NewUser, UpdateUser, FindUser}, errors};
-use crate::domain::user::{User as UserDomain, Email, PhoneNumber, Id, FirstName, LastName, Birthday, Nationality, Language, Password};
+// use super::{user_repository::{UserRepositoryTrait, NewUser, UpdateUser, FindUser}, errors};
+use crate::{
+    domain::user::{
+        User as UserDomain, Email, PhoneNumber, Id, FirstName, LastName, Birthday, Nationality, Language
+    }, 
+    application::port::driven::{
+        errors, user_repository::{
+            UserRepositoryTrait, FindUser, NewUser, UpdateUser
+        }
+    }
+};
+
 
 pub struct InMemoryRepository();
 
