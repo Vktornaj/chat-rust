@@ -119,7 +119,7 @@ mod tests {
     }
     
     #[tokio::test]
-    async fn delete_user_failed() {
+    async fn delete_user_bad_password() {
         // prepare for test
         let secret: Vec<u8> = "8Xui8SN4mI+7egV/9dlfYYLGQJeEx4+DwmSQLwDVXJg=".to_string().into_bytes();
         let conn = Mutex::new(vec![]);

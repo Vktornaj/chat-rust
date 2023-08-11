@@ -26,10 +26,6 @@ pub struct NewUser {
     pub languages: Vec<String>,
 }
 
-impl NewUser {
-    
-}
-
 pub struct FindUser {
     pub email: Option<String>,
     pub phone_number: Option<String>,
@@ -39,6 +35,7 @@ pub struct FindUser {
     pub created_at: Option<DateRange>,
 }
 
+#[derive(Default)]
 pub struct UpdateUser {
     pub id: Uuid,
     pub email: Option<Option<String>>,
@@ -50,6 +47,22 @@ pub struct UpdateUser {
     pub nationality: Option<Option<String>>,
     pub languages: Option<Option<Vec<String>>>,
 }
+
+// impl Default for UpdateUser {
+//     fn default() -> Self { 
+//         UpdateUser { 
+//             id: (), 
+//             email: (), 
+//             phone_number: (), 
+//             hashed_password: (), 
+//             first_name: (), 
+//             last_name: (), 
+//             birthday: (), 
+//             nationality: (), 
+//             languages: () 
+//         }
+//     }
+// }
 
 // TODO: improve criteria
 #[async_trait]

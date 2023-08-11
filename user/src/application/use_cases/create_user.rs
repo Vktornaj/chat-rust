@@ -1,13 +1,6 @@
-use argon2::{
-    password_hash::{
-        rand_core::OsRng,
-        PasswordHasher, SaltString, Error
-    },
-    Argon2
-};
 use chrono::{DateTime, Utc};
 
-use super::super::port::driven::user_repository::UserRepositoryTrait;
+use super::{super::port::driven::user_repository::UserRepositoryTrait, utils};
 use crate::{
     domain::user::{
         User, Email, PhoneNumber, Password, FirstName, LastName, Birthday, Nationality, Language
@@ -32,7 +25,7 @@ pub async fn execute<T>(conn: &T, repo: &impl UserRepositoryTrait<T>, mut new_us
         return Err(CreateError::Conflict("email or phone already in use".to_string()))
     }
     // hash password
-    new_user.hashed_password = if let Ok(hashed_password) = hash_password(new_user.password.unwrap()) {
+    new_user.hashed_password = if let Ok(hashed_password) = utils::hash_password(new_user.password.unwrap()) {
         Some(hashed_password)
     } else {
         return Err(CreateError::InvalidData("Invalid password".to_string()));
@@ -43,14 +36,6 @@ pub async fn execute<T>(conn: &T, repo: &impl UserRepositoryTrait<T>, mut new_us
         Ok(user) => Ok(user),
         Err(error) => Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     }
-}
-
-// TODO: Reduce the runtime; 1.3 seconds
-fn hash_password(password: String) -> Result<String, Error>{
-    let salt = SaltString::generate(&mut OsRng);
-    
-    let argon2 = Argon2::default();
-    Ok(argon2.hash_password(password.as_bytes(), &salt)?.to_string())
 }
 
 fn validate_data(mut new_user: NewUser) -> Result<NewUser, CreateError> {
