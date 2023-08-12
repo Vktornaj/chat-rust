@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use rocket::futures::future::join_all;
 use sqlx::query_builder::QueryBuilder;
 use sqlx::{Postgres, Pool, Row};
@@ -43,7 +44,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
     async fn find_by_criteria(
         &self, 
         conn: &Pool<Postgres>,
-        find_user: &FindUser,
+        find_user: FindUser,
         offset: i64,
         limit: i64,        
     ) -> Result<Vec<UserDomain>, RepoSelectError> {
@@ -54,18 +55,20 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             query.push(" INNER JOIN languages ON users_languages.language_id = languages.id ");
         }
         query.push(" WHERE TRUE ");
-        if let Some(languages) = &find_user.languages {
+        if let Some(languages) = find_user.languages {
+            let languages = languages.into_iter()
+                .map(|x| Into::<String>::into(x)).collect::<Vec<String>>();
             query.push(" AND languages.code = ANY(");
             query.push_bind(languages);
             query.push(")");
         }
-        if let Some(email) = &find_user.email {
+        if let Some(email) = find_user.email {
             query.push(" AND email = ");
-            query.push_bind(email);
+            query.push_bind(Into::<String>::into(email));
         }
-        if let Some(phone_number) = &find_user.phone_number {
+        if let Some(phone_number) = find_user.phone_number {
             query.push(" AND phone_number = ");
-            query.push_bind(phone_number);
+            query.push_bind(Into::<String>::into(phone_number));
         }
         if let Some(birthday) = &find_user.birthday {
             query.push(" AND birthday >= ");
@@ -73,9 +76,9 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             query.push(" AND birthday < ");
             query.push_bind(birthday.1);
         }
-        if let Some(nationality) = &find_user.nationality {
+        if let Some(nationality) = find_user.nationality {
             query.push(" AND nationality = ");
-            query.push_bind(nationality);
+            query.push_bind(Into::<String>::into(nationality));
         }
         if let Some(created_at) = &find_user.created_at {
             query.push(" AND created_at >= ");
@@ -123,14 +126,14 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             r#"
                 SELECT * FROM insert_user($1, $2, $3, $4, $5, $6, $7, $8);
             "#,
-            user.email,
-            user.phone_number,
-            user.hashed_password,
-            user.first_name,
-            user.last_name,
-            user.birthday,
-            user.nationality,
-            &user.languages
+            user.email.map(|x| Into::<String>::into(x)),
+            user.phone_number.map(|x| Into::<String>::into(x)),
+            user.hashed_password.map(|x| Into::<String>::into(x)),
+            Into::<String>::into(user.first_name),
+            Into::<String>::into(user.last_name),
+            Into::<DateTime<Utc>>::into(user.birthday),
+            Into::<String>::into(user.nationality),
+            &user.languages.into_iter().map(|x| x.into()).collect::<Vec<String>>()
         ).fetch_one(conn).await;
         match result {
             Ok(result) => {
@@ -158,31 +161,31 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
     
         if let Some(email) = user.email {
             query.push(" email = ");
-            query.push_bind(email);
+            query.push_bind(email.map(|x| Into::<String>::into(x)));
         }
         if let Some(phone_number) = user.phone_number {
             query.push(" phone_number = ");
-            query.push_bind(phone_number);
+            query.push_bind(phone_number.map(|x| Into::<String>::into(x)));
         }
         if let Some(hashed_password) = user.hashed_password {
             query.push(" hashed_password = ");
-            query.push_bind(hashed_password);
+            query.push_bind(hashed_password.map(|x| Into::<String>::into(x)));
         }
         if let Some(first_name) = user.first_name {
             query.push(" first_name = ");
-            query.push_bind(first_name);
+            query.push_bind(first_name.map(|x| Into::<String>::into(x)));
         }
         if let Some(last_name) = user.last_name {
             query.push(" last_name = ");
-            query.push_bind(last_name);
+            query.push_bind(last_name.map(|x| Into::<String>::into(x)));
         }
         if let Some(birthday) = user.birthday {
             query.push(" birthday = ");
-            query.push_bind(birthday);
+            query.push_bind(birthday.map(|x| Into::<DateTime<Utc>>::into(x)));
         }
         if let Some(nationality) = user.nationality {
             query.push(" nationality = ");
-            query.push_bind(nationality);
+            query.push_bind(nationality.map(|x| Into::<String>::into(x)));
         }
 
         // Add the WHERE clause with the user ID

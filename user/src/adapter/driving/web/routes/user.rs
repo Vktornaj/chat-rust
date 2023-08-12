@@ -8,6 +8,7 @@ use sqlx::PgPool;
 
 use crate::adapter::driving::web::schemas::user::{NewUserJson, UserJson};
 use crate::application::use_cases;
+use crate::domain::user::{Email, PhoneNumber, Password};
 use common::{config::AppState, token::Token};
 
 // Persistence
@@ -16,7 +17,7 @@ use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 
 #[post("/register", format = "json", data = "<user>")]
 pub async fn create_user(pool: &rocket::State<PgPool>, user: Json<NewUserJson>) -> Result<Json<UserJson>, (Status, String)>  {
-    let new_user = if let Ok(new_user) = user.to_new_user() {
+    let new_user = if let Ok(new_user) = user.0.to_new_user() {
         new_user
     } else {
         return Err((Status::BadRequest, "Invalid data".to_string()));
@@ -40,6 +41,10 @@ pub async fn email_available(
     pool: &rocket::State<PgPool>, 
     email: String, 
 ) -> (Status, (ContentType, String)) {
+    let email = match Email::try_from(email) {
+        Ok(email) => email,
+        Err(e) => return (Status::BadRequest, (ContentType::Plain, e.to_string()))
+    };
     let is_available = !use_cases::is_user_exist::execute(
         pool.inner(),
         &UserRepository {}, 
@@ -57,6 +62,10 @@ pub async fn phone_number_available(
     pool: &rocket::State<PgPool>, 
     phone_number: String
 ) -> (Status, (ContentType, String)) {
+    let phone_number = match PhoneNumber::try_from(phone_number) {
+        Ok(phone_number) => phone_number,
+        Err(e) => return (Status::BadRequest, (ContentType::Plain, e.to_string()))
+    };
     let is_available = !use_cases::is_user_exist::execute(
         pool.inner(),
         &UserRepository {}, 
@@ -109,14 +118,31 @@ pub async fn login(
     credentials: Json<Credentials>,
 ) -> Result<Json<JsonToken>, status::Unauthorized<String>> {
     let invalid_msg = "invalid credentials".to_string();
-
+    let email = match credentials.0.email {
+        Some(email) => match Email::try_from(email) {
+            Ok(email) => Some(email),
+            Err(_) => return Err(status::Unauthorized(Some(invalid_msg))),
+        },
+        None => None,
+    };
+    let phone_number = match credentials.0.phone_number {
+        Some(phone_number) => match PhoneNumber::try_from(phone_number) {
+            Ok(phone_number) => Some(phone_number),
+            Err(_) => return Err(status::Unauthorized(Some(invalid_msg))),
+        },
+        None => None,
+    };
+    let password = match Password::try_from(credentials.0.password) {
+        Ok(password) => password,
+        Err(_) => return Err(status::Unauthorized(Some(invalid_msg))),
+    };
     match use_cases::login_user::execute(
         pool.inner(),
         &UserRepository {},
         &state.secret,
-        &credentials.0.email, 
-        &credentials.0.phone_number, 
-        &credentials.0.password
+        email,
+        phone_number, 
+        password
     ).await {
         Ok(token) => Ok(Json(JsonToken { 
             authorization_token: token, 

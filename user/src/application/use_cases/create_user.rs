@@ -1,10 +1,6 @@
-use chrono::{DateTime, Utc};
-
 use super::{super::port::driven::user_repository::UserRepositoryTrait, utils};
 use crate::{
-    domain::user::{
-        User, Email, PhoneNumber, Password, FirstName, LastName, Birthday, Nationality, Language
-    }, 
+    domain::user::User, 
     application::port::driven::user_repository::NewUser
 };
 use super::is_user_exist;
@@ -17,15 +13,13 @@ pub enum CreateError {
     Conflict(String)
 }
 
-pub async fn execute<T>(conn: &T, repo: &impl UserRepositoryTrait<T>, mut new_user: NewUser) -> Result<User, CreateError> {
-    // validate data
-    new_user = validate_data(new_user)?;  
+pub async fn execute<T>(conn: &T, repo: &impl UserRepositoryTrait<T>, mut new_user: NewUser) -> Result<User, CreateError> { 
     // verify no user with same email or phone number
     if is_user_exist::execute(conn, repo, &new_user.email, &new_user.phone_number).await {
         return Err(CreateError::Conflict("email or phone already in use".to_string()))
     }
     // hash password
-    new_user.hashed_password = if let Ok(hashed_password) = utils::hash_password(new_user.password.unwrap()) {
+    new_user.hashed_password = if let Ok(hashed_password) = utils::hash_password(new_user.password.unwrap().into()) {
         Some(hashed_password)
     } else {
         return Err(CreateError::InvalidData("Invalid password".to_string()));
@@ -38,44 +32,6 @@ pub async fn execute<T>(conn: &T, repo: &impl UserRepositoryTrait<T>, mut new_us
     }
 }
 
-fn validate_data(mut new_user: NewUser) -> Result<NewUser, CreateError> {
-    new_user.email = evaluate::<Email, String>(new_user.email)?;
-    new_user.phone_number = evaluate::<PhoneNumber, String>(new_user.phone_number)?;
-    new_user.password = evaluate::<Password, String>(new_user.password)?;
-    new_user.first_name = evaluate::<FirstName, String>(Some(new_user.first_name))?.unwrap();
-    new_user.last_name = evaluate::<LastName, String>(Some(new_user.last_name))?.unwrap();
-    new_user.birthday = evaluate::<Birthday, DateTime<Utc>>(Some(new_user.birthday))?.unwrap();
-    new_user.nationality = evaluate::<Nationality, String>(Some(new_user.nationality))?.unwrap();
-    let mut temp_languages: Vec<String> = Vec::new();
-    for language in new_user.languages {
-        if let Ok(language) = evaluate::<Language, String>(Some(language)) {
-            temp_languages.push(language.unwrap());
-        } else {
-            return Err(CreateError::InvalidData("Invalid language".to_string()));
-        }
-    }
-    new_user.languages = temp_languages;   
-    Ok(new_user)
-}
-
-fn evaluate<T,E>(item: Option<E>) -> Result<Option<E>, CreateError> 
-where 
-    T: std::convert::TryFrom<E>,
-    E: std::convert::From<T>,
-    <T as TryFrom<E>>::Error: std::fmt::Display
-{
-
-    if let Some(some) = item {
-        match T::try_from(some) {
-            Ok(some) => Ok(Some(some.into())),
-            Err(some) => Err(CreateError::InvalidData(some.to_string()))
-        }
-    } else {
-        Ok(None)
-    }
-}
-
-
 #[cfg(test)]
 mod tests {
     use std::sync::Mutex;
@@ -85,7 +41,7 @@ mod tests {
     use rocket::tokio;
     use uuid::Uuid;
     use super::*;
-    use crate::domain::user::Id;
+    use crate::domain::user::{Id, Email, PhoneNumber, Password, FirstName, LastName, Birthday, Nationality, Language};
     use crate::adapter::driven::persistence::in_memory_repository::InMemoryRepository;
     
 
@@ -151,20 +107,25 @@ mod tests {
         let conn = Mutex::new(vec![]);
         let repo = InMemoryRepository {};
         let new_user = NewUser {
-            email: Some("some_2@some.some".to_string()),
-            phone_number: Some("+528331114146".to_string()),
-            password: Some("Password123!".to_string()),
+            email: Some(Email::try_from("some_2@some.some".to_string()).unwrap()),
+            phone_number: Some(PhoneNumber::try_from("+528331114146".to_string()).unwrap()),
+            password: Some(Password::try_from("Password123!".to_string()).unwrap()),
             hashed_password: None,
-            first_name: "Victor Eduardo".to_string(),
-            last_name: "Garcia Najera".to_string(),
-            birthday: NaiveDate::from_ymd_opt(1990, 1, 1)
-                .unwrap()
-                .and_hms_opt(0, 0, 0)
-                .unwrap()
-                .and_local_timezone(Utc)
-                .unwrap(),
-            nationality: "MEX".to_string(),
-            languages: vec!["ES".to_string(), "EN".to_string()],
+            first_name: FirstName::try_from("Victor Eduardo".to_string()).unwrap(),
+            last_name: LastName::try_from("Garcia Najera".to_string()).unwrap(),
+            birthday: Birthday::try_from(
+                NaiveDate::from_ymd_opt(1990, 1, 1)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap()
+                    .and_local_timezone(Utc)
+                    .unwrap()
+            ).unwrap(),
+            nationality: Nationality::try_from("MEX".to_string()).unwrap(),
+            languages: vec![
+                Language::try_from("ES".to_string()).unwrap(), 
+                Language::try_from("EN".to_string()).unwrap(), 
+            ],
         };
 
         let res = execute(&conn, &repo, new_user).await;

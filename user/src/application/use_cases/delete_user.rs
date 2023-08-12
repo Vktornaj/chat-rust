@@ -58,7 +58,7 @@ mod tests {
             }, 
             use_cases::create_user
         }, 
-        domain::user::Id
+        domain::user::{Id, Email, PhoneNumber, Password, FirstName, LastName, Birthday, Nationality, Language}
     };
     use crate::adapter::driven::persistence::in_memory_repository::InMemoryRepository;
 
@@ -69,20 +69,25 @@ mod tests {
         let repo = InMemoryRepository {};
         let password = "Password123!".to_string();
         let new_user = NewUser {
-            email: Some("some_2@some.some".to_string()),
-            phone_number: Some("+528331114146".to_string()),
-            password: Some(password.clone()),
+            email: Some(Email::try_from("some_2@some.some".to_string()).unwrap()),
+            phone_number: Some(PhoneNumber::try_from("+528331114146".to_string()).unwrap()),
+            password: Some(Password::try_from("Password123!".to_string()).unwrap()),
             hashed_password: None,
-            first_name: "Victor Eduardo".to_string(),
-            last_name: "Garcia Najera".to_string(),
-            birthday: NaiveDate::from_ymd_opt(1990, 1, 1)
-                .unwrap()
-                .and_hms_opt(0, 0, 0)
-                .unwrap()
-                .and_local_timezone(Utc)
-                .unwrap(),
-            nationality: "MEX".to_string(),
-            languages: vec!["ES".to_string(), "EN".to_string()],
+            first_name: FirstName::try_from("Victor Eduardo".to_string()).unwrap(),
+            last_name: LastName::try_from("Garcia Najera".to_string()).unwrap(),
+            birthday: Birthday::try_from(
+                NaiveDate::from_ymd_opt(1990, 1, 1)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap()
+                    .and_local_timezone(Utc)
+                    .unwrap()
+            ).unwrap(),
+            nationality: Nationality::try_from("MEX".to_string()).unwrap(),
+            languages: vec![
+                Language::try_from("ES".to_string()).unwrap(), 
+                Language::try_from("EN".to_string()).unwrap(), 
+            ],
         };
 
         let res = create_user::execute(&conn, &repo, new_user).await;
@@ -126,20 +131,25 @@ mod tests {
         let repo = InMemoryRepository {};
         let password = "Password123!".to_string();
         let new_user = NewUser {
-            email: Some("some_2@some.some".to_string()),
-            phone_number: Some("+528331114146".to_string()),
-            password: Some(password.clone()),
+            email: Some(Email::try_from("some_2@some.some".to_string()).unwrap()),
+            phone_number: Some(PhoneNumber::try_from("+528331114146".to_string()).unwrap()),
+            password: Some(Password::try_from("Password123!".to_string()).unwrap()),
             hashed_password: None,
-            first_name: "Victor Eduardo".to_string(),
-            last_name: "Garcia Najera".to_string(),
-            birthday: NaiveDate::from_ymd_opt(1990, 1, 1)
-                .unwrap()
-                .and_hms_opt(0, 0, 0)
-                .unwrap()
-                .and_local_timezone(Utc)
-                .unwrap(),
-            nationality: "MEX".to_string(),
-            languages: vec!["ES".to_string(), "EN".to_string()],
+            first_name: FirstName::try_from("Victor Eduardo".to_string()).unwrap(),
+            last_name: LastName::try_from("Garcia Najera".to_string()).unwrap(),
+            birthday: Birthday::try_from(
+                NaiveDate::from_ymd_opt(1990, 1, 1)
+                    .unwrap()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap()
+                    .and_local_timezone(Utc)
+                    .unwrap()
+            ).unwrap(),
+            nationality: Nationality::try_from("MEX".to_string()).unwrap(),
+            languages: vec![
+                Language::try_from("ES".to_string()).unwrap(), 
+                Language::try_from("EN".to_string()).unwrap(), 
+            ],
         };
 
         let res = create_user::execute(&conn, &repo, new_user).await;

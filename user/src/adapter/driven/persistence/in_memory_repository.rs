@@ -31,7 +31,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             return Err(errors::RepoSelectError::Unknown("Failed to convert id".to_string()))
         };
         let res = lock.iter().filter(|x| x.id.as_ref().unwrap() == &id_)
-            .map(|x| x.clone()).collect::<Vec<UserDomain>>();
+            .map(|x| x).collect::<Vec<&UserDomain>>();
         if res.len() == 0 {
             return Err(errors::RepoSelectError::NotFound)
         }
@@ -41,7 +41,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
     async fn find_by_criteria(
         &self, 
         conn: &Mutex<Vec<UserDomain>>,
-        find_user: &FindUser,
+        find_user: FindUser,
         offset: i64,
         limit: i64,
     ) -> Result<Vec<UserDomain>, errors::RepoSelectError> {
@@ -50,46 +50,46 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             Err(_) => return Err(errors::RepoSelectError::Unknown("Failed to lock mutex".to_string()))
         };
         let res = lock.iter()
-        .filter(|x| {
-            if let Some(email) = &find_user.email {
-                if x.email != Some(Email::try_from(email.clone()).unwrap()) {
-                    return false
-                }
-            }
-            if let Some(phone_number) = &find_user.phone_number {
-                if x.phone_number != Some(PhoneNumber::try_from(phone_number.clone()).unwrap()) {
-                    return false
-                }
-            }
-            if let Some(birthday) = &find_user.birthday {
-                if let Some(birthday_from) = &birthday.0 {
-                    if &Into::<DateTime<Utc>>::into(x.birthday.clone().unwrap()) < birthday_from {
+            .filter(|x| {
+                if let Some(email) = &find_user.email {
+                    if x.email.as_ref() != Some(email) {
                         return false
                     }
                 }
-                if let Some(birthday_to) = &birthday.1 {
-                    if &Into::<DateTime<Utc>>::into(x.birthday.clone().unwrap()) > birthday_to {
+                if let Some(phone_number) = &find_user.phone_number {
+                    if x.phone_number.as_ref() != Some(phone_number) {
                         return false
                     }
                 }
-            }
-            if let Some(nationality) = &find_user.nationality {
-                if &Into::<String>::into(x.nationality.clone()) == nationality {
-                    return false
+                if let Some(birthday) = &find_user.birthday {
+                    if let Some(birthday_from) = birthday.0 {
+                        if x.birthday.as_ref().unwrap() < &Birthday::try_from(birthday_from).unwrap() {
+                            return false
+                        }
+                    }
+                    if let Some(birthday_to) = birthday.1 {
+                        if x.birthday.as_ref().unwrap() > &Birthday::try_from(birthday_to).unwrap() {
+                            return false
+                        }
+                    }
                 }
-            }
-            if let Some(languages) = &find_user.languages {
-                if !x.languages.clone().unwrap().iter()
-                    .any(|l| languages.contains(&Into::<String>::into(l.clone()))) {
-                    return false
+                if let Some(nationality) = &find_user.nationality {
+                    if &x.nationality == nationality {
+                        return false
+                    }
                 }
-            }
-            return true
-        })
-        .skip(offset as usize)
-        .take(limit as usize)
-        .map(|x| x.clone())
-        .collect();
+                if let Some(languages) = &find_user.languages {
+                    if !x.languages.as_ref().unwrap().iter()
+                        .any(|l| languages.contains(&l)) {
+                        return false
+                    }
+                }
+                return true
+            })
+            .skip(offset as usize)
+            .take(limit as usize)
+            .map(|x| x.clone())
+            .collect();
         Ok(res)
     }
 
@@ -99,28 +99,28 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             Err(_) => return Err(errors::RepoCreateError::Unknown("Failed to lock mutex".to_string()))
         };
         if let Some(email) = new_user.email {
-            if lock.iter().any(|u| u.email == Some(Email::try_from(email.clone()).unwrap())) {
+            if lock.iter().any(|u| u.email.as_ref() == Some(&email)) {
                 return Err(errors::RepoCreateError::Conflict("Email already in use".to_string()))
             }
             new_user.email = Some(email);
         }
         if let Some(phone_number) = new_user.phone_number {
-            if lock.iter().any(|u| u.phone_number == Some(PhoneNumber::try_from(phone_number.clone()).unwrap())) {
+            if lock.iter().any(|u| u.phone_number.as_ref() == Some(&phone_number)) {
                 return Err(errors::RepoCreateError::Conflict("Phone number already in use".to_string()))
             }
             new_user.phone_number = Some(phone_number);
         }
         let user = UserDomain {
             id: Some(Id::try_from(uuid::Uuid::new_v4()).unwrap()),
-            email: Some(Email::try_from(new_user.email.unwrap()).unwrap()),
-            phone_number: Some(PhoneNumber::try_from(new_user.phone_number.unwrap()).unwrap()),
+            email: new_user.email,
+            phone_number: new_user.phone_number,
             password: None,
             hashed_password: new_user.hashed_password,
-            first_name: Some(FirstName::try_from(new_user.first_name).unwrap()),
-            last_name: Some(LastName::try_from(new_user.last_name).unwrap()),
-            birthday: Some(Birthday::try_from(new_user.birthday).unwrap()),
-            nationality: Nationality::try_from(new_user.nationality).unwrap(),
-            languages: Some(new_user.languages.into_iter().map(|x| (Language::try_from(x).unwrap())).collect()),
+            first_name: Some(new_user.first_name),
+            last_name: Some(new_user.last_name),
+            birthday: Some(new_user.birthday),
+            nationality: new_user.nationality,
+            languages: Some(new_user.languages),
             created_at: Some(Utc::now()),
             updated_at: Some(Utc::now())
         };
@@ -142,25 +142,25 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
         let mut user = lock.iter_mut().find(|x| x.id.as_ref().unwrap() == &id).unwrap();
 
         if let Some(email) = update_user.email {
-            user.email = email.map(|x| Email::try_from(x).unwrap());
+            user.email = email;
         }
         if let Some(phone_number) = update_user.phone_number {
-            user.phone_number = Some(PhoneNumber::try_from(phone_number.unwrap()).unwrap());
+            user.phone_number = phone_number;
         }
         if let Some(hashed_password) = update_user.hashed_password {
             user.hashed_password = Some(hashed_password.unwrap());
         }
         if let Some(first_name) = update_user.first_name {
-            user.first_name = Some(FirstName::try_from(first_name.unwrap()).unwrap());
+            user.first_name = first_name;
         }
         if let Some(last_name) = update_user.last_name {
-            user.last_name = Some(LastName::try_from(last_name.unwrap()).unwrap());
+            user.last_name = last_name;
         }
         if let Some(birthday) = update_user.birthday {
-            user.birthday = Some(Birthday::try_from(birthday.unwrap()).unwrap());
+            user.birthday = birthday;
         }
         if let Some(nationality) = update_user.nationality {
-            user.nationality = Nationality::try_from(nationality.unwrap()).unwrap();
+            user.nationality = nationality.unwrap();
         }
         Ok(user.clone())
     }

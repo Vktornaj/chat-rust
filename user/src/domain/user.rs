@@ -289,7 +289,7 @@ mod tests_last_name {
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, PartialOrd)]
 pub struct Birthday(DateTime<Utc>);
 
 impl TryFrom<DateTime<Utc>> for Birthday {

@@ -1,8 +1,8 @@
-use chrono::{Utc, TimeZone, ParseError};
+use chrono::{Utc, TimeZone};
 use serde::{Serialize, Deserialize};
 
 use common::config::DATE_FORMAT;
-use crate::{domain::user::User, application::port::driven::user_repository::NewUser};
+use crate::{domain::user::{User, Email, ErrorMsg, PhoneNumber, Password, FirstName, LastName, Birthday, Nationality, Language}, application::port::driven::user_repository::NewUser};
 
 
 #[derive(Serialize, Deserialize)]
@@ -44,17 +44,23 @@ pub struct NewUserJson {
 }
 
 impl NewUserJson {
-    pub fn to_new_user(&self) -> Result<NewUser, ParseError> {
+    pub fn to_new_user(self) -> Result<NewUser, ErrorMsg> {
+        let date = Utc.datetime_from_str(&self.birthday, DATE_FORMAT).unwrap();
+        let languages: Result<Vec<Language>, ErrorMsg> = self.languages.into_iter()
+            .map(|x| Language::try_from(x))
+            .collect();
+
         Ok(NewUser {
-            email: self.email.clone(),
-            phone_number: self.phone_number.clone(),
-            password: Some(self.password.clone()),
+            email: self.email.map(|x| Email::try_from(x)).transpose()?,
+            phone_number: self.phone_number.map(|x| PhoneNumber::try_from(x)).transpose()?,
+            password: Some(Password::try_from(self.password)?),
             hashed_password: None,
-            first_name: self.first_name.clone(),
-            last_name: self.last_name.clone(),
-            birthday: Utc.datetime_from_str(&self.birthday, DATE_FORMAT)?,
-            nationality: self.nationality.clone(),
-            languages:  self.languages.clone(),
+            first_name: FirstName::try_from(self.first_name)?,
+            last_name: LastName::try_from(self.last_name)?,
+            birthday: Birthday::try_from(date)?,
+            nationality: Nationality::try_from(self.nationality)?,
+            languages: languages?,
+            
         })
     }
 }
