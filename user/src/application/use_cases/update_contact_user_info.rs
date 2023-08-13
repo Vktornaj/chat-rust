@@ -1,7 +1,14 @@
 use auth::domain::auth::Auth;
 
-use super::{super::port::driven::user_repository::UserRepositoryTrait, utils};
-use crate::{domain::user::User, application::port::driven::user_repository::UpdateUser};
+use super::super::port::driven::user_repository::UserRepositoryTrait;
+use crate::{
+    domain::{
+        user::User, types::{
+            password::Password, email::Email, phone_number::PhoneNumber
+        }
+    }, 
+    application::port::driven::user_repository::UpdateUser
+};
 
 
 #[derive(Debug)]
@@ -10,16 +17,45 @@ pub enum UpdateError {
     Unautorized,
     Unknown(String),
     Conflict(String),
+    InvalidData(String),
+}
+
+pub struct Payload {
+    password: String,
+    email: Option<String>,
+    phone_number: Option<String>,
 }
 
 pub async fn execute<T>(
     conn: &T, 
     repo: &impl UserRepositoryTrait<T>, 
-    password: String,
-    update_user: UpdateUser,
     secret: &[u8],
-    token: &String
+    token: &String,
+    payload: Payload,
 ) -> Result<User, UpdateError> {
+    let password = if let Ok(password) = Password::try_from(payload.password) {
+        password
+    } else {
+        return Err(UpdateError::Unautorized);
+    };
+    let email = if let Some(email) = payload.email {
+        if let Ok(email) = Email::try_from(email) {
+            Some(Some(email))
+        } else {
+            return Err(UpdateError::InvalidData("Invalid email".to_string()));
+        }
+    } else {
+        None
+    };
+    let phone_number = if let Some(phone_number) = payload.phone_number {
+        if let Ok(phone_number) = PhoneNumber::try_from(phone_number) {
+            Some(Some(phone_number))
+        } else {
+            return Err(UpdateError::InvalidData("Invalid phone number".to_string()));
+        }
+    } else {
+        None
+    };
     // verify user exist and token is valid
     let id = if let Ok(auth) = Auth::from_token(token, &secret) {
         auth.id
@@ -28,7 +64,7 @@ pub async fn execute<T>(
     };
     // verify user exists and password match
     if let Ok(user) = repo.find_by_id(conn, id.into()).await {
-        if utils::verify_password(&user.hashed_password.unwrap(), &password).is_err() {
+        if password.verify_password(&user.hashed_password).is_err() {
             return Err(UpdateError::Unautorized);
         }
     } else {
@@ -37,8 +73,8 @@ pub async fn execute<T>(
     // update sensitive info
     let user_update = UpdateUser {
         id: id.into(),
-        email: update_user.email,
-        phone_number: update_user.phone_number,
+        email,
+        phone_number,
         ..Default::default()
     };
     match repo.update(conn, user_update).await {

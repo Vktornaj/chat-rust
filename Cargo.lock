@@ -2578,6 +2578,7 @@ dependencies = [
  "regex",
  "rocket",
  "serde",
+ "serde_with",
  "sqlx",
  "toml",
  "uuid",

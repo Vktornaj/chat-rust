@@ -1,14 +1,23 @@
 extern crate rocket;
 
+use chrono::{Utc, TimeZone};
+use common::config::DATE_FORMAT;
 use rocket::http::{Status, ContentType};
 use rocket::response::status;
-use rocket::{get, post, State};
-use rocket::serde::{json::Json, Serialize, Deserialize};
+use rocket::{get, post, State, delete, put};
+use rocket::serde::json::Json;
 use sqlx::PgPool;
 
-use crate::adapter::driving::web::schemas::user::{NewUserJson, UserJson};
+use crate::adapter::driving::web::schemas::user::{
+    NewUserJson, 
+    UserJson, 
+    UserInfo, 
+    Credentials, 
+    JsonToken, 
+    Credentials2, 
+    Credentials3
+};
 use crate::application::use_cases;
-use crate::domain::user::{Email, PhoneNumber, Password};
 use common::{config::AppState, token::Token};
 
 // Persistence
@@ -17,15 +26,24 @@ use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 
 #[post("/register", format = "json", data = "<user>")]
 pub async fn create_user(pool: &rocket::State<PgPool>, user: Json<NewUserJson>) -> Result<Json<UserJson>, (Status, String)>  {
-    let new_user = if let Ok(new_user) = user.0.to_new_user() {
-        new_user
+    let date = if let Ok(date) = Utc.datetime_from_str(&user.birthday, DATE_FORMAT) {
+        date
     } else {
-        return Err((Status::BadRequest, "Invalid data".to_string()));
+        return Err((Status::BadRequest, "Invalid birthday format".into()));
     };
     match use_cases::create_user::execute(
         pool.inner(),
         &UserRepository {},
-        new_user
+        use_cases::create_user::Payload {
+            email: user.0.email,
+            phone_number: user.0.phone_number,
+            password: user.0.password,
+            first_name: user.0.first_name,
+            last_name: user.0.last_name,
+            birthday: date,
+            nationality: user.0.nationality,
+            languages: user.0.languages
+        }
     ).await {
         Ok(user) => Ok(Json(UserJson::from_user(user))),
         Err(error) => match error {
@@ -41,16 +59,19 @@ pub async fn email_available(
     pool: &rocket::State<PgPool>, 
     email: String, 
 ) -> (Status, (ContentType, String)) {
-    let email = match Email::try_from(email) {
-        Ok(email) => email,
-        Err(e) => return (Status::BadRequest, (ContentType::Plain, e.to_string()))
-    };
-    let is_available = !use_cases::is_user_exist::execute(
+    let res = use_cases::is_data_in_use::execute(
         pool.inner(),
         &UserRepository {}, 
-        &Some(email),
-        &None
+        use_cases::is_data_in_use::Payload {
+            email: Some(email),
+            phone_number: None
+        }
     ).await;
+    let is_available = if let Ok(res) = res {
+        !res
+    } else {
+        return (Status::InternalServerError, (ContentType::Plain, "".into()));
+    };
     (
         Status::Ok,
         (ContentType::JSON, format!("{{ \"isAvailable\": \"{is_available}\" }}"))
@@ -62,16 +83,19 @@ pub async fn phone_number_available(
     pool: &rocket::State<PgPool>, 
     phone_number: String
 ) -> (Status, (ContentType, String)) {
-    let phone_number = match PhoneNumber::try_from(phone_number) {
-        Ok(phone_number) => phone_number,
-        Err(e) => return (Status::BadRequest, (ContentType::Plain, e.to_string()))
-    };
-    let is_available = !use_cases::is_user_exist::execute(
+    let res = use_cases::is_data_in_use::execute(
         pool.inner(),
         &UserRepository {}, 
-        &None,
-        &Some(phone_number)
+        use_cases::is_data_in_use::Payload {
+            email: None,
+            phone_number: Some(phone_number)
+        }
     ).await;
+    let is_available = if let Ok(res) = res {
+        !res
+    } else {
+        return (Status::InternalServerError, (ContentType::Plain, "".into()));
+    };
     (
         Status::Ok,
         (ContentType::JSON, format!("{{ \"isAvailable\": \"{is_available}\" }}"))
@@ -98,19 +122,6 @@ pub async fn get_user_info(
     }   
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Credentials {
-    email: Option<String>,
-    phone_number: Option<String>,
-    password: String,
-}
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct JsonToken {
-    pub authorization_token: String,
-    pub token_type: String,
-}
 #[post("/login", format = "json", data = "<credentials>")]
 pub async fn login(
     pool: &rocket::State<PgPool>,
@@ -118,36 +129,96 @@ pub async fn login(
     credentials: Json<Credentials>,
 ) -> Result<Json<JsonToken>, status::Unauthorized<String>> {
     let invalid_msg = "invalid credentials".to_string();
-    let email = match credentials.0.email {
-        Some(email) => match Email::try_from(email) {
-            Ok(email) => Some(email),
-            Err(_) => return Err(status::Unauthorized(Some(invalid_msg))),
-        },
-        None => None,
-    };
-    let phone_number = match credentials.0.phone_number {
-        Some(phone_number) => match PhoneNumber::try_from(phone_number) {
-            Ok(phone_number) => Some(phone_number),
-            Err(_) => return Err(status::Unauthorized(Some(invalid_msg))),
-        },
-        None => None,
-    };
-    let password = match Password::try_from(credentials.0.password) {
-        Ok(password) => password,
-        Err(_) => return Err(status::Unauthorized(Some(invalid_msg))),
-    };
     match use_cases::login_user::execute(
         pool.inner(),
         &UserRepository {},
         &state.secret,
-        email,
-        phone_number, 
-        password
+        use_cases::login_user::Payload {
+            email: credentials.0.email,
+            phone_number: credentials.0.phone_number,
+            password: credentials.0.password,
+        }
     ).await {
         Ok(token) => Ok(Json(JsonToken { 
             authorization_token: token, 
             token_type: "Bearer".to_string() 
         })),
         Err(_) => Err(status::Unauthorized(Some(invalid_msg))),
+    }
+}
+
+#[delete("/account", format = "json", data = "<credentials>")]
+pub async fn delete_account(
+    pool: &rocket::State<PgPool>,
+    state: &State<AppState>,
+    token: Token,
+    credentials: Json<Credentials2>,
+) -> Status {
+    match use_cases::delete_user::execute(
+        pool.inner(),
+        &UserRepository {},
+        &state.secret,
+        &token.value,
+        use_cases::delete_user::Payload {
+            password: credentials.0.password,
+        }
+    ).await {
+        Ok(_) => Status::Ok,
+        Err(_) => Status::Unauthorized,
+    }
+}
+
+#[put("/password", format = "json", data = "<credentials>")]
+pub async fn update_password(
+    pool: &rocket::State<PgPool>,
+    state: &State<AppState>,
+    token: Token,
+    credentials: Json<Credentials3>,
+) -> Status {
+    match use_cases::update_password::execute(
+        pool.inner(), 
+        &UserRepository {}, 
+        &state.secret,
+        &token.value,
+        use_cases::update_password::Payload {
+            password: credentials.0.password,
+            new_password: credentials.0.new_password,
+        }
+    ).await {
+        Ok(_) => Status::Ok,
+        Err(_) => Status::Unauthorized
+    }
+}
+
+#[put("/user", format = "json", data = "<user_info>")]
+pub async fn update_user_info(
+    pool: &rocket::State<PgPool>,
+    state: &State<AppState>,
+    token: Token,
+    user_info: Json<UserInfo>,
+) -> Result<Json<UserJson>, status::BadRequest<String>>  {
+    let date = if let Some(date) = user_info.0.birthday {
+        match Utc.datetime_from_str(&date, DATE_FORMAT) {
+            Ok(date) => Some(date),
+            Err(_) => return Err(status::BadRequest(Some("Invalid date format".into()))),
+        }
+    } else {
+        None
+    };
+    match use_cases::update_user_info::execute(
+        pool.inner(), 
+        &UserRepository {}, 
+        &state.secret,
+        &token.value,
+        use_cases::update_user_info::Payload {
+            first_name: user_info.0.first_name,
+            last_name: user_info.0.last_name,
+            birthday: date,
+            nationality: user_info.0.nationality,
+            languages: user_info.0.languages,
+        }
+    ).await {
+        Ok(user) => Ok(Json(UserJson::from_user(user))),
+        Err(e) => Err(status::BadRequest(Some(format!("{:?}", e)))),
     }
 }

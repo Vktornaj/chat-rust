@@ -1,16 +1,20 @@
 use std::sync::Mutex;
 use async_trait::async_trait;
-use chrono::{Utc, DateTime};
+use chrono::Utc;
 use uuid::Uuid;
 
 // use super::{user_repository::{UserRepositoryTrait, NewUser, UpdateUser, FindUser}, errors};
 use crate::{
-    domain::user::{
-        User as UserDomain, Email, PhoneNumber, Id, FirstName, LastName, Birthday, Nationality, Language
+    domain::{
+        user::{User as UserDomain, NewUser}, 
+        types::{
+            id::Id, 
+            birthday::Birthday
+        }
     }, 
     application::port::driven::{
         errors, user_repository::{
-            UserRepositoryTrait, FindUser, NewUser, UpdateUser
+            UserRepositoryTrait, FindUser, UpdateUser
         }
     }
 };
@@ -30,7 +34,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
         } else {
             return Err(errors::RepoSelectError::Unknown("Failed to convert id".to_string()))
         };
-        let res = lock.iter().filter(|x| x.id.as_ref().unwrap() == &id_)
+        let res = lock.iter().filter(|x| x.id == id_)
             .map(|x| x).collect::<Vec<&UserDomain>>();
         if res.len() == 0 {
             return Err(errors::RepoSelectError::NotFound)
@@ -63,12 +67,12 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
                 }
                 if let Some(birthday) = &find_user.birthday {
                     if let Some(birthday_from) = birthday.0 {
-                        if x.birthday.as_ref().unwrap() < &Birthday::try_from(birthday_from).unwrap() {
+                        if x.birthday < Birthday::try_from(birthday_from).unwrap() {
                             return false
                         }
                     }
                     if let Some(birthday_to) = birthday.1 {
-                        if x.birthday.as_ref().unwrap() > &Birthday::try_from(birthday_to).unwrap() {
+                        if x.birthday > Birthday::try_from(birthday_to).unwrap() {
                             return false
                         }
                     }
@@ -79,7 +83,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
                     }
                 }
                 if let Some(languages) = &find_user.languages {
-                    if !x.languages.as_ref().unwrap().iter()
+                    if !x.languages.iter()
                         .any(|l| languages.contains(&l)) {
                         return false
                     }
@@ -111,18 +115,17 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             new_user.phone_number = Some(phone_number);
         }
         let user = UserDomain {
-            id: Some(Id::try_from(uuid::Uuid::new_v4()).unwrap()),
+            id: Id::try_from(uuid::Uuid::new_v4()).unwrap(),
             email: new_user.email,
             phone_number: new_user.phone_number,
-            password: None,
             hashed_password: new_user.hashed_password,
-            first_name: Some(new_user.first_name),
-            last_name: Some(new_user.last_name),
-            birthday: Some(new_user.birthday),
+            first_name: new_user.first_name,
+            last_name: new_user.last_name,
+            birthday: new_user.birthday,
             nationality: new_user.nationality,
-            languages: Some(new_user.languages),
-            created_at: Some(Utc::now()),
-            updated_at: Some(Utc::now())
+            languages: new_user.languages,
+            created_at: Utc::now(),
+            updated_at: Utc::now()
         };
         lock.push(user.clone());
         Ok(user)
@@ -139,7 +142,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             return Err(errors::RepoUpdateError::Unknown("Failed to convert id".to_string()))
         };
 
-        let mut user = lock.iter_mut().find(|x| x.id.as_ref().unwrap() == &id).unwrap();
+        let mut user = lock.iter_mut().find(|x| x.id == id).unwrap();
 
         if let Some(email) = update_user.email {
             user.email = email;
@@ -148,7 +151,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             user.phone_number = phone_number;
         }
         if let Some(hashed_password) = update_user.hashed_password {
-            user.hashed_password = Some(hashed_password.unwrap());
+            user.hashed_password = hashed_password;
         }
         if let Some(first_name) = update_user.first_name {
             user.first_name = first_name;
@@ -160,7 +163,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             user.birthday = birthday;
         }
         if let Some(nationality) = update_user.nationality {
-            user.nationality = nationality.unwrap();
+            user.nationality = nationality;
         }
         Ok(user.clone())
     }
@@ -175,7 +178,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
         } else {
             return Err(errors::RepoDeleteError::Unknown("Failed to convert id".to_string()))
         };
-        let index = lock.iter().position(|x| x.id.as_ref().unwrap() == &id).unwrap();
+        let index = lock.iter().position(|x| x.id == id).unwrap();
         Ok(lock.remove(index))  
     }
 }

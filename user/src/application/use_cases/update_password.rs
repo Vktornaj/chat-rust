@@ -1,7 +1,12 @@
 use auth::domain::auth::Auth;
 
-use super::{super::port::driven::user_repository::UserRepositoryTrait, utils};
-use crate::{domain::user::User, application::port::driven::user_repository::UpdateUser};
+use super::super::port::driven::user_repository::UserRepositoryTrait;
+use crate::{
+    domain::{
+        user::User, types::password::Password
+    }, 
+    application::port::driven::user_repository::UpdateUser
+};
 
 
 #[derive(Debug)]
@@ -10,16 +15,31 @@ pub enum UpdateError {
     Unautorized,
     Unknown(String),
     Conflict(String),
+    InvalidData(String),
+}
+
+pub struct Payload {
+    pub password: String,
+    pub new_password: String,
 }
 
 pub async fn execute<T>(
     conn: &T, 
     repo: &impl UserRepositoryTrait<T>, 
-    password: String,
-    new_password: String,
     secret: &[u8],
-    token: &String
+    token: &String,
+    payload: Payload,
 ) -> Result<User, UpdateError> {
+    let password = if let Ok(password) = Password::try_from(payload.password) {
+        password
+    } else {
+        return Err(UpdateError::Unautorized);
+    };
+    let new_password = if let Ok(new_password) = Password::try_from(payload.new_password) {
+        new_password
+    } else {
+        return Err(UpdateError::InvalidData("Invalid new password".to_string()));
+    };
     // verify user exist and token is valid
     let id = if let Ok(auth) = Auth::from_token(token, &secret) {
         auth.id
@@ -28,14 +48,14 @@ pub async fn execute<T>(
     };
     // verify user exists and password match
     if let Ok(user) = repo.find_by_id(conn, id.into()).await {
-        if utils::verify_password(&user.hashed_password.unwrap(), &password).is_err() {
+        if password.verify_password(&user.hashed_password).is_err() {
             return Err(UpdateError::Unautorized);
         }
     } else {
         return Err(UpdateError::NotFound);
     };
     // hash new password
-    let hashed_password = if let Ok(hashed_password) = utils::hash_password(new_password) {
+    let hashed_password = if let Ok(hashed_password) = new_password.hash_password() {
         Some(hashed_password)
     } else {
         return Err(UpdateError::Unknown("Unknown error".to_string()));
@@ -43,7 +63,7 @@ pub async fn execute<T>(
     // update password
     let user_update = UpdateUser {
         id: id.into(),
-        hashed_password: Some(hashed_password),
+        hashed_password,
         ..Default::default()
     };
     match repo.update(conn, user_update).await {

@@ -9,23 +9,22 @@ use super::errors::{
     RepoUpdateError
 };
 
-use crate::domain::user::{User, Email, PhoneNumber, Password, FirstName, LastName, Birthday, Nationality, Language};
-
+use crate::domain::{
+    user::{User, NewUser}, 
+    types::{
+        email::Email, 
+        phone_number::PhoneNumber, 
+        language::Language, 
+        nationality::Nationality, 
+        first_name::FirstName, 
+        last_name::LastName, 
+        birthday::Birthday
+    }
+};
 
 pub struct DateRange(pub Option<DateTime<Utc>>, pub Option<DateTime<Utc>>);
 
-pub struct NewUser {
-    pub email: Option<Email>,
-    pub phone_number: Option<PhoneNumber>,
-    pub password: Option<Password>,
-    pub hashed_password: Option<String>,
-    pub first_name: FirstName,
-    pub last_name: LastName,
-    pub birthday: Birthday,
-    pub nationality: Nationality,
-    pub languages: Vec<Language>,
-}
-
+#[derive(Default)]
 pub struct FindUser {
     pub email: Option<Email>,
     pub phone_number: Option<PhoneNumber>,
@@ -40,29 +39,13 @@ pub struct UpdateUser {
     pub id: Uuid,
     pub email: Option<Option<Email>>,
     pub phone_number: Option<Option<PhoneNumber>>,
-    pub hashed_password: Option<Option<String>>,
-    pub first_name: Option<Option<FirstName>>,
-    pub last_name: Option<Option<LastName>>,
-    pub birthday: Option<Option<Birthday>>,    
-    pub nationality: Option<Option<Nationality>>,
-    pub languages: Option<Option<Vec<Language>>>,
+    pub hashed_password: Option<String>,
+    pub first_name: Option<FirstName>,
+    pub last_name: Option<LastName>,
+    pub birthday: Option<Birthday>,    
+    pub nationality: Option<Nationality>,
+    pub languages: Option<Vec<Language>>,
 }
-
-// impl Default for UpdateUser {
-//     fn default() -> Self { 
-//         UpdateUser { 
-//             id: (), 
-//             email: (), 
-//             phone_number: (), 
-//             hashed_password: (), 
-//             first_name: (), 
-//             last_name: (), 
-//             birthday: (), 
-//             nationality: (), 
-//             languages: () 
-//         }
-//     }
-// }
 
 // TODO: improve criteria
 #[async_trait]

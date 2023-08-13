@@ -1,8 +1,6 @@
-use chrono::{Utc, TimeZone};
 use serde::{Serialize, Deserialize};
 
-use common::config::DATE_FORMAT;
-use crate::{domain::user::{User, Email, ErrorMsg, PhoneNumber, Password, FirstName, LastName, Birthday, Nationality, Language}, application::port::driven::user_repository::NewUser};
+use crate::domain::user::User;
 
 
 #[derive(Serialize, Deserialize)]
@@ -10,10 +8,10 @@ use crate::{domain::user::{User, Email, ErrorMsg, PhoneNumber, Password, FirstNa
 pub struct UserJson {
     pub email: Option<String>,
     pub phone_number: Option<String>,
-    pub first_name: Option<String>,
-    pub last_name: Option<String>,
-    pub nationality: Option<String>,
-    pub languages: Option<Vec<String>>,
+    pub first_name: String,
+    pub last_name: String,
+    pub nationality: String,
+    pub languages: Vec<String>,
 }
 
 impl UserJson {
@@ -21,11 +19,10 @@ impl UserJson {
         UserJson { 
             email: user.email.map(|x| x.into()),
             phone_number: user.phone_number.map(|x| x.into()),
-            first_name: user.first_name.map(|x| x.into()), 
-            last_name: user.last_name.map(|x| x.into()),
-            nationality: Some(user.nationality.into()),
-            languages: user.languages.map(|x| x.into_iter()
-                .map(|x| x.into()).collect()),
+            first_name: user.first_name.into(), 
+            last_name: user.last_name.into(),
+            nationality: user.nationality.into(),
+            languages: user.languages.into_iter().map(|x| x.into()).collect(),
         }
     }
 }
@@ -43,24 +40,57 @@ pub struct NewUserJson {
     pub languages: Vec<String>,
 }
 
-impl NewUserJson {
-    pub fn to_new_user(self) -> Result<NewUser, ErrorMsg> {
-        let date = Utc.datetime_from_str(&self.birthday, DATE_FORMAT).unwrap();
-        let languages: Result<Vec<Language>, ErrorMsg> = self.languages.into_iter()
-            .map(|x| Language::try_from(x))
-            .collect();
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserInfo {
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub birthday: Option<String>,
+    pub nationality: Option<String>,
+    pub languages: Option<Vec<String>>
+}
 
-        Ok(NewUser {
-            email: self.email.map(|x| Email::try_from(x)).transpose()?,
-            phone_number: self.phone_number.map(|x| PhoneNumber::try_from(x)).transpose()?,
-            password: Some(Password::try_from(self.password)?),
-            hashed_password: None,
-            first_name: FirstName::try_from(self.first_name)?,
-            last_name: LastName::try_from(self.last_name)?,
-            birthday: Birthday::try_from(date)?,
-            nationality: Nationality::try_from(self.nationality)?,
-            languages: languages?,
-            
-        })
-    }
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserContactInfo {
+    #[serde(
+        default,                                    // <- important for deserialization
+        skip_serializing_if = "Option::is_none",    // <- important for serialization
+        with = "::serde_with::rust::double_option",
+    )]
+    pub email: Option<Option<String>>,
+    #[serde(
+        default,                                    // <- important for deserialization
+        skip_serializing_if = "Option::is_none",    // <- important for serialization
+        with = "::serde_with::rust::double_option",
+    )]
+    pub phone_number: Option<Option<String>>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Credentials {
+    pub email: Option<String>,
+    pub phone_number: Option<String>,
+    pub password: String,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JsonToken {
+    pub authorization_token: String,
+    pub token_type: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Credentials2 {
+    pub password: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Credentials3 {
+    pub password: String,
+    pub new_password: String,
 }
