@@ -30,6 +30,10 @@ pub async fn execute<T>(
     token: &String,
     payload: Payload,
 ) -> Result<User, UpdateError> {
+    if payload.password == payload.new_password {
+        return Err(UpdateError::Conflict("New password is the same as old password".to_string()));
+    }
+    // validate payload
     let password = if let Ok(password) = Password::try_from(payload.password) {
         password
     } else {

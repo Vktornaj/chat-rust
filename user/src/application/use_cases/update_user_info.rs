@@ -90,8 +90,24 @@ pub async fn execute<T>(
     } else {
         return Err(UpdateError::Unautorized);
     };
-    // verify user exists
-    if repo.find_by_id(conn, id.into()).await.is_err() {
+    // verify user exists and data is not the same
+    if let Ok(user) = repo.find_by_id(conn, id.into()).await {
+        if Some(user.first_name) == first_name {
+            return Err(UpdateError::Conflict("first_name is the same".into()));
+        }
+        if Some(user.last_name) == last_name {
+            return Err(UpdateError::Conflict("last_name is the same".into()));
+        }
+        if Some(user.birthday) == birthday {
+            return Err(UpdateError::Conflict("birthday is the same".into()));
+        }
+        if Some(user.nationality) == nationality {
+            return Err(UpdateError::Conflict("nationality is the same".into()));
+        }
+        if Some(user.languages) == languages {
+            return Err(UpdateError::Conflict("languages is the same".into()));
+        }
+    } else {
         return Err(UpdateError::NotFound);
     };
     // update only user not sensitive info

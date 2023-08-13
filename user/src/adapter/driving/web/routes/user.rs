@@ -222,3 +222,5 @@ pub async fn update_user_info(
         Err(e) => Err(status::BadRequest(Some(format!("{:?}", e)))),
     }
 }
+
+// TODO: implement update user contact info
