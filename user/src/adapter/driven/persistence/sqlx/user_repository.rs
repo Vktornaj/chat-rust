@@ -1,17 +1,19 @@
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use rocket::futures::future::join_all;
 use sqlx::query_builder::QueryBuilder;
-use sqlx::{Postgres, Pool, Row};
+use sqlx::{Postgres, Pool};
 use uuid::Uuid;
 
-use crate::application::port::driven::user_repository::{UserRepositoryTrait, UpdateUser, NewUser, FindUser};
+use crate::application::port::driven::user_repository::{UserRepositoryTrait, UpdateUser, FindUser};
 use crate::application::port::driven::errors::{
     RepoCreateError, 
     RepoDeleteError, 
     RepoSelectError, 
     RepoUpdateError,
 };
-use crate::domain::user::User as UserDomain;
+use crate::domain::types::error::ErrorMsg;
+use crate::domain::user::{User as UserDomain, NewUser};
 use super::models::user::User as UserDB;
 
 
@@ -30,7 +32,15 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         match user {
             Ok(user) => {
                 let user_id = user.id;
-                Ok(user.to_user_domain(get_languages(conn, &user_id).await.ok()))
+                let languages = if let Ok(languages) = get_languages(conn, &user_id).await {
+                    languages
+                } else {
+                    return Err(RepoSelectError::Unknown("Error getting languages".to_string()));
+                };
+                match user.to_user_domain(languages) {
+                    Ok(user) => Ok(user),
+                    Err(err) => Err(RepoSelectError::Unknown(err.to_string())),
+                }
             },
             Err(err) => match err {
                 sqlx::Error::RowNotFound => Err(RepoSelectError::NotFound),
@@ -43,7 +53,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
     async fn find_by_criteria(
         &self, 
         conn: &Pool<Postgres>,
-        find_user: &FindUser,
+        find_user: FindUser,
         offset: i64,
         limit: i64,        
     ) -> Result<Vec<UserDomain>, RepoSelectError> {
@@ -54,18 +64,20 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             query.push(" INNER JOIN languages ON users_languages.language_id = languages.id ");
         }
         query.push(" WHERE TRUE ");
-        if let Some(languages) = &find_user.languages {
+        if let Some(languages) = find_user.languages {
+            let languages = languages.into_iter()
+                .map(|x| Into::<String>::into(x)).collect::<Vec<String>>();
             query.push(" AND languages.code = ANY(");
             query.push_bind(languages);
             query.push(")");
         }
-        if let Some(email) = &find_user.email {
+        if let Some(email) = find_user.email {
             query.push(" AND email = ");
-            query.push_bind(email);
+            query.push_bind(Into::<String>::into(email));
         }
-        if let Some(phone_number) = &find_user.phone_number {
+        if let Some(phone_number) = find_user.phone_number {
             query.push(" AND phone_number = ");
-            query.push_bind(phone_number);
+            query.push_bind(Into::<String>::into(phone_number));
         }
         if let Some(birthday) = &find_user.birthday {
             query.push(" AND birthday >= ");
@@ -73,9 +85,9 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             query.push(" AND birthday < ");
             query.push_bind(birthday.1);
         }
-        if let Some(nationality) = &find_user.nationality {
+        if let Some(nationality) = find_user.nationality {
             query.push(" AND nationality = ");
-            query.push_bind(nationality);
+            query.push_bind(Into::<String>::into(nationality));
         }
         if let Some(created_at) = &find_user.created_at {
             query.push(" AND created_at >= ");
@@ -91,25 +103,39 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         // Execute the update query
         match query.build().fetch_all(conn).await {
             Ok(result) => {
-                let users = result.iter().map(|x| UserDB {
-                    id: x.get("id"),
-                    email: x.get("email"),
-                    phone_number: x.get("phone_number"),
-                    hashed_password: x.get("hashed_password"),
-                    first_name: x.get("first_name"),
-                    last_name: x.get("last_name"),
-                    birthday: x.get("birthday"),
-                    nationality: x.get("nationality"),
-                    created_at: x.get("created_at"),
-                    updated_at: x.get("updated_at"),
-                }).collect::<Vec<UserDB>>();
+                let res: Result<Vec<UserDB>, sqlx::Error> = result.iter()
+                    .map(|x| UserDB::from_pgrow(x))
+                    .collect();
+
+                let users = if let Ok(users) = res {
+                    users
+                } else {
+                    return Err(RepoSelectError::Unknown("Error getting users".to_string()));
+                };
+
                 let futures = users.iter()
                     .map(|x| get_languages(conn, &x.id));
-                let every_languages = join_all(futures).await;
-                Ok(users.into_iter().zip(every_languages)
-                    .map(|(user, tags)| {
-                        user.to_user_domain(tags.ok())
-                }).collect())
+
+                let every_languages: Result<Vec<Vec<String>>, RepoSelectError> = join_all(futures)
+                    .await
+                    .into_iter()
+                    .collect();
+
+                let every_languages = if let Ok(every_languages) = every_languages {
+                    every_languages
+                } else {
+                    return Err(RepoSelectError::Unknown("Error getting languages".to_string()));
+                };
+                
+                let users: Result<Vec<UserDomain>, ErrorMsg> = users.into_iter().zip(every_languages)
+                    .map(|(user, languages)| {
+                        user.to_user_domain(languages)
+                }).collect();
+
+                match users {
+                    Ok(users) => Ok(users),
+                    Err(err) => Err(RepoSelectError::Unknown(err.to_string())),
+                }
             },
             Err(err) => {
                 println!("{}", err.to_string());
@@ -123,14 +149,14 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             r#"
                 SELECT * FROM insert_user($1, $2, $3, $4, $5, $6, $7, $8);
             "#,
-            user.email,
-            user.phone_number,
-            user.hashed_password,
-            user.first_name,
-            user.last_name,
-            user.birthday,
-            user.nationality,
-            &user.languages
+            user.email.map(|x| Into::<String>::into(x)),
+            user.phone_number.map(|x| Into::<String>::into(x)),
+            Into::<String>::into(user.hashed_password),
+            Into::<String>::into(user.first_name),
+            Into::<String>::into(user.last_name),
+            Into::<DateTime<Utc>>::into(user.birthday),
+            Into::<String>::into(user.nationality),
+            &user.languages.into_iter().map(|x| x.into()).collect::<Vec<String>>()
         ).fetch_one(conn).await;
         match result {
             Ok(result) => {
@@ -139,15 +165,22 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                     email: result.email,
                     phone_number: result.phone_number,
                     hashed_password: result.hashed_password.unwrap(),
-                    first_name: result.first_name,
-                    last_name: result.last_name,
+                    first_name: result.first_name.unwrap(),
+                    last_name: result.last_name.unwrap(),
                     birthday: result.birthday.unwrap(),
                     nationality: result.nationality.unwrap(),
                     created_at: result.created_at.unwrap(),
                     updated_at: result.updated_at.unwrap()
                 };
-                Ok(user.to_user_domain(Some(get_languages(conn, &result.id.unwrap())
-                    .await.unwrap_or(Vec::new()))))
+                let user = if let Ok(languages) = get_languages(conn, &result.id.unwrap()).await {
+                    match user.to_user_domain(languages) {
+                        Ok(user) => user,
+                        Err(err) => return Err(RepoCreateError::Unknown(err.to_string()))
+                    }
+                } else {
+                    return Err(RepoCreateError::Unknown("Error getting user".to_string()));
+                };
+                Ok(user)
             },
             Err(err) => Err(RepoCreateError::Unknown(err.to_string()))
         }
@@ -158,31 +191,31 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
     
         if let Some(email) = user.email {
             query.push(" email = ");
-            query.push_bind(email);
+            query.push_bind(email.map(|x| Into::<String>::into(x)));
         }
         if let Some(phone_number) = user.phone_number {
             query.push(" phone_number = ");
-            query.push_bind(phone_number);
+            query.push_bind(phone_number.map(|x| Into::<String>::into(x)));
         }
         if let Some(hashed_password) = user.hashed_password {
             query.push(" hashed_password = ");
-            query.push_bind(hashed_password);
+            query.push_bind(Into::<String>::into(hashed_password));
         }
         if let Some(first_name) = user.first_name {
             query.push(" first_name = ");
-            query.push_bind(first_name);
+            query.push_bind(Into::<String>::into(first_name));
         }
         if let Some(last_name) = user.last_name {
             query.push(" last_name = ");
-            query.push_bind(last_name);
+            query.push_bind(Into::<String>::into(last_name));
         }
         if let Some(birthday) = user.birthday {
             query.push(" birthday = ");
-            query.push_bind(birthday);
+            query.push_bind(Into::<DateTime<Utc>>::into(birthday));
         }
         if let Some(nationality) = user.nationality {
             query.push(" nationality = ");
-            query.push_bind(nationality);
+            query.push_bind(Into::<String>::into(nationality));
         }
 
         // Add the WHERE clause with the user ID
@@ -226,8 +259,13 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         match result {
             Ok(result) => {
                 if let Some(user) = result {
-                    let languages = get_languages(conn, &user.id).await.unwrap_or(Vec::new());
-                    return Ok(user.to_user_domain(Some(languages)));
+                    match get_languages(conn, &user.id).await {
+                        Ok(languages) => match user.to_user_domain(languages) {
+                            Ok(user) => return Ok(user),
+                            Err(err) => return Err(RepoDeleteError::Unknown(err.to_string())),
+                        },
+                        Err(_) => return Err(RepoDeleteError::Unknown("Error getting languages".to_string())),
+                    }
                 } else {
                     return Err(RepoDeleteError::NotFound);
                 }

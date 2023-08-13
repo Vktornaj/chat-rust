@@ -9,46 +9,42 @@ use super::errors::{
     RepoUpdateError
 };
 
-use crate::domain::user::User;
-
+use crate::domain::{
+    user::{User, NewUser}, 
+    types::{
+        email::Email, 
+        phone_number::PhoneNumber, 
+        language::Language, 
+        nationality::Nationality, 
+        first_name::FirstName, 
+        last_name::LastName, 
+        birthday::Birthday
+    }
+};
 
 pub struct DateRange(pub Option<DateTime<Utc>>, pub Option<DateTime<Utc>>);
 
-pub struct NewUser {
-    pub email: Option<String>,
-    pub phone_number: Option<String>,
-    pub password: Option<String>,
-    pub hashed_password: Option<String>,
-    pub first_name: String,
-    pub last_name: String,
-    pub birthday: DateTime<Utc>,
-    pub nationality: String,
-    pub languages: Vec<String>,
-}
-
-impl NewUser {
-    
-}
-
+#[derive(Default)]
 pub struct FindUser {
-    pub email: Option<String>,
-    pub phone_number: Option<String>,
+    pub email: Option<Email>,
+    pub phone_number: Option<PhoneNumber>,
     pub birthday: Option<DateRange>,
-    pub nationality: Option<String>,
-    pub languages: Option<Vec<String>>,
+    pub languages: Option<Vec<Language>>,
+    pub nationality: Option<Nationality>,
     pub created_at: Option<DateRange>,
 }
 
+#[derive(Default)]
 pub struct UpdateUser {
     pub id: Uuid,
-    pub email: Option<Option<String>>,
-    pub phone_number: Option<Option<String>>,
-    pub hashed_password: Option<Option<String>>,
-    pub first_name: Option<Option<String>>,
-    pub last_name: Option<Option<String>>,
-    pub birthday: Option<Option<DateTime<Utc>>>,    
-    pub nationality: Option<Option<String>>,
-    pub languages: Option<Option<Vec<String>>>,
+    pub email: Option<Option<Email>>,
+    pub phone_number: Option<Option<PhoneNumber>>,
+    pub hashed_password: Option<String>,
+    pub first_name: Option<FirstName>,
+    pub last_name: Option<LastName>,
+    pub birthday: Option<Birthday>,    
+    pub nationality: Option<Nationality>,
+    pub languages: Option<Vec<Language>>,
 }
 
 // TODO: improve criteria
@@ -61,7 +57,7 @@ pub trait UserRepositoryTrait<T> {
     async fn find_by_criteria(
         &self, 
         conn: &T, 
-        find_user: &FindUser,
+        find_user: FindUser,
         offset: i64,
         limit: i64,
     ) -> Result<Vec<User>, RepoSelectError>;
