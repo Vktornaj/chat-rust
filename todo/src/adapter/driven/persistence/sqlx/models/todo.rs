@@ -29,28 +29,4 @@ impl Todo {
             tags,
         }
     }
-
-    pub fn from_tuple( 
-        tuple: (
-            i32,
-            Uuid, 
-            String, 
-            Option<String>, 
-            i32, 
-            DateTime<Utc>, 
-            Option<DateTime<Utc>>, 
-            Option<DateTime<Utc>>
-        )
-    ) -> Self {
-        Todo {
-            id: tuple.0,
-            user_id: tuple.1,
-            title: tuple.2,
-            description: tuple.3,
-            status: tuple.4,
-            create_date: tuple.5,
-            done_date: tuple.6,
-            deadline: tuple.7,
-        }
-    }
 }

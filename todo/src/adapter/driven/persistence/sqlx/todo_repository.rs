@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use rocket::futures::future::join_all;
-use sqlx::query_builder::QueryBuilder;
 use sqlx::{Postgres, Pool};
 use uuid::Uuid;
 
