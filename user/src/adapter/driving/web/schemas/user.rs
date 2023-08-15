@@ -65,6 +65,7 @@ pub struct UserContactInfo {
         with = "::serde_with::rust::double_option",
     )]
     pub phone_number: Option<Option<String>>,
+    pub password: String,
 }
 
 #[derive(Deserialize)]

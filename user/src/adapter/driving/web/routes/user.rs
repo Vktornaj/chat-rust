@@ -15,7 +15,7 @@ use crate::adapter::driving::web::schemas::user::{
     Credentials, 
     JsonToken, 
     Credentials2, 
-    Credentials3
+    Credentials3, UserContactInfo
 };
 use crate::application::use_cases;
 use common::{config::AppState, token::Token};
@@ -190,7 +190,7 @@ pub async fn update_password(
     }
 }
 
-#[put("/user", format = "json", data = "<user_info>")]
+#[put("/user-info", format = "json", data = "<user_info>")]
 pub async fn update_user_info(
     pool: &rocket::State<PgPool>,
     state: &State<AppState>,
@@ -223,4 +223,25 @@ pub async fn update_user_info(
     }
 }
 
-// TODO: implement update user contact info
+#[put("/user-contact-info", format = "json", data = "<user_contact_info>")]
+pub async fn update_user_contact_info(
+    pool: &rocket::State<PgPool>,
+    state: &State<AppState>,
+    token: Token,
+    user_contact_info: Json<UserContactInfo>,
+) -> Result<Json<UserJson>, status::BadRequest<String>>  {
+    match use_cases::update_contact_user_info::execute(
+        pool.inner(), 
+        &UserRepository {}, 
+        &state.secret,
+        &token.value,
+        use_cases::update_contact_user_info::Payload {
+            email: user_contact_info.0.email,
+            phone_number: user_contact_info.0.phone_number,
+            password: user_contact_info.0.password,
+        }
+    ).await {
+        Ok(user) => Ok(Json(UserJson::from_user(user))),
+        Err(e) => Err(status::BadRequest(Some(format!("{:?}", e)))),
+    }
+}
