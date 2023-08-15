@@ -2575,6 +2575,7 @@ dependencies = [
  "chrono",
  "common",
  "dotenv",
+ "rand",
  "regex",
  "rocket",
  "serde",
