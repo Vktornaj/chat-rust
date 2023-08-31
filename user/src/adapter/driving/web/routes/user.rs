@@ -1,5 +1,7 @@
 extern crate rocket;
 
+use deadpool::managed::Pool;
+use deadpool_redis::{Manager, Connection};
 use chrono::{Utc, TimeZone};
 use common::config::DATE_FORMAT;
 use rocket::http::{Status, ContentType};
@@ -15,7 +17,10 @@ use crate::adapter::driving::web::schemas::user::{
     Credentials, 
     JsonToken, 
     Credentials2, 
-    Credentials3, UserContactInfo
+    Credentials3, 
+    UserContactInfo, 
+    IdTransaction, 
+    ValidUser
 };
 use crate::application::use_cases;
 use common::{config::AppState, token::Token};
@@ -25,34 +30,60 @@ use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 
 
 #[post("/register", format = "json", data = "<user>")]
-pub async fn create_user(pool: &rocket::State<PgPool>, user: Json<NewUserJson>) -> Result<Json<UserJson>, (Status, String)>  {
-    let date = if let Ok(date) = Utc.datetime_from_str(&user.birthday, DATE_FORMAT) {
-        date
-    } else {
-        return Err((Status::BadRequest, "Invalid birthday format".into()));
-    };
-    match use_cases::create_user::execute(
-        pool.inner(),
-        &UserRepository {},
-        use_cases::create_user::Payload {
-            email: user.0.email,
-            phone_number: user.0.phone_number,
-            password: user.0.password,
-            first_name: user.0.first_name,
-            last_name: user.0.last_name,
-            birthday: date,
-            nationality: user.0.nationality,
-            languages: user.0.languages
-        }
-    ).await {
-        Ok(user) => Ok(Json(UserJson::from_user(user))),
-        Err(error) => match error {
-            use_cases::create_user::CreateError::InvalidData(err) => Err((Status::BadRequest, err)),
-            use_cases::create_user::CreateError::Unknown(err) => Err((Status::InternalServerError, err)),
-            use_cases::create_user::CreateError::Conflict(err) => Err((Status::Conflict, err)),
-        }
-    }
+pub async fn create_user_chache(
+    pool: &rocket::State<PgPool>, 
+    cache_pool: &rocket::State<Pool<Manager, Connection>>,
+    user: Json<NewUserJson>
+) -> Result<Json<IdTransaction>, (Status, String)>  {
+    todo!();
+    // let date = if let Ok(date) = Utc.datetime_from_str(&user.birthday, DATE_FORMAT) {
+    //     date
+    // } else {
+    //     return Err((Status::BadRequest, "Invalid birthday format".into()));
+    // };
+    // match use_cases::create_user_cache::execute(
+    //     pool.inner(),
+    //     &UserRepository {},
+    //     &UserRepository {},
+    //     use_cases::create_user_cache::Payload {
+    //         email: user.0.email,
+    //         phone_number: user.0.phone_number,
+    //         password: user.0.password,
+    //         first_name: user.0.first_name,
+    //         last_name: user.0.last_name,
+    //         birthday: date,
+    //         nationality: user.0.nationality,
+    //         languages: user.0.languages
+    //     }
+    // ).await {
+    //     Ok(user) => Ok(Json(IdTransaction { id_transaction: user })),
+    //     Err(error) => match error {
+    //         use_cases::create_user_cache::CreateError::InvalidData(err) => Err((Status::BadRequest, err)),
+    //         use_cases::create_user_cache::CreateError::Unknown(err) => Err((Status::InternalServerError, err)),
+    //         use_cases::create_user_cache::CreateError::Conflict(err) => Err((Status::Conflict, err)),
+    //     }
+    // }
 }
+
+// #[post("/register-confirmation", format = "json", data = "<data>")]
+// pub async fn create_user_confirmation(pool: &rocket::State<PgPool>, data: Json<ValidUser>) -> Result<Json<UserJson>, (Status, String)>  {
+//     match use_cases::create_user_confirm::execute(
+//         pool.inner(),
+//         &UserRepository {},
+//         &UserRepository {},
+//         use_cases::create_user_confirm::Payload {
+//             transaction_id: data.0.transaction_id,
+//             confirmation_code: data.0.confirmation_code
+//         }
+//     ).await {
+//         Ok(user) => Ok(Json(UserJson::from_user(user))),
+//         Err(error) => match error {
+//             use_cases::create_user_confirm::CreateError::InvalidData(err) => Err((Status::BadRequest, err)),
+//             use_cases::create_user_confirm::CreateError::Unknown(err) => Err((Status::InternalServerError, err)),
+//             use_cases::create_user_confirm::CreateError::Conflict(err) => Err((Status::Conflict, err)),
+//         }
+//     }
+// }
 
 #[get("/email-availability/<email>")]
 pub async fn email_available(
@@ -230,12 +261,12 @@ pub async fn update_user_contact_info(
     token: Token,
     user_contact_info: Json<UserContactInfo>,
 ) -> Result<Json<UserJson>, status::BadRequest<String>>  {
-    match use_cases::update_contact_user_info::execute(
+    match use_cases::update_contact_info_cache::execute(
         pool.inner(), 
         &UserRepository {}, 
         &state.secret,
         &token.value,
-        use_cases::update_contact_user_info::Payload {
+        use_cases::update_contact_info_cache::Payload {
             email: user_contact_info.0.email,
             phone_number: user_contact_info.0.phone_number,
             password: user_contact_info.0.password,

@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc, Datelike};
 use super::error::ErrorMsg;
+use serde::{Deserialize, Serialize};
 
 
-#[derive(PartialEq, Debug, Clone, PartialOrd)]
+#[derive(PartialEq, Debug, Clone, PartialOrd, Deserialize, Serialize)]
 pub struct Birthday(DateTime<Utc>);
 
 impl TryFrom<DateTime<Utc>> for Birthday {

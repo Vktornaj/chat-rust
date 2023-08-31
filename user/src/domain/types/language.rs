@@ -1,9 +1,10 @@
 use regex::Regex;
 use super::error::ErrorMsg;
+use serde::{Deserialize, Serialize};
 
 
 // alpha-2 code (ISO 639-1)
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Deserialize, Serialize)]
 pub struct Language(String);
 
 impl TryFrom<String> for Language {

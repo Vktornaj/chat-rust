@@ -1,9 +1,11 @@
 pub mod utils;
-pub mod create_user;
+pub mod create_user_cache;
 pub mod login_user;
 pub mod is_data_in_use;
 pub mod get_user_info;
 pub mod delete_user;
 pub mod update_password;
 pub mod update_user_info;
-pub mod update_contact_user_info;
+pub mod update_contact_info_cache;
+pub mod update_contact_info_validate;
+pub mod create_user_validate;

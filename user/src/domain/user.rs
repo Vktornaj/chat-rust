@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use uuid::Uuid;
+
 
 use super::types::{
     id::Id, 
@@ -11,7 +11,7 @@ use super::types::{
     nationality::Nationality, 
     language::Language, 
     password::Password, 
-    error::ErrorMsg, code::Code
+    error::ErrorMsg,
 };
 
 
@@ -73,33 +73,5 @@ impl NewUser {
             nationality: Nationality::try_from(nationality)?, 
             languages: languages?,
         })
-    }
-}
-
-pub struct CacheUser {
-    pub email: Option<Email>,
-    pub phone_number: Option<PhoneNumber>,
-    pub hashed_password: String,
-    pub first_name: FirstName,
-    pub last_name: LastName,
-    pub birthday: Birthday,
-    pub nationality: Nationality,
-    pub languages: Vec<Language>,
-    pub transaction_id: Uuid,
-    pub code: Code,
-}
-
-impl CacheUser {
-    pub fn to_new_user(self) -> NewUser {
-        NewUser {
-            email: self.email,
-            phone_number: self.phone_number,
-            hashed_password: self.hashed_password,
-            first_name: self.first_name,
-            last_name: self.last_name,
-            birthday: self.birthday,
-            nationality: self.nationality,
-            languages: self.languages,
-        }
     }
 }

@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use uuid::Uuid;
 
 use crate::domain::user::User;
 
@@ -94,4 +95,17 @@ pub struct Credentials2 {
 pub struct Credentials3 {
     pub password: String,
     pub new_password: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ValidUser {
+    pub transaction_id: Uuid,
+    pub confirmation_code: u32,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdTransaction {
+    pub id_transaction: Uuid,
 }
