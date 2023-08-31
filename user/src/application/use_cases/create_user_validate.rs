@@ -1,5 +1,5 @@
 use super::super::port::driven::user_repository::UserRepositoryTrait;
-use crate::{domain::user::User, application::port::driven::user_cache::UserCacheTrait};
+use crate::{domain::user::User, application::port::driven::user_cache::{UserCacheTrait, CreateUserCache}};
 
 
 #[derive(Debug)]
@@ -22,7 +22,7 @@ pub async fn execute<T>(
     payload: Payload
 ) -> Result<User, CreateError> {
     // validate confirmation code
-    let new_user = match repo_cache.find_user(conn, payload.transaction_id).await {
+    let new_user = match repo_cache.find_by_id::<CreateUserCache>(conn, payload.transaction_id).await {
         Ok(user) => match user {
             Some(user) => {
                 if Into::<u32>::into(user.confirmation_code.clone()) == payload.confirmation_code {

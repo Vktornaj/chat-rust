@@ -1,5 +1,5 @@
 use deadpool::managed::Pool;
-use deadpool_redis::{Manager, Connection, redis::cmd};
+use deadpool_redis::{Manager, Connection, redis::{cmd, FromRedisValue}};
 use async_trait::async_trait;
 use rocket::serde::json::serde_json;
 use uuid::Uuid;
@@ -11,11 +11,11 @@ use crate::{
 };
 
 
-pub struct InMemoryRepository();
+pub struct RedisCache();
 
 #[async_trait]
-impl UserCacheTrait<Pool<Manager, Connection>> for InMemoryRepository {
-    async fn find_by_id(&self, pool: &Pool<Manager, Connection>, id: String) -> Result<CacheUser, RepoSelectError> {
+impl UserCacheTrait<Pool<Manager, Connection>> for RedisCache {
+    async fn find_by_id<E>(&self, pool: &Pool<Manager, Connection>, id: String) -> Result<E, RepoSelectError> {
         let mut conn = pool.get().await.unwrap();
         let value = cmd("GET")
             .arg(&[id.to_string()])

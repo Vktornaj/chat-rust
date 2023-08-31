@@ -1,6 +1,6 @@
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
-    application::port::driven::user_cache::UserCacheTrait, 
+    application::port::driven::user_cache::{UserCacheTrait, UpdateUserCDCache}, 
     domain::user::User
 };
 
@@ -28,7 +28,7 @@ pub async fn execute<T>(
     payload: Payload,
 ) -> Result<User, UpdateError> {
     // validate confirmation code
-    let update_user = match repo_cache.find_update(conn, payload.transaction_id).await {
+    let update_user = match repo_cache.find_by_id::<UpdateUserCDCache>(conn, payload.transaction_id).await {
         Ok(update) => match update {
             Some(update) => {
                 if Into::<u32>::into(update.confirmation_code.clone()) == payload.confirmation_code {

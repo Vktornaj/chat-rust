@@ -19,8 +19,7 @@ use crate::adapter::driving::web::schemas::user::{
     Credentials2, 
     Credentials3, 
     UserContactInfo, 
-    IdTransaction, 
-    ValidUser
+    IdTransaction
 };
 use crate::application::use_cases;
 use common::{config::AppState, token::Token};
@@ -254,25 +253,25 @@ pub async fn update_user_info(
     }
 }
 
-#[put("/user-contact-info", format = "json", data = "<user_contact_info>")]
-pub async fn update_user_contact_info(
-    pool: &rocket::State<PgPool>,
-    state: &State<AppState>,
-    token: Token,
-    user_contact_info: Json<UserContactInfo>,
-) -> Result<Json<UserJson>, status::BadRequest<String>>  {
-    match use_cases::update_contact_info_cache::execute(
-        pool.inner(), 
-        &UserRepository {}, 
-        &state.secret,
-        &token.value,
-        use_cases::update_contact_info_cache::Payload {
-            email: user_contact_info.0.email,
-            phone_number: user_contact_info.0.phone_number,
-            password: user_contact_info.0.password,
-        }
-    ).await {
-        Ok(user) => Ok(Json(UserJson::from_user(user))),
-        Err(e) => Err(status::BadRequest(Some(format!("{:?}", e)))),
-    }
-}
+// #[put("/user-contact-info", format = "json", data = "<user_contact_info>")]
+// pub async fn update_user_contact_info(
+//     pool: &rocket::State<PgPool>,
+//     state: &State<AppState>,
+//     token: Token,
+//     user_contact_info: Json<UserContactInfo>,
+// ) -> Result<Json<UserJson>, status::BadRequest<String>>  {
+//     match use_cases::update_contact_info_cache::execute(
+//         pool.inner(), 
+//         &UserRepository {}, 
+//         &state.secret,
+//         &token.value,
+//         use_cases::update_contact_info_cache::Payload {
+//             email: user_contact_info.0.email,
+//             phone_number: user_contact_info.0.phone_number,
+//             password: user_contact_info.0.password,
+//         }
+//     ).await {
+//         Ok(user) => Ok(Json(UserJson::from_user(user))),
+//         Err(e) => Err(status::BadRequest(Some(format!("{:?}", e)))),
+//     }
+// }

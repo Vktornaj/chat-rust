@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use crate::domain::{
     types::{
@@ -89,6 +89,7 @@ impl CreateUserCache {
 }
 
 // update user contact data
+#[derive(Clone, Deserialize, Serialize)]
 pub struct UpdateUserCDCache {
     pub id: Id,
     pub email: Option<Option<Email>>,
@@ -109,6 +110,7 @@ impl UpdateUserCDCache {
 
 
 // recover password
+#[derive(Clone, Deserialize, Serialize)]
 pub struct RecoverPasswordCache {
     pub id: Id,
     pub hashed_new_password: String,
@@ -118,37 +120,39 @@ pub struct RecoverPasswordCache {
 #[async_trait]
 pub trait UserCacheTrait<T> {
     /// Find and return one single record from the persistence system by id
-    async fn find_user(&self, conn: &T, id: String) -> Result<Option<CreateUserCache>, RepoSelectError>;
-    
-    async fn find_update(&self, conn: &T, id: String) -> Result<Option<UpdateUserCDCache>, RepoSelectError>;
+    async fn find_by_id<E>(&self, conn: &T, id: String) -> Result<Option<E>, RepoSelectError>
+    where
+        E: DeserializeOwned;
 
     /// Insert the received entity in the persistence system
-    async fn add_create_user(
+    async fn add_request<E>(
         &self, 
         conn: &T, 
         transaction_id: String, 
-        user: CreateUserCache, 
+        payload: E,
         exp: u32
-    ) -> Result<String, RepoCreateError>;
+    ) -> Result<String, RepoCreateError>
+    where
+        E: Clone + Serialize + Send;
     
-    /// Insert the received entity in the persistence system
-    async fn add_update_user(
-        &self, 
-        conn: &T, 
-        transaction_id: String, 
-        user: UpdateUserCDCache, 
-        exp: u32
-    ) -> Result<String, RepoCreateError>;
+    // /// Insert the received entity in the persistence system
+    // async fn add_update_user(
+    //     &self, 
+    //     conn: &T, 
+    //     transaction_id: String, 
+    //     user: UpdateUserCDCache, 
+    //     exp: u32
+    // ) -> Result<String, RepoCreateError>;
 
-    /// Add request to recover password
-    async fn add_recover_password(
-        &self, 
-        conn: &T, 
-        transaction_id: String, 
-        user: RecoverPasswordCache, 
-        exp: u32
-    ) -> Result<String, RepoCreateError>;
+    // /// Add request to recover password
+    // async fn add_recover_password(
+    //     &self, 
+    //     conn: &T, 
+    //     transaction_id: String, 
+    //     user: RecoverPasswordCache, 
+    //     exp: u32
+    // ) -> Result<String, RepoCreateError>;
 
     /// Delete one single record from the persistence system
-    async fn delete(&self, conn: &T, id: String) -> Result<CreateUserCache, RepoDeleteError>;
+    async fn delete(&self, conn: &T, id: String) -> Result<(), RepoDeleteError>;
 }

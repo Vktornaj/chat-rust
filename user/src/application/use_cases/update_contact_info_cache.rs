@@ -5,7 +5,7 @@ use crate::{
     domain::types::{
         password::Password, 
         email::Email, 
-        phone_number::{PhoneNumber, self}, 
+        phone_number::PhoneNumber, 
         id::Id, code::Code
     }, 
     application::port::driven::{user_cache::{UserCacheTrait, UpdateUserCDCache}, user_repository::{FindUser, UpdateUser}}
@@ -71,8 +71,9 @@ pub async fn execute<T>(
     } else {
         phone_number.clone().unwrap().unwrap().into()
     };
-    if let Ok(res) = repo_cache.find_update(conn, transaction_id.clone()).await {
-        if let Some(res) = res {
+    if let Ok(res) = repo_cache
+        .find_by_id::<UpdateUserCDCache>(conn, transaction_id.clone()).await {
+        if res.is_some() {
             return Err(UpdateError::Conflict(format!("update request already in progress")));
         }
     } else {
@@ -161,7 +162,7 @@ pub async fn execute<T>(
         confirmation_code: Code::new(6)
     };
     let res = match repo_cache
-        .add_update_user(
+        .add_request::<>(
             conn, 
             transaction_id, 
             user_update_cache, 

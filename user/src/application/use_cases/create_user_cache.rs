@@ -44,7 +44,7 @@ pub async fn execute<T>(
     };
     // verify no email in cache
     if let Some(email) = cache_user.email.clone() {
-        match repo_cache.find_user(conn, email.into()).await {
+        match repo_cache.find_by_id::<CreateUserCache>(conn, email.into()).await {
             Ok(user) => {
                 if user.is_some() {
                     return Err(CreateError::Conflict("email unavailable".to_string()));
@@ -55,7 +55,7 @@ pub async fn execute<T>(
     }
     // verify no phone number in cache
     if let Some(phone_number) = cache_user.phone_number.clone() {
-        match repo_cache.find_user(conn, phone_number.into()).await {
+        match repo_cache.find_by_id::<CreateUserCache>(conn, phone_number.into()).await {
             Ok(user) => {
                 if user.is_some() {
                     return Err(CreateError::Conflict("phone number unavailable".to_string()));
@@ -86,7 +86,7 @@ pub async fn execute<T>(
         cache_user.phone_number.clone().unwrap().into()
     };
     let res = match repo_cache
-        .add_create_user(
+        .add_request::<CreateUserCache>(
             conn,
             id,
             cache_user.clone(),
