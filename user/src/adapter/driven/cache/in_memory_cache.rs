@@ -39,12 +39,13 @@ impl UserCacheTrait<Mutex<HashMap<String, String>>> for InMemoryRepository {
         }
     }
 
+    // TODO: implement the expire time
     async fn add_request<T>(
         &self, 
         conn: &Mutex<HashMap<String, String>>, 
         id: String, 
         item: T, 
-        exp: u32
+        _exp: u32
     ) -> Result<String, RepoCreateError> 
     where 
         T: Clone + Serialize + Send,
@@ -55,7 +56,7 @@ impl UserCacheTrait<Mutex<HashMap<String, String>>> for InMemoryRepository {
         };
         match serde_json::to_string(&item) {
             Ok(item) => {
-                lock.insert(id, item);
+                lock.insert(id.clone(), item);
                 Ok(id)
             },
             Err(_) => Err(RepoCreateError::Unknown("Failed to serialize item".to_string()))
@@ -72,7 +73,7 @@ impl UserCacheTrait<Mutex<HashMap<String, String>>> for InMemoryRepository {
             Err(_) => return Err(RepoDeleteError::Unknown("Failed to lock mutex".to_string()))
         };
         match lock.remove(&id) {
-            Some(cache_user) => Ok(()),
+            Some(_) => Ok(()),
             None => Err(RepoDeleteError::NotFound)
         }
     }

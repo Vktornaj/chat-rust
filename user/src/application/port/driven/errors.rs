@@ -2,12 +2,15 @@
 pub enum RepoCreateError {
     Unknown(String),
     Conflict(String),
+    SerializeError(String),
+    ConnectionError(String),
 }
 
 #[derive(Debug)]
 pub enum RepoSelectError {
     NotFound,
     Unknown(String),
+    ConnectionError(String),
 }
 
 #[derive(Debug)]
@@ -20,10 +23,6 @@ pub enum RepoUpdateError {
 pub enum RepoDeleteError {
     NotFound,
     Unknown(String),
+    SerializeError(String),
+    ConnectionError(String),
 }
-
-// #[derive(Debug)]
-// pub enum RepoInitializeError {
-//     NotFound,
-//     Unknown(String),
-// }
