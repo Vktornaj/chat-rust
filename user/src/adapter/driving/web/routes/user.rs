@@ -4,6 +4,7 @@ use deadpool::managed::Pool;
 use deadpool_redis::{Manager, Connection};
 use chrono::{Utc, TimeZone};
 use common::config::DATE_FORMAT;
+use lettre::SmtpTransport;
 use rocket::http::{Status, ContentType};
 use rocket::response::status;
 use rocket::{get, post, State, delete, put};
@@ -27,6 +28,7 @@ use common::{config::AppState, token::Token};
 // Persistence
 use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 use crate::adapter::driven::cache::redis::user_cache::UserCache;
+use crate::adapter::driven::email_service::fake_email_service::FakeEmailService;
 
 
 #[post("/register", format = "json", data = "<user>")]
@@ -40,11 +42,14 @@ pub async fn create_user_cache(
     } else {
         return Err((Status::BadRequest, "Invalid birthday format".into()));
     };
+    let mailer: SmtpTransport = SmtpTransport::unencrypted_localhost();
     match use_cases::create_user_cache::execute(
         pool.inner(),
         cache_pool.inner(),
+        &mailer,
         &UserRepository {},
         &UserCache {},
+        &FakeEmailService {},
         use_cases::create_user_cache::Payload {
             email: user.0.email,
             phone_number: user.0.phone_number,

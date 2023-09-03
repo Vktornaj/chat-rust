@@ -1,6 +1,7 @@
 use crate::application::port::driven::{
     user_cache::{UserCacheTrait, CreateUserCache}, 
-    user_repository::UserRepositoryTrait
+    user_repository::UserRepositoryTrait, 
+    email_service::EmailServiceTrait
 };
 use super::is_data_in_use;
 
@@ -23,11 +24,13 @@ pub struct Payload {
     pub languages: Vec<String>,
 }
 
-pub async fn execute<T, U>(
+pub async fn execute<T, U, ES>(
     conn: &T,
     cache_conn: &U,
+    email_conn: &ES,
     repo: &impl UserRepositoryTrait<T>, 
-    repo_cache: &impl UserCacheTrait<U>, 
+    repo_cache: &impl UserCacheTrait<U>,
+    email_service: &impl EmailServiceTrait<ES>,
     payload: Payload
 ) -> Result<String, CreateError> {
     let cache_user = match CreateUserCache::new(
@@ -81,8 +84,8 @@ pub async fn execute<T, U>(
         return Err(CreateError::Unknown("unknown error".to_string()));
     }
     // create cache user
-    let id: String = if let Some(cache_user) = cache_user.email.clone() {
-        cache_user.into()
+    let id: String = if let Some(email) = cache_user.email.clone() {
+        email.into()
     } else {
         cache_user.phone_number.clone().unwrap().into()
     };
@@ -91,12 +94,21 @@ pub async fn execute<T, U>(
             cache_conn,
             id,
             cache_user.clone(),
-            3600
+            60
         ).await {
         Ok(transaction_id) => Ok(transaction_id),
         Err(error) => Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     };
-    // TODO: send email
+    // Send confirmation email
+    if let Some(email) = cache_user.email.clone() {
+        if email_service.send_confirmation_email(
+            email_conn, 
+            email.into(), 
+            cache_user.confirmation_code.into()
+        ).await.is_err() {
+            return Err(CreateError::Unknown("Email invalid".to_string()));
+        }
+    }
     // TODO: send sms
     res
 }

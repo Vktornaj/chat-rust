@@ -170,7 +170,7 @@ pub async fn execute<T, U>(
             cache_conn, 
             transaction_id, 
             user_update_cache, 
-            3600
+            60
         ).await {
         Ok(transaction_id) => Ok(Some(transaction_id)),
         Err(e) => Err(UpdateError::Unknown(format!("{:?}", e)))

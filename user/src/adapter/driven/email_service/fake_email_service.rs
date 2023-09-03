@@ -2,9 +2,9 @@ use lettre::message::header::ContentType;
 use lettre::{Message, SmtpTransport, Transport};
 use async_trait::async_trait;
 
-use crate::application::port::driven::email_servic::{EmailServiceTrait, EmailSendError};
+use crate::application::port::driven::email_service::{EmailServiceTrait, EmailSendError};
 
-struct FakeEmailService();
+pub struct FakeEmailService();
 
 #[async_trait]
 impl EmailServiceTrait<SmtpTransport> for FakeEmailService {

@@ -27,6 +27,8 @@ pub async fn execute<T, U>(
         Ok(user) => match user {
             Some(user) => {
                 if Into::<u32>::into(user.confirmation_code.clone()) == payload.confirmation_code {
+                    println!("confirmation code {}", Into::<u32>::into(user.confirmation_code.clone()));
+                    println!("payload code {}", payload.confirmation_code);
                     user.to_new_user()
                 } else {
                     return Err(CreateError::InvalidData("invalid confirmation code".to_string()));
