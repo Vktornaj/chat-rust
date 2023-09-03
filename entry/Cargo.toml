@@ -6,12 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = { version = "0.5.0-rc.3", features=["json"]}
-toml = "0.7.1"
-sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }
-
-
 # added
 user = { path = "../user"}
 todo = { path = "../todo"}
 common = { path = "../common"}
+#
+rocket = { version = "0.5.0-rc.3", features=["json"]}
+toml = "0.7.1"
+sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }
+deadpool = "0.9.5"
+deadpool-redis = "0.12.0"

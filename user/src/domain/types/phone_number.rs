@@ -1,8 +1,9 @@
 use super::error::ErrorMsg;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Deserialize, Serialize)]
 pub struct PhoneNumber(String);
 
 impl TryFrom<String> for PhoneNumber {

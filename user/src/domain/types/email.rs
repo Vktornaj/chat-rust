@@ -1,8 +1,9 @@
 use regex::Regex;
 use super::error::ErrorMsg;
+use serde::{Deserialize, Serialize};
 
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Deserialize, Serialize)]
 pub struct Email(String);
 
 impl TryFrom<String> for Email {

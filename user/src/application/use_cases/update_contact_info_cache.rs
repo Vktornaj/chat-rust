@@ -2,12 +2,15 @@ use auth::domain::auth::Auth;
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
-    domain::{
-        user::User, types::{
-            password::Password, email::Email, phone_number::PhoneNumber
-        }
+    domain::types::{
+        email::Email, 
+        phone_number::PhoneNumber, 
+        id::Id, code::Code
     }, 
-    application::port::driven::user_repository::{UpdateUser, FindUser}
+    application::port::driven::{
+        user_cache::{UserCacheTrait, UpdateUserCDCache}, 
+        user_repository::{FindUser, UpdateUser}, email_service::EmailServiceTrait
+    }
 };
 
 
@@ -21,23 +24,22 @@ pub enum UpdateError {
 }
 
 pub struct Payload {
-    pub password: String,
     pub email: Option<Option<String>>,
     pub phone_number: Option<Option<String>>,
 }
 
-pub async fn execute<T>(
-    conn: &T, 
-    repo: &impl UserRepositoryTrait<T>, 
+pub async fn execute<T, U, ES>(
+    conn: &T,
+    cache_conn: &U,
+    email_conn: &ES,
+    repo: &impl UserRepositoryTrait<T>,
+    repo_cache: &impl UserCacheTrait<U>,
+    email_service: &impl EmailServiceTrait<ES>,
     secret: &[u8],
     token: &String,
     payload: Payload,
-) -> Result<User, UpdateError> {
-    let password = if let Ok(password) = Password::try_from(payload.password) {
-        password
-    } else {
-        return Err(UpdateError::Unautorized);
-    };
+) -> Result<Option<String>, UpdateError> {
+    // validate payload
     let email = if let Some(email) = payload.email {
         if let Ok(email) = email.map(|x| Email::try_from(x)).transpose() {
            Some(email)
@@ -62,6 +64,20 @@ pub async fn execute<T>(
     } else {
         return Err(UpdateError::Unautorized);
     };
+    // verify no update request with same email or phone number in cache
+    let transaction_id: String = if let Some(email) = email.as_ref() {
+        email.clone().unwrap().into()
+    } else {
+        phone_number.clone().unwrap().unwrap().into()
+    };
+    if let Ok(res) = repo_cache
+        .find_by_id::<UpdateUserCDCache>(cache_conn, transaction_id.clone()).await {
+        if res.is_some() {
+            return Err(UpdateError::Conflict(format!("update request already in progress")));
+        }
+    } else {
+        return Err(UpdateError::Unknown("unknown error".to_string()));
+    }
     // verify user exists, data is not the same, user contact data integrity and password match
     if let Ok(user) = repo.find_by_id(conn, id.into()).await {
         if let Some(email) = email.as_ref() {          
@@ -80,12 +96,36 @@ pub async fn execute<T>(
                 return Err(UpdateError::Conflict("Phone number is the same".to_string()));
             }
         }
-        if password.verify_password(&user.hashed_password).is_err() {
-            return Err(UpdateError::Unautorized);
-        }
     } else {
         return Err(UpdateError::NotFound);
     };
+    // if none just delete
+    if let Some(email) = email.as_ref() {
+        if email.is_none() {
+            let user = UpdateUser {
+                id,
+                email: Some(None),
+                ..Default::default()
+            };
+            match repo.update(conn, user).await {
+                Ok(_) => return Ok(None),
+                Err(e) => return Err(UpdateError::Unknown(format!("{:?}", e)))
+            }
+        }
+    }
+    if let Some(phone_number) = phone_number.as_ref() {
+        if phone_number.is_none() {
+            let user = UpdateUser {
+                id,
+                phone_number: Some(None),
+                ..Default::default()
+            };
+            match repo.update(conn, user).await {
+                Ok(_) => return Ok(None),
+                Err(e) => return Err(UpdateError::Unknown(format!("{:?}", e)))
+            }
+        }
+    }
     // verify email is not in use
     if let Some(email) = &email {
         let find_user = FindUser {
@@ -98,7 +138,7 @@ pub async fn execute<T>(
             }
         }
     }
-    //verify phone number is not in use
+    // verify phone number is not in use
     if let Some(phone_number) = &phone_number {
         let find_user = FindUser {
             phone_number: phone_number.clone(),
@@ -110,21 +150,40 @@ pub async fn execute<T>(
             }
         }
     }
-    // update sensitive info
-    let user_update = UpdateUser {
-        id: id.into(),
-        email,
+    // create request to update sensitive info
+    let confirmation_code = Code::new(6);
+    let user_update_cache = UpdateUserCDCache {
+        id: Id::try_from(id).unwrap(),
+        email: email.clone(),
         phone_number,
-        ..Default::default()
+        confirmation_code: confirmation_code.clone(),
     };
-    match repo.update(conn, user_update).await {
-        Ok(user) => Ok(user),
-        Err(e) => Err(UpdateError::Unknown(format!("{:?}", e))),
+    let res = match repo_cache
+        .add_request::<>(
+            cache_conn, 
+            transaction_id, 
+            user_update_cache, 
+            60
+        ).await {
+        Ok(transaction_id) => Ok(Some(transaction_id)),
+        Err(e) => Err(UpdateError::Unknown(format!("{:?}", e)))
+    };
+    // Send confirmation email
+    if let Some(Some(email)) = email {
+        if email_service.send_confirmation_email(
+            email_conn, 
+            email.into(),
+            confirmation_code.into()
+        ).await.is_err() {
+            return Err(UpdateError::Unknown("Email invalid".to_string()));
+        }
     }
+    // TODO: send sms
+    res
 }
 
-// #[cfg(test)]
-// mod tests {
+#[cfg(test)]
+mod tests {
 //     use std::sync::Mutex;
 
 //     // use crate::repositories::pokemon::InMemoryRepository;
@@ -145,4 +204,4 @@ pub async fn execute<T>(
 //     use crate::adapter::driven::persistence::in_memory_repository::InMemoryRepository;
 
     
-// }
+}

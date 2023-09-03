@@ -1,7 +1,8 @@
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 
-#[derive(PartialEq, Clone, PartialOrd)]
+#[derive(PartialEq, Clone, PartialOrd, Deserialize, Serialize)]
 pub struct Code(u32);
 
 impl From<Code> for u32 {

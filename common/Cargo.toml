@@ -11,3 +11,7 @@ toml = "0.7.1"
 serde = "1.0.152"
 dotenvy = "0.15"
 sqlx = { version = "0.7", features = [ "postgres" ] }
+async-std = "1.10"
+deadpool = "0.9.5"
+deadpool-redis = "0.12.0"
+redis-async = "0.16.1"
