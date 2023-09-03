@@ -6,7 +6,7 @@ pub enum SmsSendError {
 }
 
 #[async_trait]
-pub trait UserCacheRepositoryTrait<T> {
+pub trait SmsServiceTrait<T> {
     /// Find and return one single record from the persistence system by id
     async fn send_confirmation_sms(&self, conn: &T, phone_number: String, code: u32) -> Result<(), SmsSendError>;
 }

@@ -6,7 +6,6 @@ pub enum EmailSendError {
 }
 
 #[async_trait]
-pub trait UserCacheRepositoryTrait<T> {
-    /// Find and return one single record from the persistence system by id
+pub trait EmailServiceTrait<T> {
     async fn send_confirmation_email(&self, conn: &T, address: String, code: u32) -> Result<(), EmailSendError>;
 }
