@@ -1,6 +1,6 @@
 use crate::{
     application::port::driven::user_repository::FindUser, domain::types::{
-        email::Email, error::ErrorMsg, phone_number::{PhoneNumber, self}
+        email::Email, error::ErrorMsg, phone_number::PhoneNumber
     }
 };
 

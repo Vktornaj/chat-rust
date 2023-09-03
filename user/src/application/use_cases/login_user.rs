@@ -1,6 +1,6 @@
 use crate::{
     domain::types::{
-        email::Email, phone_number::PhoneNumber, password::{Password, self}
+        email::Email, phone_number::PhoneNumber, password::Password
     }, 
     application::port::driven::user_repository::FindUser
 };

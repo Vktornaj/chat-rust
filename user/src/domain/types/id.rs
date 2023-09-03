@@ -1,8 +1,9 @@
+use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use super::error::ErrorMsg;
 
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct Id(Uuid);
 
 impl TryFrom<Uuid> for Id {

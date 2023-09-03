@@ -2,13 +2,15 @@ use rocket::{Request, catch, catchers, options, get};
 use cors::CORS;
 use rocket::{launch, routes};
 use sqlx::migrate::Migrator;
+use deadpool::managed::Pool;
+use deadpool_redis::{Manager, Connection};
 
 mod cors;
 
 use sqlx::PgPool;
 use user::routes as user_routes;
 use todo::routes as todo_routes;
-use common::{config, db};
+use common::{config, db, cache};
 
 
 #[catch(404)]
@@ -36,6 +38,7 @@ async fn run_migrations(pool: &PgPool) {
 pub async fn rocket() -> _ {
     let sqlx_pool = db::create_pool().await;
     run_migrations(&sqlx_pool).await;
+    let redis_pool = cache::create_pool().await;
 
     rocket::custom(config::from_env())
         .attach(CORS)
@@ -50,7 +53,10 @@ pub async fn rocket() -> _ {
             routes![
                 user_routes::user::email_available,
                 user_routes::user::phone_number_available,
-                user_routes::user::create_user,
+                user_routes::user::create_user_cache,
+                user_routes::user::create_user_confirmation,
+                user_routes::user::update_user_contact_info_cache,
+                user_routes::user::update_user_contact_info_confirmation,
                 user_routes::user::login,
                 user_routes::user::get_user_info,
                 todo_routes::todo::post_todo,
@@ -63,6 +69,7 @@ pub async fn rocket() -> _ {
             ]
         )
         .manage::<PgPool>(sqlx_pool)
+        .manage::<Pool<Manager, Connection>>(redis_pool)
         .attach(config::AppState::manage())
         .register("/", catchers![not_found])
 }

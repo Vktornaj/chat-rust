@@ -1,9 +1,11 @@
 use regex::Regex;
 use super::error::ErrorMsg;
+use serde::{Deserialize, Serialize};
+
 
 
 // alpha-3 code (ISO 3166)
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Deserialize, Serialize)]
 pub struct Nationality(String);
 
 impl TryFrom<String> for Nationality {

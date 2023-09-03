@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 
+
 use super::types::{
     id::Id, 
     email::Email, 
@@ -10,7 +11,7 @@ use super::types::{
     nationality::Nationality, 
     language::Language, 
     password::Password, 
-    error::ErrorMsg
+    error::ErrorMsg,
 };
 
 

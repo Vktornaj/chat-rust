@@ -1,24 +1,20 @@
 #[derive(Debug)]
 pub enum RepoCreateError {
-    InvalidData(String),
     Unknown(String),
     Conflict(String),
+    SerializeError(String),
+    ConnectionError(String),
 }
 
 #[derive(Debug)]
 pub enum RepoSelectError {
     NotFound,
     Unknown(String),
-}
-
-#[derive(Debug)]
-pub enum RepoFindAllError {
-    Unknown(String),
+    ConnectionError(String),
 }
 
 #[derive(Debug)]
 pub enum RepoUpdateError {
-    InvalidData(String),
     NotFound,
     Unknown(String),
 }
@@ -26,12 +22,7 @@ pub enum RepoUpdateError {
 #[derive(Debug)]
 pub enum RepoDeleteError {
     NotFound,
-    InvalidData(String),
     Unknown(String),
-}
-
-#[derive(Debug)]
-pub enum RepoInitializeError {
-    NotFound,
-    Unknown(String),
+    SerializeError(String),
+    ConnectionError(String),
 }

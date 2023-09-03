@@ -94,3 +94,16 @@ pub struct Credentials3 {
     pub password: String,
     pub new_password: String,
 }
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ValidTransaction {
+    pub transaction_id: String,
+    pub confirmation_code: u32,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdTransaction {
+    pub id_transaction: String,
+}
