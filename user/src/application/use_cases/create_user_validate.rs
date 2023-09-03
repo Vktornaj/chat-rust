@@ -15,14 +15,15 @@ pub struct Payload {
 }
 
 // TODO: add attempt limit
-pub async fn execute<T>(
-    conn: &T, 
+pub async fn execute<T, U>(
+    conn: &T,
+    cache_conn: &U,
     repo: &impl UserRepositoryTrait<T>, 
-    repo_cache: &impl UserCacheTrait<T>,
+    repo_cache: &impl UserCacheTrait<U>,
     payload: Payload
 ) -> Result<User, CreateError> {
     // validate confirmation code
-    let new_user = match repo_cache.find_by_id::<CreateUserCache>(conn, payload.transaction_id).await {
+    let new_user = match repo_cache.find_by_id::<CreateUserCache>(cache_conn, payload.transaction_id).await {
         Ok(user) => match user {
             Some(user) => {
                 if Into::<u32>::into(user.confirmation_code.clone()) == payload.confirmation_code {

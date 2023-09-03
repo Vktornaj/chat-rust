@@ -120,20 +120,20 @@ pub struct RecoverPasswordCache {
 #[async_trait]
 pub trait UserCacheTrait<T> {
     /// Find and return one single record from the persistence system by id
-    async fn find_by_id<E>(&self, conn: &T, id: String) -> Result<Option<E>, RepoSelectError>
+    async fn find_by_id<U>(&self, conn: &T, id: String) -> Result<Option<U>, RepoSelectError>
     where
-        E: DeserializeOwned;
+        U: DeserializeOwned;
 
     /// Insert the received entity in the persistence system
-    async fn add_request<E>(
+    async fn add_request<U>(
         &self, 
         conn: &T, 
         transaction_id: String, 
-        payload: E,
+        payload: U,
         exp: u32
     ) -> Result<String, RepoCreateError>
     where
-        E: Clone + Serialize + Send;
+        U: Clone + Serialize + Send;
     
     // /// Insert the received entity in the persistence system
     // async fn add_update_user(

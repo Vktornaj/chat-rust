@@ -19,16 +19,17 @@ pub struct Payload {
     pub confirmation_code: u32,
 }
 
-pub async fn execute<T>(
+pub async fn execute<T, U>(
     conn: &T, 
+    cache_conn: &U, 
     repo: &impl UserRepositoryTrait<T>,
-    repo_cache: &impl UserCacheTrait<T>,
+    repo_cache: &impl UserCacheTrait<U>,
     secret: &[u8],
     token: &String,
     payload: Payload,
 ) -> Result<User, UpdateError> {
     // validate confirmation code
-    let update_user = match repo_cache.find_by_id::<UpdateUserCDCache>(conn, payload.transaction_id).await {
+    let update_user = match repo_cache.find_by_id::<UpdateUserCDCache>(cache_conn, payload.transaction_id).await {
         Ok(update) => match update {
             Some(update) => {
                 if Into::<u32>::into(update.confirmation_code.clone()) == payload.confirmation_code {

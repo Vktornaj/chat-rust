@@ -11,10 +11,10 @@ use crate::application::port::driven::{
 };
 
 
-pub struct RedisCache();
+pub struct UserCache();
 
 #[async_trait]
-impl UserCacheTrait<Pool<Manager, Connection>> for RedisCache {
+impl UserCacheTrait<Pool<Manager, Connection>> for UserCache {
     async fn find_by_id<T>(&self, pool: &Pool<Manager, Connection>, id: String) -> Result<Option<T>, RepoSelectError>
     where
         T: DeserializeOwned,
@@ -23,26 +23,24 @@ impl UserCacheTrait<Pool<Manager, Connection>> for RedisCache {
             RepoSelectError::ConnectionError(format!("Failed to get connection from pool: {}", e))
         })?;
 
-        let result: Result<String, RedisError> = cmd("GET")
+        let result: Result<Option<String>, RedisError> = cmd("GET")
             .arg(&[id.to_string()])
             .query_async(&mut conn)
             .await;
 
         match result {
             Ok(data) => {
-                if let Ok(value) = serde_json::from_str(&data) {
-                    Ok(Some(value))
+                if let Some(data) = data {
+                    if let Ok(value) = serde_json::from_str(&data) {
+                        Ok(Some(value))
+                    } else {
+                        Err(RepoSelectError::Unknown("Failed to deserialize value".to_string()))
+                    }
                 } else {
-                    Err(RepoSelectError::Unknown("Failed to deserialize value".to_string()))
-                }
-            }
-            Err(err) => {
-                if err.to_string() == "Redis error: key not found" {
                     Ok(None)
-                } else {
-                    Err(RepoSelectError::Unknown("Failed to get value".to_string()))
                 }
             }
+            Err(err) => Err(RepoSelectError::Unknown(format!("Failed to get value {}", err))),
         }
     }
 

@@ -23,10 +23,11 @@ pub struct Payload {
     pub languages: Vec<String>,
 }
 
-pub async fn execute<T>(
+pub async fn execute<T, U>(
     conn: &T,
+    cache_conn: &U,
     repo: &impl UserRepositoryTrait<T>, 
-    repo_cache: &impl UserCacheTrait<T>, 
+    repo_cache: &impl UserCacheTrait<U>, 
     payload: Payload
 ) -> Result<String, CreateError> {
     let cache_user = match CreateUserCache::new(
@@ -44,7 +45,7 @@ pub async fn execute<T>(
     };
     // verify no email in cache
     if let Some(email) = cache_user.email.clone() {
-        match repo_cache.find_by_id::<CreateUserCache>(conn, email.into()).await {
+        match repo_cache.find_by_id::<CreateUserCache>(cache_conn, email.into()).await {
             Ok(user) => {
                 if user.is_some() {
                     return Err(CreateError::Conflict("email unavailable".to_string()));
@@ -55,7 +56,7 @@ pub async fn execute<T>(
     }
     // verify no phone number in cache
     if let Some(phone_number) = cache_user.phone_number.clone() {
-        match repo_cache.find_by_id::<CreateUserCache>(conn, phone_number.into()).await {
+        match repo_cache.find_by_id::<CreateUserCache>(cache_conn, phone_number.into()).await {
             Ok(user) => {
                 if user.is_some() {
                     return Err(CreateError::Conflict("phone number unavailable".to_string()));
@@ -87,7 +88,7 @@ pub async fn execute<T>(
     };
     let res = match repo_cache
         .add_request::<CreateUserCache>(
-            conn,
+            cache_conn,
             id,
             cache_user.clone(),
             3600

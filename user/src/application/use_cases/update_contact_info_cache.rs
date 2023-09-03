@@ -8,7 +8,10 @@ use crate::{
         phone_number::PhoneNumber, 
         id::Id, code::Code
     }, 
-    application::port::driven::{user_cache::{UserCacheTrait, UpdateUserCDCache}, user_repository::{FindUser, UpdateUser}}
+    application::port::driven::{
+        user_cache::{UserCacheTrait, UpdateUserCDCache}, 
+        user_repository::{FindUser, UpdateUser}
+    }
 };
 
 
@@ -27,10 +30,11 @@ pub struct Payload {
     pub phone_number: Option<Option<String>>,
 }
 
-pub async fn execute<T>(
-    conn: &T, 
+pub async fn execute<T, U>(
+    conn: &T,
+    cache_conn: &U,
     repo: &impl UserRepositoryTrait<T>,
-    repo_cache: &impl UserCacheTrait<T>,
+    repo_cache: &impl UserCacheTrait<U>,
     secret: &[u8],
     token: &String,
     payload: Payload,
@@ -72,7 +76,7 @@ pub async fn execute<T>(
         phone_number.clone().unwrap().unwrap().into()
     };
     if let Ok(res) = repo_cache
-        .find_by_id::<UpdateUserCDCache>(conn, transaction_id.clone()).await {
+        .find_by_id::<UpdateUserCDCache>(cache_conn, transaction_id.clone()).await {
         if res.is_some() {
             return Err(UpdateError::Conflict(format!("update request already in progress")));
         }
@@ -163,7 +167,7 @@ pub async fn execute<T>(
     };
     let res = match repo_cache
         .add_request::<>(
-            conn, 
+            cache_conn, 
             transaction_id, 
             user_update_cache, 
             3600

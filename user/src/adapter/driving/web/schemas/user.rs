@@ -1,5 +1,4 @@
 use serde::{Serialize, Deserialize};
-use uuid::Uuid;
 
 use crate::domain::user::User;
 
@@ -99,13 +98,13 @@ pub struct Credentials3 {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ValidUser {
-    pub transaction_id: Uuid,
+pub struct ValidTransaction {
+    pub transaction_id: String,
     pub confirmation_code: u32,
 }
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdTransaction {
-    pub id_transaction: Uuid,
+    pub id_transaction: String,
 }

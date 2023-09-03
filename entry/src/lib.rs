@@ -53,7 +53,10 @@ pub async fn rocket() -> _ {
             routes![
                 user_routes::user::email_available,
                 user_routes::user::phone_number_available,
-                // user_routes::user::create_user,
+                user_routes::user::create_user_cache,
+                user_routes::user::create_user_confirmation,
+                user_routes::user::update_user_contact_info_cache,
+                user_routes::user::update_user_contact_info_confirmation,
                 user_routes::user::login,
                 user_routes::user::get_user_info,
                 todo_routes::todo::post_todo,
