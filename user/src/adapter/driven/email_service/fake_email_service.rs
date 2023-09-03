@@ -70,7 +70,6 @@ mod tests {
         // RFC 822 dictates the format of the body of e-mails.
         let messages_stream = session.fetch("1:*", "RFC822").await.unwrap();
         let messages: Vec<_> = messages_stream.try_collect().await.unwrap();
-        // let message = messages.first().expect("found no messages in the INBOX");
 
         let bodyes = messages.iter().map(|m| {
             // Extract the message body.
@@ -78,10 +77,10 @@ mod tests {
             std::str::from_utf8(body).expect("message was not valid utf-8").to_string()
         }).collect::<Vec<String>>();
 
-        let matches_bodyes: Vec<String> = bodyes.into_iter()
+        let match_bodyes: Vec<String> = bodyes.into_iter()
             .filter(|b| b.contains(format!("Code: {}", code).as_str())).collect();
 
-        assert_eq!(matches_bodyes.len(), 1);
+        assert_eq!(match_bodyes.len(), 1);
 
         session.logout().await.unwrap();
     }
