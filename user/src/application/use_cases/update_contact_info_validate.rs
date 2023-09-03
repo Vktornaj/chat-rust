@@ -1,3 +1,5 @@
+use auth::domain::auth::Auth;
+
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
     application::port::driven::user_cache::{UserCacheTrait, UpdateUserCDCache}, 
@@ -28,8 +30,13 @@ pub async fn execute<T, U>(
     token: &String,
     payload: Payload,
 ) -> Result<User, UpdateError> {
+    // verify token is valid
+    if Auth::from_token(token, &secret).is_err() {
+        return Err(UpdateError::Unautorized);
+    };
     // validate confirmation code
-    let update_user = match repo_cache.find_by_id::<UpdateUserCDCache>(cache_conn, payload.transaction_id).await {
+    let update_user = match repo_cache
+        .find_by_id::<UpdateUserCDCache>(cache_conn, payload.transaction_id.clone()).await {
         Ok(update) => match update {
             Some(update) => {
                 if Into::<u32>::into(update.confirmation_code.clone()) == payload.confirmation_code {
@@ -40,6 +47,11 @@ pub async fn execute<T, U>(
             },
             None => return Err(UpdateError::InvalidData("invalid transaction id".to_string())),
         },
+        Err(error) => return Err(UpdateError::Unknown(format!("Unknown error: {:?}", error))),
+    };
+    // delete cache
+    match repo_cache.delete(cache_conn, payload.transaction_id).await {
+        Ok(_) => (),
         Err(error) => return Err(UpdateError::Unknown(format!("Unknown error: {:?}", error))),
     };
     // create user

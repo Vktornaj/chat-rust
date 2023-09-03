@@ -3,14 +3,13 @@ use auth::domain::auth::Auth;
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
     domain::types::{
-        password::Password, 
         email::Email, 
         phone_number::PhoneNumber, 
         id::Id, code::Code
     }, 
     application::port::driven::{
         user_cache::{UserCacheTrait, UpdateUserCDCache}, 
-        user_repository::{FindUser, UpdateUser}
+        user_repository::{FindUser, UpdateUser}, email_service::EmailServiceTrait
     }
 };
 
@@ -25,26 +24,22 @@ pub enum UpdateError {
 }
 
 pub struct Payload {
-    pub password: String,
     pub email: Option<Option<String>>,
     pub phone_number: Option<Option<String>>,
 }
 
-pub async fn execute<T, U>(
+pub async fn execute<T, U, ES>(
     conn: &T,
     cache_conn: &U,
+    email_conn: &ES,
     repo: &impl UserRepositoryTrait<T>,
     repo_cache: &impl UserCacheTrait<U>,
+    email_service: &impl EmailServiceTrait<ES>,
     secret: &[u8],
     token: &String,
     payload: Payload,
 ) -> Result<Option<String>, UpdateError> {
     // validate payload
-    let password = if let Ok(password) = Password::try_from(payload.password) {
-        password
-    } else {
-        return Err(UpdateError::Unautorized);
-    };
     let email = if let Some(email) = payload.email {
         if let Ok(email) = email.map(|x| Email::try_from(x)).transpose() {
            Some(email)
@@ -101,9 +96,6 @@ pub async fn execute<T, U>(
                 return Err(UpdateError::Conflict("Phone number is the same".to_string()));
             }
         }
-        if password.verify_password(&user.hashed_password).is_err() {
-            return Err(UpdateError::Unautorized);
-        }
     } else {
         return Err(UpdateError::NotFound);
     };
@@ -159,11 +151,12 @@ pub async fn execute<T, U>(
         }
     }
     // create request to update sensitive info
+    let confirmation_code = Code::new(6);
     let user_update_cache = UpdateUserCDCache {
         id: Id::try_from(id).unwrap(),
-        email,
+        email: email.clone(),
         phone_number,
-        confirmation_code: Code::new(6)
+        confirmation_code: confirmation_code.clone(),
     };
     let res = match repo_cache
         .add_request::<>(
@@ -175,7 +168,16 @@ pub async fn execute<T, U>(
         Ok(transaction_id) => Ok(Some(transaction_id)),
         Err(e) => Err(UpdateError::Unknown(format!("{:?}", e)))
     };
-    // TODO: send email
+    // Send confirmation email
+    if let Some(Some(email)) = email {
+        if email_service.send_confirmation_email(
+            email_conn, 
+            email.into(),
+            confirmation_code.into()
+        ).await.is_err() {
+            return Err(UpdateError::Unknown("Email invalid".to_string()));
+        }
+    }
     // TODO: send sms
     res
 }

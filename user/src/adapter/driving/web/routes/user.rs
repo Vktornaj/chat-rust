@@ -272,17 +272,19 @@ pub async fn update_user_contact_info_cache(
     token: Token,
     user_contact_info: Json<UserContactInfo>,
 ) -> Result<Option<String>, status::BadRequest<String>> {
+    let mailer: SmtpTransport = SmtpTransport::unencrypted_localhost();
     match use_cases::update_contact_info_cache::execute(
         pool.inner(), 
         cache_pool.inner(),
+        &mailer,
         &UserRepository {},
         &UserCache {},
+        &FakeEmailService {},
         &state.secret,
         &token.value,
         use_cases::update_contact_info_cache::Payload {
             email: user_contact_info.0.email,
             phone_number: user_contact_info.0.phone_number,
-            password: user_contact_info.0.password,
         }
     ).await {
         Ok(user) => Ok(user),

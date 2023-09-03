@@ -23,7 +23,7 @@ pub async fn execute<T, U>(
     payload: Payload
 ) -> Result<User, CreateError> {
     // validate confirmation code
-    let new_user = match repo_cache.find_by_id::<CreateUserCache>(cache_conn, payload.transaction_id).await {
+    let new_user = match repo_cache.find_by_id::<CreateUserCache>(cache_conn, payload.transaction_id.clone()).await {
         Ok(user) => match user {
             Some(user) => {
                 if Into::<u32>::into(user.confirmation_code.clone()) == payload.confirmation_code {
@@ -36,6 +36,11 @@ pub async fn execute<T, U>(
             },
             None => return Err(CreateError::InvalidData("invalid transaction id".to_string())),
         },
+        Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
+    };
+    // delete cache
+    match repo_cache.delete(cache_conn, payload.transaction_id).await {
+        Ok(_) => (),
         Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     };
     // create user
