@@ -20,7 +20,7 @@ use crate::adapter::driving::web::schemas::user::{
     Credentials2, 
     Credentials3, 
     UserContactInfo, 
-    IdTransaction, ValidTransaction
+    IdTransaction, ValidTransaction, UserContactInfo2
 };
 use crate::application::use_cases;
 use common::{config::AppState, token::Token};
@@ -320,5 +320,54 @@ pub async fn update_user_contact_info_confirmation(
             use_cases::update_contact_info_validate::UpdateError::NotFound => Err((Status::NotFound, "User not found".into())),
             use_cases::update_contact_info_validate::UpdateError::Unautorized => Err((Status::Unauthorized, "Unautorized".into())),
         }
+    }
+}
+
+// TODO: use different secret for password reset
+// TODO: get domain from config
+#[put("/password-reset-request", format = "json", data = "<data>")]
+pub async fn password_reset_request(
+    pool: &rocket::State<PgPool>,
+    state: &State<AppState>,
+    data: Json<UserContactInfo2>,
+) -> Result<(), status::BadRequest<String>> {
+    let mailer: SmtpTransport = SmtpTransport::unencrypted_localhost();
+    match use_cases::reset_password_request::execute(
+        pool.inner(),
+        &mailer,
+        &UserRepository {},
+        &FakeEmailService {},
+        &state.secret,
+        use_cases::reset_password_request::Payload {
+            email: data.0.email,
+            phone_number: data.0.phone_number,
+            domain: "localhost:8000".to_string(),
+        }
+    ).await {
+        Ok(_) => Ok(()),
+        Err(e) => Err(status::BadRequest(Some(format!("{:?}", e)))),
+    }
+}
+
+// TODO: use different secret for password reset
+// TODO: get domain from config
+#[put("/password-reset/<token>", format = "json", data = "<data>")]
+pub async fn password_reset(
+    pool: &rocket::State<PgPool>,
+    state: &State<AppState>,
+    data: Json<Credentials2>,
+    token: String,
+) -> Result<Json<UserJson>, status::BadRequest<String>> {
+    match use_cases::reset_password::execute(
+        pool.inner(),
+        &UserRepository {},
+        &state.secret,
+        use_cases::reset_password::Payload {
+            token,
+            password: data.0.password,
+        }
+    ).await {
+        Ok(user) => Ok(Json(UserJson::from_user(user))),
+        Err(e) => Err(status::BadRequest(Some(format!("{:?}", e)))),
     }
 }

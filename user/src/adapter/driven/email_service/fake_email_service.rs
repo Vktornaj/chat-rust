@@ -24,6 +24,23 @@ impl EmailServiceTrait<SmtpTransport> for FakeEmailService {
             Err(e) => panic!("Could not send email: {e:?}"),
         }
     }
+
+    async fn send_reset_password_email(&self, conn: &SmtpTransport, address: String, link: String) -> Result<(), EmailSendError> {
+        let email = Message::builder()
+            .from("Staff <staff@domain.tld>".parse().unwrap())
+            .reply_to("You <you@domain.tld>".parse().unwrap())
+            .to(format!("You <{}>", address).parse().unwrap())
+            .subject(String::from("Reset your password"))
+            .header(ContentType::TEXT_PLAIN)
+            .body(format!("Link: {}", link))
+            .unwrap();
+
+        // Send the email
+        match conn.send(&email) {
+            Ok(_) => Ok(()),
+            Err(e) => panic!("Could not send email: {e:?}"),
+        }
+    }
 }
 
 // write tests
