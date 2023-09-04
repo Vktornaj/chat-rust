@@ -69,6 +69,13 @@ pub struct UserContactInfo {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct UserContactInfo2 {
+    pub email: Option<String>,
+    pub phone_number: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Credentials {
     pub email: Option<String>,
     pub phone_number: Option<String>,
