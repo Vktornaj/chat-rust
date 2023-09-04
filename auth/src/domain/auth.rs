@@ -28,6 +28,13 @@ impl Auth {
         }
     }
 
+    pub fn new_reset_password_token(id: &Uuid) -> Self {
+        Auth { 
+            exp: (Utc::now() + Duration::minutes(15)).timestamp(), 
+            id: id.to_owned() 
+        }
+    }
+
     pub fn token(&self, secret: &[u8]) -> String {
         let encoding_key = EncodingKey::from_base64_secret(
             std::str::from_utf8(secret).unwrap()

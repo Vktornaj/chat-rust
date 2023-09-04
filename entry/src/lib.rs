@@ -59,6 +59,8 @@ pub async fn rocket() -> _ {
                 user_routes::user::update_user_contact_info_confirmation,
                 user_routes::user::login,
                 user_routes::user::get_user_info,
+                user_routes::user::password_reset,
+                user_routes::user::password_reset_request,
                 todo_routes::todo::post_todo,
                 todo_routes::todo::update_todo,
                 todo_routes::todo::delete_todo,

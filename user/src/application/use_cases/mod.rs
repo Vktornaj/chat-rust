@@ -9,3 +9,5 @@ pub mod update_user_info;
 pub mod update_contact_info_cache;
 pub mod update_contact_info_validate;
 pub mod create_user_validate;
+pub mod reset_password_request;
+pub mod reset_password;
