@@ -1,9 +1,11 @@
 use deadpool_redis::{Config, Runtime, Manager, Connection};
 use deadpool::managed::Pool;
+use std::env;
 
 
 pub async fn create_pool() -> Pool<Manager, Connection> {
-    let cfg = Config::from_url("redis://localhost:6379/");
+    let redis_url = env::var("CACHE_URL").expect("CACHE_URL must be set");
+    let cfg = Config::from_url(redis_url);
     let pool = cfg.create_pool(Some(Runtime::Tokio1)).unwrap();
     pool
 }
