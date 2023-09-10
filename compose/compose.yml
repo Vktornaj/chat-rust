@@ -1,0 +1,94 @@
+version: "3.9"
+
+services:  
+  server:
+    image: nginx
+    environment: 
+      - PUID=1000 
+      - PGID=1000 
+      - TZ=Europe/London
+      - URL=
+      - VALIDATION=http 
+      - SUBDOMAINS= #optional 
+      - CERTPROVIDER= #optional 
+      - DNSPLUGIN=cloudflare #optional 
+      - PROPAGATION= #optional
+      - EMAIL= #optional 
+      - ONLY_SUBDOMAINS=false #optional 
+      - EXTRA_DOMAINS= #optional
+      - STAGING=false #optional 
+    ports: 
+      # - 443:443
+      - 80:80
+    volumes:
+      - config:/config
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    restart: unless-stopped
+    depends_on:
+      - web
+
+  web:
+    image: chat-rust:0.0.6
+    environment:
+      - DATABASE_URL
+      - SECRET_KEY
+      - CACHE_URL
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15.0-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    healthcheck:
+        test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
+        interval: 10s
+        timeout: 3s
+        retries: 5
+    volumes: 
+      - db:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7.2-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t82
+    volumes: 
+      - cache:/data
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9091:9090"
+    command: --config.file=/etc/prometheus/prometheus.yaml
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - prometheus:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./grafana.ini:/etc/grafana/grafana.ini
+      - grafana:/var/lib/grafana
+
+volumes:
+  db:
+    driver: local
+  cache:
+    driver: local
+  config:
+  grafana:
+    driver: local
+  prometheus:
+    driver: local
