@@ -1,2 +1,0 @@
-[default.databases.my_db]
-url = "postgres://postgres:postgres@localhost/todo_list"

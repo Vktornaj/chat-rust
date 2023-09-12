@@ -25,7 +25,7 @@ use crate::adapter::driving::web::schemas::user::{
 use crate::application::use_cases;
 use common::{config::AppState, token::Token};
 
-// Persistence
+// Adapters
 use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 use crate::adapter::driven::cache::redis::user_cache::UserCache;
 use crate::adapter::driven::email_service::fake_email_service::FakeEmailService;
@@ -98,7 +98,7 @@ pub async fn create_user_confirmation(
 #[get("/email-availability/<email>")]
 pub async fn email_available(
     pool: &rocket::State<PgPool>, 
-    email: String, 
+    email: String
 ) -> (Status, (ContentType, String)) {
     let res = use_cases::is_data_in_use::execute(
         pool.inner(),
@@ -113,6 +113,7 @@ pub async fn email_available(
     } else {
         return (Status::InternalServerError, (ContentType::Plain, "".into()));
     };
+    
     (
         Status::Ok,
         (ContentType::JSON, format!("{{ \"isAvailable\": \"{is_available}\" }}"))

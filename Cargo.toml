@@ -6,3 +6,5 @@ members = [
   "entry",
   "common",
 ]
+
+resolver = "2"
