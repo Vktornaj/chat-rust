@@ -28,45 +28,47 @@ services:
       - web
 
   web:
-    image: chat-rust:0.0.6
-    environment:
-      - DATABASE_URL
-      - SECRET_KEY
-      - CACHE_URL
-    restart: unless-stopped
+    build:
+      context: ../
+      target: final
+    env_file:
+      - ./config/.env
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - .:/app
 
   db:
-    image: postgres:15.0-alpine
+    image: postgres
     restart: unless-stopped
-    environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
+    env_file:
+      - ./config/.env
     healthcheck:
-        test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
-        interval: 10s
-        timeout: 3s
-        retries: 5
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes: 
       - db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=postgres
 
   cache:
     image: redis:7.2-alpine
     restart: unless-stopped
-    ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t82
+    # ports:
+    #   - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
     volumes: 
       - cache:/data
 
   prometheus:
     image: prom/prometheus
     container_name: prometheus
-    ports:
-      - "9091:9090"
+    # ports:
+    #   - "9091:9090"
     command: --config.file=/etc/prometheus/prometheus.yaml
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
@@ -76,8 +78,8 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     restart: always
-    ports:
-      - '3000:3000'
+    # ports:
+    #   - '3000:3000'
     volumes:
       - ./grafana.ini:/etc/grafana/grafana.ini
       - grafana:/var/lib/grafana
