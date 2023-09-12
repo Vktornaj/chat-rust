@@ -36,39 +36,40 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      cache:
+        condition: service_healthy
     volumes:
       - .:/app
 
   db:
     image: postgres
     restart: unless-stopped
+    user: postgres
     env_file:
       - ./config/.env
     healthcheck:
-      test: [ "CMD", "pg_isready" ]
+      test: [ "CMD", "pg_isready", "-d", "chat" ]
       interval: 10s
       timeout: 5s
       retries: 5
     volumes: 
       - db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_PASSWORD=postgres
 
   cache:
     image: redis:7.2-alpine
     restart: unless-stopped
-    # ports:
-    #   - '6379:6379'
     command: redis-server --save 20 1 --loglevel warning
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes: 
       - cache:/data
 
   prometheus:
     image: prom/prometheus
     container_name: prometheus
-    # ports:
-    #   - "9091:9090"
     command: --config.file=/etc/prometheus/prometheus.yaml
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
