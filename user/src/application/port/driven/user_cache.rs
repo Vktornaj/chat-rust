@@ -47,6 +47,7 @@ impl CreateUserCache {
         birthday: DateTime<Utc>,
         nationality: String,
         languages: Vec<String>,
+        confirmation_code: Code,
     ) -> Result<Self, ErrorMsg> {
         if email.is_none() && phone_number.is_none() {
             return Err(ErrorMsg("email or phone number must be provided".to_string()));
@@ -70,7 +71,7 @@ impl CreateUserCache {
             birthday: Birthday::try_from(birthday)?, 
             nationality: Nationality::try_from(nationality)?, 
             languages: languages?,
-            confirmation_code: Code::new(6)
+            confirmation_code
         })
     }
 

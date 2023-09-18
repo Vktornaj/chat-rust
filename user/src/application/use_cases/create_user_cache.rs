@@ -1,8 +1,8 @@
-use crate::application::port::driven::{
+use crate::{application::port::driven::{
     user_cache::{UserCacheTrait, CreateUserCache}, 
     user_repository::UserRepositoryTrait, 
     email_service::EmailServiceTrait
-};
+}, domain::types::code::Code};
 use super::is_data_in_use;
 
 
@@ -21,7 +21,7 @@ pub struct Payload {
     pub last_name: String, 
     pub birthday: chrono::DateTime<chrono::Utc>, 
     pub nationality: String, 
-    pub languages: Vec<String>,
+    pub languages: Vec<String>
 }
 
 pub async fn execute<T, U, ES>(
@@ -31,8 +31,15 @@ pub async fn execute<T, U, ES>(
     repo: &impl UserRepositoryTrait<T>, 
     repo_cache: &impl UserCacheTrait<U>,
     email_service: &impl EmailServiceTrait<ES>,
+    environment: &String,
     payload: Payload
 ) -> Result<String, CreateError> {
+    // TODO: improve environment handling
+    let confirmation_code = if environment == "production" {
+        Code::new(6)
+    } else {
+        Code::new_0s(6)
+    };
     let cache_user = match CreateUserCache::new(
         payload.email,
         payload.phone_number, 
@@ -42,6 +49,7 @@ pub async fn execute<T, U, ES>(
         payload.birthday, 
         payload.nationality, 
         payload.languages,
+        confirmation_code
     ) {
         Ok(new_user) => new_user,
         Err(error) => return Err(CreateError::InvalidData(error.to_string())),
@@ -113,19 +121,19 @@ pub async fn execute<T, U, ES>(
     res
 }
 
-#[cfg(test)]
-mod tests {
-    use std::sync::Mutex;
+// #[cfg(test)]
+// mod tests {
+//     use std::sync::Mutex;
 
-    // use crate::repositories::pokemon::InMemoryRepository;
-    use chrono::{Utc, NaiveDate, DateTime};
-    use rocket::tokio;
-    use uuid::Uuid;
-    use super::*;
-    use crate::{
-        adapter::driven::persistence::in_memory_repository::InMemoryRepository, 
-        domain::types::id::Id
-    };
+//     // use crate::repositories::pokemon::InMemoryRepository;
+//     use chrono::{Utc, NaiveDate, DateTime};
+//     use rocket::tokio;
+//     use uuid::Uuid;
+//     use super::*;
+//     use crate::{
+//         adapter::driven::persistence::in_memory_repository::InMemoryRepository, 
+//         domain::types::id::Id
+//     };
     
     // #[tokio::test]
     // async fn it_should_return_the_user_otherwise() {
@@ -171,4 +179,4 @@ mod tests {
     //         _ => unreachable!(),
     //     };
     // }
-}
+// }

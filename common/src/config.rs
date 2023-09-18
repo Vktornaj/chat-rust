@@ -16,11 +16,13 @@ pub const TOKEN_PREFIX: &'static str = "Bearer ";
 
 pub struct AppState {
     pub secret: Vec<u8>,
+    pub environment: String,
 }
 
 impl AppState {
     pub fn manage() -> AdHoc {
         AdHoc::on_ignite("Manage config", |rocket| async move {
+            
             // Rocket doesn't expose it's own secret_key, so we use our own here.
             let secret = env::var("SECRET_KEY").unwrap_or_else(|err| {
                 if cfg!(debug_assertions) {
@@ -30,8 +32,11 @@ impl AppState {
                 }
             });
 
+            let environment = env::var("ROCKET_ENV").unwrap_or_else(|_| "development".to_string());
+
             rocket.manage(AppState {
-                secret: secret.into_bytes()
+                secret: secret.into_bytes(),
+                environment,
             })
         })
     }

@@ -106,7 +106,7 @@ pub struct Credentials3 {
 #[serde(rename_all = "camelCase")]
 pub struct ValidTransaction {
     pub transaction_id: String,
-    pub confirmation_code: u32,
+    pub confirmation_code: String,
 }
 
 #[derive(Deserialize, Serialize)]

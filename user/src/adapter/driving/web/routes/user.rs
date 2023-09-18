@@ -35,21 +35,27 @@ use crate::adapter::driven::email_service::fake_email_service::FakeEmailService;
 pub async fn create_user_cache(
     pool: &rocket::State<PgPool>, 
     cache_pool: &rocket::State<Pool<Manager, Connection>>,
-    user: Json<NewUserJson>
+    user: Json<NewUserJson>,
+    state: &State<AppState>,
 ) -> Result<Json<IdTransaction>, (Status, String)>  {
     let date = if let Ok(date) = Utc.datetime_from_str(&user.birthday, DATE_FORMAT) {
         date
     } else {
         return Err((Status::BadRequest, "Invalid birthday format".into()));
     };
-    let mailer: SmtpTransport = SmtpTransport::unencrypted_localhost();
+    let email_conn = if state.environment == "production" {
+        Some(SmtpTransport::relay("smtp.gmail.com").unwrap().build())
+    } else {
+        None
+    };
     match use_cases::create_user_cache::execute(
         pool.inner(),
         cache_pool.inner(),
-        &mailer,
+        &email_conn,
         &UserRepository {},
         &UserCache {},
         &FakeEmailService {},
+        &state.environment,
         use_cases::create_user_cache::Payload {
             email: user.0.email,
             phone_number: user.0.phone_number,
@@ -273,11 +279,15 @@ pub async fn update_user_contact_info_cache(
     token: Token,
     user_contact_info: Json<UserContactInfo>,
 ) -> Result<Option<String>, status::BadRequest<String>> {
-    let mailer: SmtpTransport = SmtpTransport::unencrypted_localhost();
+    let email_conn = if state.environment == "production" {
+        Some(SmtpTransport::relay("smtp.gmail.com").unwrap().build())
+    } else {
+        None
+    };
     match use_cases::update_contact_info_cache::execute(
         pool.inner(), 
         cache_pool.inner(),
-        &mailer,
+        &email_conn,
         &UserRepository {},
         &UserCache {},
         &FakeEmailService {},
@@ -332,10 +342,14 @@ pub async fn password_reset_request(
     state: &State<AppState>,
     data: Json<UserContactInfo2>,
 ) -> Result<(), status::BadRequest<String>> {
-    let mailer: SmtpTransport = SmtpTransport::unencrypted_localhost();
+    let email_conn = if state.environment == "production" {
+        Some(SmtpTransport::relay("smtp.gmail.com").unwrap().build())
+    } else {
+        None
+    };
     match use_cases::reset_password_request::execute(
         pool.inner(),
-        &mailer,
+        &email_conn,
         &UserRepository {},
         &FakeEmailService {},
         &state.secret,

@@ -18,7 +18,7 @@ pub enum UpdateError {
 
 pub struct Payload {
     pub transaction_id: String,
-    pub confirmation_code: u32,
+    pub confirmation_code: String,
 }
 
 pub async fn execute<T, U>(
@@ -39,7 +39,7 @@ pub async fn execute<T, U>(
         .find_by_id::<UpdateUserCDCache>(cache_conn, payload.transaction_id.clone()).await {
         Ok(update) => match update {
             Some(update) => {
-                if Into::<u32>::into(update.confirmation_code.clone()) == payload.confirmation_code {
+                if Into::<String>::into(update.confirmation_code.clone()) == payload.confirmation_code {
                     update.to_update_user()
                 } else {
                     return Err(UpdateError::InvalidData("invalid confirmation code".to_string()));
