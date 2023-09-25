@@ -1,6 +1,6 @@
 use std::thread;
 
-use systemstat::{Platform, System, Duration};
+use systemstat::{Platform, System};
 
 use rocket::{catch, catchers, options, get, Request};
 use cors::CORS;
@@ -15,7 +15,7 @@ mod metrics;
 
 use sqlx::PgPool;
 use user::routes as user_routes;
-use todo::routes as todo_routes;
+// use message::routes as message_routes;
 use common::{config, db, cache};
 
 
@@ -108,12 +108,6 @@ pub async fn rocket() -> _ {
                 user_routes::user::password_reset,
                 user_routes::user::password_reset_request,
                 user_routes::user::update_user_info,
-                // todo_routes::todo::post_todo,
-                // todo_routes::todo::update_todo,
-                // todo_routes::todo::delete_todo,
-                // todo_routes::todo::get_todos,
-                // todo_routes::todo::put_add_tag,
-                // todo_routes::todo::put_remove_tag,
                 all_options,
             ]
         )
