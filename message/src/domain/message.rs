@@ -1,17 +1,15 @@
 use user::types::id::Id;
 use uuid::Uuid;
+use serde::{Deserialize, Serialize};
 
 use super::types::{
-    file::File,
-    audio::Audio,
-    video::Video,
     text::Text,
-    image::Image, 
     sender::Sender, 
     recipient::Recipient, media_path::MediaPath,
 };
 
 
+#[derive(Clone, Deserialize, Serialize)]
 pub enum MessageContent {
     Text(Text),
     Image(MediaPath),
@@ -20,12 +18,14 @@ pub enum MessageContent {
     File(MediaPath),
 }
 
+#[derive(Clone, Deserialize, Serialize)]
 pub enum MessageStatus {
     Sent,
     Delivered,
     Read,
 }
 
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Message {
     sender: Sender,
     recipient: Recipient,

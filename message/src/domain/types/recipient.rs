@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
 use user::types::id::Id;
 use uuid::Uuid;
 
 
+#[derive(Clone, Deserialize, Serialize)]
 pub enum Recipient {
     User(Id),
     Group(Id),

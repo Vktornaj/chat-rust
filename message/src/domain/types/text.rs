@@ -1,6 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use super::error::ErrorMsg;
 
 
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Text(String);
 
 
