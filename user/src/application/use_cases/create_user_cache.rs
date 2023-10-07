@@ -1,3 +1,5 @@
+use common::config::Environment;
+
 use crate::{application::port::driven::{
     user_cache::{UserCacheTrait, CreateUserCache}, 
     user_repository::UserRepositoryTrait, 
@@ -31,14 +33,13 @@ pub async fn execute<T, U, ES>(
     repo: &impl UserRepositoryTrait<T>, 
     repo_cache: &impl UserCacheTrait<U>,
     email_service: &impl EmailServiceTrait<ES>,
-    environment: &String,
+    environment: &Environment,
     payload: Payload
 ) -> Result<String, CreateError> {
     // TODO: improve environment handling
-    let confirmation_code = if environment == "production" {
-        Code::new(6)
-    } else {
-        Code::new_0s(6)
+    let confirmation_code = match environment {
+        Environment::Development => Code::new(6),
+        Environment::Production => Code::new_0s(6),
     };
     let cache_user = match CreateUserCache::new(
         payload.email,

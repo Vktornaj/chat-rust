@@ -2,34 +2,22 @@ use prometheus::Encoder;
 use systemstat::{Platform, System};
 use axum::{
     Router, http::{StatusCode, Uri}, 
-    routing::get, 
+    routing::{get, post}, 
     response::IntoResponse, middleware,
 };
-use common::{db, cache};
 use sqlx::{PgPool, migrate::Migrator};
-use deadpool_redis::{Manager, Connection};
-use deadpool::managed::Pool;
+use common::config;
+use user::handlers as user_handlers;
 
 mod metrics;
 
 
-#[derive(Clone)]
-struct MyAppState {
-    db_sql_pool: PgPool,
-    cache_pool: Pool<Manager, Connection>,
-}
-
 pub async fn router() -> Router {
-    let sqlx_pool = db::create_pool().await;
-    let redis_pool = cache::create_pool().await;
+   
     let sys = System::new();
+    let state = config::AppState::new().await;
 
-    run_migrations(&sqlx_pool).await;
-
-    let state = MyAppState { 
-        db_sql_pool: sqlx_pool,
-        cache_pool: redis_pool,
-    };
+    run_migrations(&state.db_sql_pool).await;
 
     tokio::spawn(async move { 
         loop {
@@ -57,8 +45,17 @@ pub async fn router() -> Router {
     });
 
     Router::new()
-        .route("/", get(handle_get_root))
-        .route("/metrics", get(get_metrics))
+        .route("/", get(handler_get_root))
+        .route("/metrics", get(handler_metrics))
+        .nest(
+            "/api",
+            Router::new()
+                .nest(
+                    "/user", 
+                    Router::new()
+                        .route("create-user-request", post(user_handlers::handle_create_user_cache))
+                )
+        )
         .layer(middleware::from_fn(metrics::metrics_middleware))
         .fallback(handler_404)
         .with_state(state)
@@ -69,15 +66,17 @@ async fn run_migrations(pool: &PgPool) {
     MIGRATOR.run(pool).await.expect("USER_MIGRATOR failed");
 }
 
+// handlers
+
 async fn handler_404(uri: Uri) -> impl IntoResponse {
     (StatusCode::NOT_FOUND, format!("No route for {}", uri))
 }
 
-async fn handle_get_root() -> &'static str {
+async fn handler_get_root() -> &'static str {
     "ok"
 }
 
-async fn get_metrics() -> std::string::String {
+async fn handler_metrics() -> std::string::String {
     let mut buffer = Vec::new();
     let encoder = prometheus::TextEncoder::new();
 

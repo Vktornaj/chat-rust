@@ -1,10 +1,9 @@
-use rocket::figment::Figment;
-// use std::collections::HashMap;
-use rocket::config::Config;
-// use dotenvy::dotenv;
-use rocket::fairing::AdHoc;
+use deadpool::managed::Pool;
+use deadpool_redis::{Connection, Manager};
+use sqlx::PgPool;
 use std::env;
 
+use crate::{cache, db};
 
 /// Debug only secret for JWT encoding & decoding.
 pub const SECRET: &'static str = "8Xui8SN4mI+7egV/9dlfYYLGQJeEx4+DwmSQLwDVXJg=";
@@ -14,56 +13,51 @@ pub const DATE_FORMAT: &'static str = "%Y-%m-%dT%H:%M:%S%.3fZ";
 
 pub const TOKEN_PREFIX: &'static str = "Bearer ";
 
-pub struct AppState {
+#[derive(Clone)]
+pub enum Environment {
+    Development,
+    Production,
+}
+
+#[derive(Clone)]
+pub struct Config {
     pub secret: Vec<u8>,
-    pub environment: String,
+    pub environment: Environment,
+}
+
+#[derive(Clone)]
+pub struct AppState {
+    pub db_sql_pool: PgPool,
+    pub cache_pool: Pool<Manager, Connection>,
+    pub config: Config,
 }
 
 impl AppState {
-    pub fn manage() -> AdHoc {
-        AdHoc::on_ignite("Manage config", |rocket| async move {
-            
-            // Rocket doesn't expose it's own secret_key, so we use our own here.
-            let secret = env::var("SECRET_KEY").unwrap_or_else(|err| {
-                if cfg!(debug_assertions) {
-                    SECRET.to_string()
-                } else {
-                    panic!("No SECRET_KEY environment variable found: {:?}", err)
-                }
-            });
+    pub async fn new() -> AppState {
+        let secret = env::var("SECRET_KEY").unwrap_or_else(|err| {
+            if cfg!(debug_assertions) {
+                SECRET.to_string()
+            } else {
+                panic!("No SECRET_KEY environment variable found: {:?}", err)
+            }
+        });
 
-            let environment = env::var("ROCKET_ENV").unwrap_or_else(|_| "development".to_string());
+        let environment = match env::var("ROCKET_ENV")
+            .unwrap_or_else(|_| "development".to_string())
+            .as_str()
+        {
+            "development" => Environment::Development,
+            "production" => Environment::Production,
+            s => panic!("Unknown environment: {}", s),
+        };
 
-            rocket.manage(AppState {
+        AppState {
+            db_sql_pool: db::create_pool().await,
+            cache_pool: cache::create_pool().await,
+            config: Config {
                 secret: secret.into_bytes(),
                 environment,
-            })
-        })
+            },
+        }
     }
-}
-
-// pub fn establish_connection_pg() -> PgConnection {
-//     dotenv().ok();
-//     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-//     PgConnection::establish(&database_url)
-//         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
-// }
-
-/// Create rocket config from environment variables
-pub fn from_env() -> Figment {
-    let port = env::var("PORT")
-        .unwrap_or_else(|_| "8000".to_string())
-        .parse::<u16>()
-        .expect("PORT environment variable should parse to an integer");
-
-    // let mut database_config = HashMap::new();
-    // let mut databases = HashMap::new();
-    // let database_url =
-    //     env::var("DATABASE_URL").expect("No DATABASE_URL environment variable found");
-    // database_config.insert("url", database_url);
-    // databases.insert("diesel_postgres_pool", database_config);
-
-    Config::figment()
-        .merge(("port", port))
-        // .merge(("databases", databases))
 }
