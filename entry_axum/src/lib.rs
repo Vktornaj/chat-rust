@@ -2,7 +2,7 @@ use prometheus::Encoder;
 use systemstat::{Platform, System};
 use axum::{
     Router, http::{StatusCode, Uri}, 
-    routing::{get, post}, 
+    routing::{get, post, put, delete}, 
     response::IntoResponse, middleware,
 };
 use sqlx::{PgPool, migrate::Migrator};
@@ -15,9 +15,9 @@ mod metrics;
 pub async fn router() -> Router {
    
     let sys = System::new();
-    let state = config::AppState::new().await;
+    let app_state = config::AppState::new().await;
 
-    run_migrations(&state.db_sql_pool).await;
+    run_migrations(&app_state.db_sql_pool).await;
 
     tokio::spawn(async move { 
         loop {
@@ -53,12 +53,24 @@ pub async fn router() -> Router {
                 .nest(
                     "/user", 
                     Router::new()
-                        .route("create-user-request", post(user_handlers::handle_create_user_cache))
+                        .route("/create-user-request", post(user_handlers::handle_create_user_cache))
+                        .route("/create-use-confirmation", post(user_handlers::handle_create_user_confirmation))
+                        .route("/get-user", get(user_handlers::handle_get_user_info))
+                        .route("/update-user", put(user_handlers::handle_update_user_info))
+                        .route("/delete-user", delete(user_handlers::handle_delete_account))
+                        .route("/email-available/:email", get(user_handlers::handle_email_available))
+                        .route("/phone-number-available/:phone", get(user_handlers::handle_phone_number_available))
+                        .route("/login", post(user_handlers::handle_login))
+                        .route("/update-password", put(user_handlers::handle_update_password))
+                        .route("/update-user-contact-info-cache", put(user_handlers::handle_update_user_contact_info_cache))
+                        .route("/update-user-contact-info-confirmation", put(user_handlers::handle_update_user_contact_info_confirmation))
+                        .route("/password-recovery-request", post(user_handlers::handle_password_recovery_request))
+                        .route("/password-reset-confirmation/:token", put(user_handlers::handle_password_reset_confirmation))
                 )
         )
         .layer(middleware::from_fn(metrics::metrics_middleware))
         .fallback(handler_404)
-        .with_state(state)
+        .with_state(app_state)
 }
 
 async fn run_migrations(pool: &PgPool) {
@@ -66,7 +78,7 @@ async fn run_migrations(pool: &PgPool) {
     MIGRATOR.run(pool).await.expect("USER_MIGRATOR failed");
 }
 
-// handlers
+// root handlers
 
 async fn handler_404(uri: Uri) -> impl IntoResponse {
     (StatusCode::NOT_FOUND, format!("No route for {}", uri))

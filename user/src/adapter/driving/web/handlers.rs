@@ -14,6 +14,7 @@ use super::schemas::{
     UserContactInfo, UserContactInfo2, UserInfo, UserJson, ValidTransaction,
 };
 use crate::application::use_cases;
+use crate::types::error::ErrorMsg;
 use common::{config::AppState, token::Token};
 
 // Adapters
@@ -107,16 +108,15 @@ pub async fn handle_email_available(
             phone_number: None
         }
     ).await;
-    let is_available = if let Ok(res) = res {
-        !res
-    } else {
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    };
-
-    if is_available {
-        StatusCode::OK
-    } else {
-        StatusCode::CONFLICT
+    match res {
+        Ok(is_in_use) => {
+            if is_in_use {
+                StatusCode::CONFLICT
+            } else {
+                StatusCode::OK
+            }
+        },
+        Err(_) => StatusCode::BAD_REQUEST,
     }
 }
 
@@ -132,28 +132,27 @@ pub async fn handle_phone_number_available(
             phone_number: Some(phone_number)
         }
     ).await;
-    let is_available = if let Ok(res) = res {
-        !res
-    } else {
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    };
-
-    if is_available {
-        StatusCode::OK
-    } else {
-        StatusCode::CONFLICT
+    match res {
+        Ok(is_in_use) => {
+            if is_in_use {
+                StatusCode::CONFLICT
+            } else {
+                StatusCode::OK
+            }
+        },
+        Err(_) => StatusCode::BAD_REQUEST,
     }
 }
 
 pub async fn handle_get_user_info(
     State(state): State<AppState>,
-    token: Token,
+    TypedHeader(token): TypedHeader<Authorization<Bearer>>,
 ) -> Result<Json<UserJson>, StatusCode> {
     match use_cases::get_user_info::execute(
         &state.db_sql_pool,
         &UserRepository {},
         &state.config.secret,
-        &token.value,
+        &token.token().to_string(),
     )
     .await
     {
@@ -372,10 +371,10 @@ pub async fn handle_password_recovery_request(
 
 // TODO: use different secret for password reset
 // TODO: get domain from config
-pub async fn handle_password_reset(
+pub async fn handle_password_reset_confirmation(
     State(state): State<AppState>,
-    Json(data): Json<Credentials2>,
     Path(token): Path<String>,
+    Json(data): Json<Credentials2>,
 ) -> Result<Json<UserJson>, StatusCode> {
     match use_cases::reset_password::execute(
         &state.db_sql_pool,
