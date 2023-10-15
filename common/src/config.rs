@@ -1,9 +1,10 @@
+use axum::extract::ws::WebSocket;
 use deadpool::managed::Pool;
 use deadpool_redis::{Connection, Manager};
+use futures_util::stream::SplitSink;
 use sqlx::PgPool;
-use std::env;
 
-use crate::{cache, db};
+use crate::models::client::{Clients, EventQueue};
 
 /// Debug only secret for JWT encoding & decoding.
 pub const SECRET: &'static str = "8Xui8SN4mI+7egV/9dlfYYLGQJeEx4+DwmSQLwDVXJg=";
@@ -26,38 +27,10 @@ pub struct Config {
 }
 
 #[derive(Clone)]
-pub struct AppState {
+pub struct AppState<T> {
+    pub clients: Clients<SplitSink<WebSocket, T>>,
+    pub event_queue: EventQueue,
     pub db_sql_pool: PgPool,
     pub cache_pool: Pool<Manager, Connection>,
     pub config: Config,
-}
-
-impl AppState {
-    pub async fn new() -> AppState {
-        let secret = env::var("SECRET_KEY").unwrap_or_else(|err| {
-            if cfg!(debug_assertions) {
-                SECRET.to_string()
-            } else {
-                panic!("No SECRET_KEY environment variable found: {:?}", err)
-            }
-        });
-
-        let environment = match env::var("ROCKET_ENV")
-            .unwrap_or_else(|_| "development".to_string())
-            .as_str()
-        {
-            "development" => Environment::Development,
-            "production" => Environment::Production,
-            s => panic!("Unknown environment: {}", s),
-        };
-
-        AppState {
-            db_sql_pool: db::create_pool().await,
-            cache_pool: cache::create_pool().await,
-            config: Config {
-                secret: secret.into_bytes(),
-                environment,
-            },
-        }
-    }
 }

@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc, Datelike};
-use super::error::ErrorMsg;
+use common::types::error::ErrorMsg;
 use serde::{Deserialize, Serialize};
 
 

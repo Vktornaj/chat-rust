@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use user::types::id::Id;
+use super::id::Id;
 use uuid::Uuid;
 
 

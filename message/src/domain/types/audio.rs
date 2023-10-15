@@ -1,4 +1,5 @@
-use super::error::ErrorMsg;
+use common::types::error::ErrorMsg;
+
 
 pub struct Audio(Vec<u8>);
 

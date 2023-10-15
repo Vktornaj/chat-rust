@@ -1,6 +1,10 @@
-use rocket::{Request, Data};
-use rocket::fairing::{Fairing, Info, Kind};
 use std::time::Instant;
+use axum::{
+    http::Request,
+    response::Response,
+    middleware::Next,
+};
+
 use prometheus::{
     HistogramVec, 
     IntCounter, 
@@ -14,7 +18,7 @@ use prometheus::{
     Gauge, 
     register_gauge,
 };
-use lazy_static::lazy_static;   
+use lazy_static::lazy_static;
 
 
 lazy_static! {
@@ -49,27 +53,23 @@ lazy_static! {
         "Current memory usage in percent"
     ).unwrap();
 }
-pub struct PrometheusMetrics;
 
-#[rocket::async_trait]
-impl Fairing for PrometheusMetrics {
-    fn info(&self) -> Info {
-        Info {
-            name: "Prometheus Metrics",
-            kind: Kind::Request | Kind::Response,
-        }
-    }
+pub async fn metrics_middleware<B>(
+    req: Request<B>,
+    next: Next<B>,
+) -> Response {
+    // do something with `request`...
+    let start = Instant::now();
+    INCOMING_REQUESTS.inc();
 
-    async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
-        request.local_cache(|| Instant::now());
-        INCOMING_REQUESTS.inc();
-    }
+    let response = next.run(req).await;
 
-    async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut rocket::Response<'r>) {
-        let start = request.local_cache(|| Instant::now());
-        let elapsed = start.elapsed();
-        let code = response.status().code;
-        let is_ok = if code >= 200 && code < 300 { "true" } else { "false" };
-        RESPONSE_TIME_COLLECTOR.with_label_values(&[is_ok]).observe(elapsed.as_secs_f64());
-    }
+    // do something with `response`...
+    let elapsed = start.elapsed();
+    let status_result = if response.status()
+        .is_success() { "ok" } else { "err" };
+    RESPONSE_TIME_COLLECTOR.with_label_values(&[status_result])
+        .observe(elapsed.as_secs_f64());
+
+    response
 }

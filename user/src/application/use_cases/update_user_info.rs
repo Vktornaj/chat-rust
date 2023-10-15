@@ -1,5 +1,6 @@
 use auth::domain::auth::Auth;
 use chrono::{DateTime, Utc};
+use common::types::error::ErrorMsg;
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
@@ -9,8 +10,7 @@ use crate::{
             last_name::LastName, 
             birthday::Birthday, 
             nationality::Nationality, 
-            language::Language, 
-            error::ErrorMsg
+            language::Language,
         }
     }, 
     application::port::driven::user_repository::UpdateUser

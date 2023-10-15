@@ -1,17 +1,11 @@
 use auth::domain::auth::Auth;
+use common::types::{email::Email, phone_number::PhoneNumber, id::Id};
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
-use crate::{
-    domain::types::{
-        email::Email, 
-        phone_number::PhoneNumber, 
-        id::Id, code::Code
-    }, 
-    application::port::driven::{
-        user_cache::{UserCacheTrait, UpdateUserCDCache}, 
-        user_repository::{FindUser, UpdateUser}, email_service::EmailServiceTrait
-    }
-};
+use crate::{application::port::driven::{
+    user_cache::{UserCacheTrait, UpdateUserCDCache}, 
+    user_repository::{FindUser, UpdateUser}, email_service::EmailServiceTrait
+}, types::code::Code};
 
 
 #[derive(Debug)]

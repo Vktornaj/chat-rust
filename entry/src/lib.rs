@@ -1,42 +1,109 @@
-use std::thread;
-
-use systemstat::{Platform, System};
-
-use rocket::{catch, catchers, options, get, Request};
-use cors::CORS;
-use rocket::{launch, routes};
-use sqlx::migrate::Migrator;
-use deadpool::managed::Pool;
-use deadpool_redis::{Manager, Connection};
 use prometheus::Encoder;
+use systemstat::{Platform, System};
+use axum::{
+    Router, http::{StatusCode, Uri}, 
+    routing::{get, post, put, delete}, 
+    response::IntoResponse, middleware,
+};
+use sqlx::{PgPool, migrate::Migrator};
+use common::config;
+use tower::ServiceBuilder;
+use tower_http::trace::{TraceLayer, DefaultMakeSpan};
+use user::handlers as user_handlers;
+use message::handlers as message_handlers;
 
-mod cors;
 mod metrics;
 
-use sqlx::PgPool;
-use user::routes as user_routes;
-// use message::routes as message_routes;
-use common::{config, db, cache};
 
+pub async fn router() -> Router {
+   
+    let sys = System::new();
+    let app_state = config::AppState::new().await;
 
-#[catch(404)]
-fn not_found(req: &Request) -> String {
-    format!("Sorry, '{}' is not a valid path.", req.uri())
+    run_migrations(&app_state.db_sql_pool).await;
+
+    tokio::spawn(async move { 
+        loop {
+            // sleep for 1 second
+            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+            #[cfg(target_os = "linux")]
+            match sys.cpu_load_aggregate() {
+                Ok(cpu) => {
+                    let cpu = cpu.done().unwrap();
+                    metrics::CPU_USAGE.set(f64::trunc(
+                        ((cpu.system * 100.0) + (cpu.user * 100.0)).into(),
+                    ));
+                }
+                Err(x) => println!("\nCPU load: error: {}", x),
+            }
+            match sys.memory() {
+                Ok(mem) => {
+                    let memory_used = mem.total.0 - mem.free.0;
+                    let pourcentage_used = (memory_used as f64 / mem.total.0 as f64) * 100.0;
+                    metrics::MEM_USAGE.set(f64::trunc(pourcentage_used));
+                }
+                Err(x) => println!("\nMemory: error: {}", x),
+            }
+        }
+    });
+
+    Router::new()
+        .route("/", get(handler_get_root))
+        .route("/metrics", get(handler_metrics))
+        .nest(
+            "/api",
+            Router::new()
+                .nest(
+                    "/user", 
+                    Router::new()
+                        .route("/create-user-request", post(user_handlers::handle_create_user_cache))
+                        .route("/create-use-confirmation", post(user_handlers::handle_create_user_confirmation))
+                        .route("/get-user", get(user_handlers::handle_get_user_info))
+                        .route("/update-user", put(user_handlers::handle_update_user_info))
+                        .route("/delete-user", delete(user_handlers::handle_delete_account))
+                        .route("/email-available/:email", get(user_handlers::handle_email_available))
+                        .route("/phone-number-available/:phone", get(user_handlers::handle_phone_number_available))
+                        .route("/login", post(user_handlers::handle_login))
+                        .route("/update-password", put(user_handlers::handle_update_password))
+                        .route("/update-user-contact-info-cache", put(user_handlers::handle_update_user_contact_info_cache))
+                        .route("/update-user-contact-info-confirmation", put(user_handlers::handle_update_user_contact_info_confirmation))
+                        .route("/password-recovery-request", post(user_handlers::handle_password_recovery_request))
+                        .route("/password-reset-confirmation/:token", put(user_handlers::handle_password_reset_confirmation))
+                )
+                .nest(
+                    "/message",
+                    Router::new()
+                        .route("/ws", get(message_handlers::ws_handler))
+                )
+        )
+        .layer(
+            ServiceBuilder::new()
+                .layer(middleware::from_fn(metrics::metrics_middleware))
+                .layer(
+                    TraceLayer::new_for_http()
+                        .make_span_with(DefaultMakeSpan::default().include_headers(true))
+                    )
+        )
+        .fallback(handler_404)
+        .with_state(app_state)
 }
 
-/// Catches all OPTION requests in order to get the CORS related Fairing triggered.
-#[options("/<_..>")]
-fn all_options() {
-    /* Intentionally left empty */
+async fn run_migrations(pool: &PgPool) {
+    static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
+    MIGRATOR.run(pool).await.expect("USER_MIGRATOR failed");
 }
 
-#[get("/")]
-pub fn get_root() -> &'static str {
-    "{ \"msg\": \"ok\" }"
+// root handlers
+
+async fn handler_404(uri: Uri) -> impl IntoResponse {
+    (StatusCode::NOT_FOUND, format!("No route for {}", uri))
 }
 
-#[get("/metrics")]
-pub fn get_metrics() -> Result<std::string::String, ()> {
+async fn handler_get_root() -> &'static str {
+    "ok"
+}
+
+async fn handler_metrics() -> std::string::String {
     let mut buffer = Vec::new();
     let encoder = prometheus::TextEncoder::new();
 
@@ -45,75 +112,5 @@ pub fn get_metrics() -> Result<std::string::String, ()> {
     // Encode them to send.
     encoder.encode(&metric_families, &mut buffer).unwrap();
 
-    let output = String::from_utf8(buffer.clone()).unwrap();
-
-    Ok(output)
-}
-
-async fn run_migrations(pool: &PgPool) {
-    static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
-    MIGRATOR.run(pool).await.expect("USER_MIGRATOR failed");
-}
-
-#[launch]
-pub async fn rocket() -> _ {
-    let sqlx_pool = db::create_pool().await;
-    run_migrations(&sqlx_pool).await;
-    let redis_pool = cache::create_pool().await;
-
-    let sys = System::new();
-
-    thread::spawn(move || loop {
-        #[cfg(target_os = "linux")]
-        match sys.cpu_load_aggregate() {
-            Ok(cpu) => {
-                thread::sleep(Duration::from_secs(1));
-                let cpu = cpu.done().unwrap();
-                metrics::CPU_USAGE.set(f64::trunc(
-                    ((cpu.system * 100.0) + (cpu.user * 100.0)).into(),
-                ));
-            }
-            Err(x) => println!("\nCPU load: error: {}", x),
-        }
-        match sys.memory() {
-            Ok(mem) => {
-                let memory_used = mem.total.0 - mem.free.0;
-                let pourcentage_used = (memory_used as f64 / mem.total.0 as f64) * 100.0;
-                metrics::MEM_USAGE.set(f64::trunc(pourcentage_used));
-            }
-            Err(x) => println!("\nMemory: error: {}", x),
-        }
-    });
-
-    rocket::custom(config::from_env())
-        .attach(CORS)
-        .mount(
-            "/", 
-            routes![
-                get_root,
-                get_metrics
-            ]
-        )
-        .mount(
-            "/api", 
-            routes![
-                user_routes::user::email_available,
-                user_routes::user::phone_number_available,
-                user_routes::user::create_user_cache,
-                user_routes::user::create_user_confirmation,
-                user_routes::user::update_user_contact_info_cache,
-                user_routes::user::update_user_contact_info_confirmation,
-                user_routes::user::login,
-                user_routes::user::get_user_info,
-                user_routes::user::password_reset,
-                user_routes::user::password_reset_request,
-                user_routes::user::update_user_info,
-                all_options,
-            ]
-        )
-        .manage::<PgPool>(sqlx_pool)
-        .manage::<Pool<Manager, Connection>>(redis_pool)
-        .attach(config::AppState::manage())
-        .attach(metrics::PrometheusMetrics)
-        .register("/", catchers![not_found])
+    String::from_utf8(buffer.clone()).unwrap()
 }

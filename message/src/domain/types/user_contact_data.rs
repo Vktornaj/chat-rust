@@ -1,8 +1,8 @@
-use user::types::{
+use common::types::{
     email::Email,
     phone_number::PhoneNumber
 };
-use super::error::ErrorMsg;
+use common::types::error::ErrorMsg;
 
 
 pub enum UserContactData {

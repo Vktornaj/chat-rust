@@ -6,7 +6,7 @@ use argon2::{
     Argon2, PasswordHasher
 };
 
-use super::error::ErrorMsg;
+use common::types::error::ErrorMsg;
 
 
 #[derive(PartialEq, Debug, Clone)]

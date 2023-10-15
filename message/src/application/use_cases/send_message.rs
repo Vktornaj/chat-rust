@@ -1,23 +1,15 @@
 use auth::domain::auth::Auth;
-use user::types::id::Id;
 use uuid::Uuid;
 
-use crate::{
-    application::port::driven::{message_queue::MessageQueue, media_repository::{self, MediaRepository, Media}},
-    domain::{
-        message::{Message, MessageContent as DomainMessageContent, self},
-        types::{
-            audio::Audio,
-            file::File,
-            image::Image,
-            recipient::Recipient,
-            sender::Sender,
-            text::Text,
-            user_contact_data::UserContactData,
-            video::Video, media_path::MediaPath,
-        },
-    },
+use crate::application::port::driven::{
+    message_queue::MessageQueue, 
+    media_repository::Media
 };
+use common::{
+    models::message_model::{Message, MessageContent as DomainMessageContent}, 
+    types::{text::Text, sender_type::Sender, recipient::Recipient, id::Id}
+};
+
 
 #[derive(Debug)]
 pub enum SendError {
@@ -56,7 +48,6 @@ pub struct Payload {
 pub async fn execute<T>(
     conn: &T,
     queue: &impl MessageQueue<T>,
-    media_repository: &impl MediaRepository<T>,
     secret: &[u8],
     token: &String,
     payload: Payload,
@@ -77,23 +68,11 @@ pub async fn execute<T>(
         MessageContent::Text(text) => DomainMessageContent::Text(
             Text::try_from(text).map_err(|e| SendError::InvalidData(e.to_string()))?,
         ),
-        msg_c => {
-            let content = Media::try_from(msg_c)
-                .map_err(|e| SendError::InvalidData(e.to_string()))?;
-            // add media to repository
-            let path = media_repository
-                .add(conn, &content)
-                .await
-                .map_err(|e| SendError::Unknown(e.to_string()))?;
-            let path = MediaPath::try_from(path)
-                .map_err(|e| SendError::Unknown(e.to_string()))?;
-            match content {
-                Media::Image(_) => DomainMessageContent::Image(path),
-                Media::Video(_) => DomainMessageContent::Video(path),
-                Media::Audio(_) => DomainMessageContent::Audio(path),
-                Media::File(_) => DomainMessageContent::File(path),
-            }
-        }
+        MessageContent::Image(binary) => DomainMessageContent::Image(binary),
+        MessageContent::Video(binary) => DomainMessageContent::Video(binary),
+        MessageContent::Audio(binary) => DomainMessageContent::Audio(binary),
+        MessageContent::File(binary) => DomainMessageContent::File(binary),
+        
     };
     // create message
     let message = Message::new(

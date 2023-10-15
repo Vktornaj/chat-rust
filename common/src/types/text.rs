@@ -18,3 +18,9 @@ impl TryFrom<String> for Text {
         }
     }
 }
+
+impl From<Text> for String {
+    fn from(text: Text) -> Self {
+        text.0
+    }
+}

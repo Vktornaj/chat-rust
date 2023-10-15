@@ -3,7 +3,7 @@ members = [
   "auth",
   "message",
   "user",
-  "entry_axum",
+  "entry",
   "common",
 ]
 

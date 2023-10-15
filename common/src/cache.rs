@@ -15,7 +15,7 @@ pub async fn create_pool() -> Pool<Manager, Connection> {
 #[cfg(test)]
 mod tests {
     use deadpool_redis::redis::AsyncCommands;
-    use rocket::tokio;
+    use tokio;
 
     use super::*;
 

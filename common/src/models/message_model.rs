@@ -1,21 +1,22 @@
-use user::types::id::Id;
 use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 
-use super::types::{
+use super::super::types::{
     text::Text,
-    sender::Sender, 
-    recipient::Recipient, media_path::MediaPath,
+    sender_type::Sender, 
+    recipient::Recipient, 
+    // media_path::MediaPath,
+    id::Id,
 };
 
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum MessageContent {
     Text(Text),
-    Image(MediaPath),
-    Video(MediaPath),
-    Audio(MediaPath),
-    File(MediaPath),
+    Image(Vec<u8>),
+    Video(Vec<u8>),
+    Audio(Vec<u8>),
+    File(Vec<u8>),
 }
 
 #[derive(Clone, Deserialize, Serialize)]

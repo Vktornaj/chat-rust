@@ -1,5 +1,6 @@
 // extern crate rocket;
 
+use axum::extract::ws::Message;
 use axum::extract::{State, Path, TypedHeader};
 use axum::headers::authorization::Bearer;
 use axum::http::StatusCode;
@@ -14,8 +15,7 @@ use super::schemas::{
     UserContactInfo, UserContactInfo2, UserInfo, UserJson, ValidTransaction,
 };
 use crate::application::use_cases;
-use crate::types::error::ErrorMsg;
-use common::{config::AppState, token::Token};
+use common::config::AppState;
 
 // Adapters
 use crate::adapter::driven::cache::redis::user_cache::UserCache;
@@ -23,7 +23,7 @@ use crate::adapter::driven::email_service::fake_email_service::FakeEmailService;
 use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 
 pub async fn handle_create_user_cache(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     Json(payload): Json<NewUserJson>,
 ) -> Result<Json<IdTransaction>, (StatusCode, String)> {
     let date = if let Ok(date) = Utc.datetime_from_str(&payload.birthday, DATE_FORMAT) {
@@ -74,7 +74,7 @@ pub async fn handle_create_user_cache(
 }
 
 pub async fn handle_create_user_confirmation(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     Json(payload): Json<ValidTransaction>,
 ) -> Result<Json<UserJson>, (StatusCode, String)>  {
     match use_cases::create_user_validate::execute(
@@ -97,7 +97,7 @@ pub async fn handle_create_user_confirmation(
 }
 
 pub async fn handle_email_available(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     Path(email): Path<String>,
 ) -> StatusCode {
     let res = use_cases::is_data_in_use::execute(
@@ -121,7 +121,7 @@ pub async fn handle_email_available(
 }
 
 pub async fn handle_phone_number_available(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     Path(phone_number): Path<String>,
 ) -> StatusCode {
     let res = use_cases::is_data_in_use::execute(
@@ -145,7 +145,7 @@ pub async fn handle_phone_number_available(
 }
 
 pub async fn handle_get_user_info(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
 ) -> Result<Json<UserJson>, StatusCode> {
     match use_cases::get_user_info::execute(
@@ -165,7 +165,7 @@ pub async fn handle_get_user_info(
 }
 
 pub async fn handle_login(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     Json(credentials): Json<Credentials>,
 ) -> Result<Json<JsonToken>, StatusCode> {
     match use_cases::login_user::execute(
@@ -189,7 +189,7 @@ pub async fn handle_login(
 }
 
 pub async fn handle_delete_account(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(credentials): Json<Credentials2>,
 ) -> StatusCode {
@@ -210,7 +210,7 @@ pub async fn handle_delete_account(
 }
 
 pub async fn handle_update_password(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(credentials): Json<Credentials3>,
 ) -> StatusCode {
@@ -238,7 +238,7 @@ pub async fn handle_update_password(
 }
 
 pub async fn handle_update_user_info(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(user_info): Json<UserInfo>,
 ) -> Result<Json<UserJson>, StatusCode> {
@@ -276,7 +276,7 @@ pub async fn handle_update_user_info(
 }
 
 pub async fn handle_update_user_contact_info_cache(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(user_info): Json<UserContactInfo>,
 ) -> Result<String, StatusCode> {
@@ -315,7 +315,7 @@ pub async fn handle_update_user_contact_info_cache(
 }
 
 pub async fn handle_update_user_contact_info_confirmation(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(data): Json<ValidTransaction>,
 ) -> Result<Json<UserJson>, StatusCode> {
@@ -345,7 +345,7 @@ pub async fn handle_update_user_contact_info_confirmation(
 // TODO: use different secret for password reset
 // TODO: get domain from config
 pub async fn handle_password_recovery_request(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     Json(data): Json<UserContactInfo2>,
 ) -> Result<(), StatusCode> {
     let email_conn = match state.config.environment  {
@@ -372,7 +372,7 @@ pub async fn handle_password_recovery_request(
 // TODO: use different secret for password reset
 // TODO: get domain from config
 pub async fn handle_password_reset_confirmation(
-    State(state): State<AppState>,
+    State(state): State<AppState<Message>>,
     Path(token): Path<String>,
     Json(data): Json<Credentials2>,
 ) -> Result<Json<UserJson>, StatusCode> {

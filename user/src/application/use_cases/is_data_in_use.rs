@@ -1,8 +1,6 @@
-use crate::{
-    application::port::driven::user_repository::FindUser, domain::types::{
-        email::Email, error::ErrorMsg, phone_number::PhoneNumber
-    }
-};
+use common::types::{error::ErrorMsg, email::Email, phone_number::PhoneNumber};
+
+use crate::application::port::driven::user_repository::FindUser;
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 

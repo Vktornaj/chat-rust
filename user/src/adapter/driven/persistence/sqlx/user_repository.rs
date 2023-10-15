@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use common::types::error::ErrorMsg;
 use sqlx::query_builder::QueryBuilder;
 use sqlx::{Postgres, Pool};
 use uuid::Uuid;
@@ -12,7 +13,6 @@ use crate::application::port::driven::errors::{
     RepoSelectError, 
     RepoUpdateError,
 };
-use crate::domain::types::error::ErrorMsg;
 use crate::domain::user::{User as UserDomain, NewUser};
 use super::models::user::User as UserDB;
 
