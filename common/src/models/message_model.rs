@@ -10,7 +10,7 @@ use super::super::types::{
 };
 
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub enum MessageContent {
     Text(Text),
     Image(Vec<u8>),
@@ -28,12 +28,12 @@ pub enum MessageStatus {
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Message {
-    sender: Sender,
-    recipient: Recipient,
-    content: MessageContent,
-    timestamp: u64,
-    status: MessageStatus,
-    id: Id,
+    pub sender: Sender,
+    pub recipient: Recipient,
+    pub content: MessageContent,
+    pub timestamp: u64,
+    pub status: MessageStatus,
+    pub id: Id,
 }
 
 impl Message {

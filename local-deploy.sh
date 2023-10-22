@@ -20,7 +20,7 @@ rsync -avzr --exclude='.git/' --exclude='target/' --delete -e "ssh -p ${remote_p
 # docker compose -f compose_projects/compose.yml build
 ssh -tt -i ${ssh_key} ${remote_user}@${remote_host} << EOF 
 docker compose -f ${remote_path_app}/compose/compose.yml down || true
-docker compose -f ${remote_path_app}/compose/compose.yml --env-file ${remote_path_app}/compose/config/.env up -d
+docker compose -f ${remote_path_app}/compose/compose.yml --env-file ${remote_path_app}/compose/config/.env up -d --build
 exit
 EOF
 

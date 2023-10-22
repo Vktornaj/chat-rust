@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::error::ErrorMsg;
 
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct Text(String);
 
 

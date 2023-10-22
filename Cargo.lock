@@ -464,6 +464,7 @@ dependencies = [
  "redis-async",
  "regex",
  "serde",
+ "serde_json",
  "sqlx",
  "tokio",
  "tokio-tungstenite",
@@ -711,6 +712,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "user",
+ "uuid",
 ]
 
 [[package]]
@@ -1408,6 +1410,7 @@ dependencies = [
  "futures",
  "futures-util",
  "serde",
+ "serde_json",
  "serde_with",
  "sqlx",
  "tokio",

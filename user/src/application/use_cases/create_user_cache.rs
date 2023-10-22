@@ -38,8 +38,8 @@ pub async fn execute<T, U, ES>(
 ) -> Result<String, CreateError> {
     // TODO: improve environment handling
     let confirmation_code = match environment {
-        Environment::Development => Code::new(6),
-        Environment::Production => Code::new_0s(6),
+        Environment::Development => Code::new_0s(6),
+        Environment::Production => Code::new(6),
     };
     let cache_user = match CreateUserCache::new(
         payload.email,

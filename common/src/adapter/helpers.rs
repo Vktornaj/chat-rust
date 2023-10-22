@@ -1,24 +1,33 @@
-use std::{env, sync::Arc, collections::HashMap};
+use std::{env, sync::Arc, collections::{HashMap, VecDeque}};
 
 use axum::extract::ws::Message;
 use tokio::sync::RwLock;
 
 use crate::{
-    models::message_model::MessageContent, 
+    models::message_model::Message as MyMessage, 
     types::error::ErrorMsg, config::{AppState, SECRET, Environment, Config}, db, cache
 };
 
 
-impl TryFrom<MessageContent> for Message {
+impl TryFrom<MyMessage> for Message {
     type Error = ErrorMsg;
 
-    fn try_from(value: MessageContent) -> Result<Self, Self::Error> {
+    fn try_from(value: MyMessage) -> Result<Self, Self::Error> {
+        // serialize value
+        serde_json::to_string(&value)
+            .map_err(|err| ErrorMsg(format!("Error serializing message: {:?}", err)))
+            .map(|value| Message::Text(value))
+    }
+}
+
+impl TryFrom<Message> for MyMessage {
+    type Error = ErrorMsg;
+
+    fn try_from(value: Message) -> Result<Self, Self::Error> {
         match value {
-            MessageContent::Text(text) => Ok(Message::Text(text.into())),
-            MessageContent::Image(image) => Ok(Message::Binary(image)),
-            MessageContent::Video(video) => Ok(Message::Binary(video)),
-            MessageContent::Audio(audio) => Ok(Message::Binary(audio)),
-            MessageContent::File(file) => Ok(Message::Binary(file)),
+            Message::Text(value) => serde_json::from_str(&value)
+                .map_err(|err| ErrorMsg(format!("Error deserializing message: {:?}", err))),
+            _ => Err(ErrorMsg("Error deserializing message: not a text message".to_string())),
         }
     }
 }
@@ -33,7 +42,7 @@ impl AppState<Message> {
             }
         });
 
-        let environment = match env::var("ROCKET_ENV")
+        let environment = match env::var("ENVIRONMENT")
             .unwrap_or_else(|_| "development".to_string())
             .as_str()
         {
@@ -50,7 +59,7 @@ impl AppState<Message> {
                 environment,
             },
             clients: Arc::new(RwLock::new(HashMap::new())),
-            event_queue: Arc::new(RwLock::new(Vec::new())),
+            event_queue: Arc::new(RwLock::new(VecDeque::new())),
         }
     }
 }

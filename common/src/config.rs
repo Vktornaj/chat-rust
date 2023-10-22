@@ -1,7 +1,7 @@
 use axum::extract::ws::WebSocket;
 use deadpool::managed::Pool;
 use deadpool_redis::{Connection, Manager};
-use futures_util::stream::SplitSink;
+use futures_util::stream::{SplitSink, SplitStream};
 use sqlx::PgPool;
 
 use crate::models::client::{Clients, EventQueue};
@@ -28,7 +28,7 @@ pub struct Config {
 
 #[derive(Clone)]
 pub struct AppState<T> {
-    pub clients: Clients<SplitSink<WebSocket, T>>,
+    pub clients: Clients<SplitSink<WebSocket, T>, SplitStream<WebSocket>>,
     pub event_queue: EventQueue,
     pub db_sql_pool: PgPool,
     pub cache_pool: Pool<Manager, Connection>,
