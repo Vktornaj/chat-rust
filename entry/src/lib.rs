@@ -8,27 +8,25 @@ use axum::{
 };
 use futures_util::{
     stream::{SplitSink, SplitStream},
-    SinkExt, StreamExt,
+    SinkExt,
 };
 use prometheus::Encoder;
 use sqlx::{migrate::Migrator, PgPool};
 use systemstat::{Platform, System};
-use tokio::sync::mpsc;
-use tokio::time::{sleep, Duration};
 use tower::ServiceBuilder;
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 
 use common::{
     config,
-    models::{
-        client::{Clients, Event, EventContent, EventQueue, Client},
-        message_model::Message as MyMessage,
+    models::client::{
+        Clients, 
+        EventContent, 
+        EventQueue
     },
 };
 mod metrics;
 use message::handlers as message_handlers;
 use user::handlers as user_handlers;
-use uuid::Uuid;
 
 pub async fn router() -> Router {
     let sys: System = System::new();
@@ -38,7 +36,7 @@ pub async fn router() -> Router {
     run_migrations(&app_state.db_sql_pool).await;
 
     // new thread to produce event queue
-    run_producer_event_queue(app_state.event_queue.clone(), app_state.clients.clone());
+    // run_producer_event_queue(app_state.event_queue.clone(), app_state.clients.clone());
 
     // new thread to listen to event queue
     run_consumer_event_queue(app_state.event_queue.clone(), app_state.clients.clone());
@@ -169,7 +167,7 @@ fn run_geting_metricts(sys: System) {
 
 fn run_consumer_event_queue(
     event_queue: EventQueue,
-    clients: Clients<SplitSink<WebSocket, Message>, SplitStream<WebSocket>>,
+    clients: Clients<SplitSink<WebSocket, Message>>,
 ) {
     // Spawn a task to listen for updates to the event queue
     tokio::spawn(async move {
@@ -205,77 +203,77 @@ fn run_consumer_event_queue(
     });
 }
 
-fn run_producer_event_queue(
-    event_queue: EventQueue,
-    clients: Clients<SplitSink<WebSocket, Message>, SplitStream<WebSocket>>,
-) {
-    tokio::spawn(async move {
-        let (tx, mut rx) = mpsc::channel(32);
+// fn run_producer_event_queue(
+//     event_queue: EventQueue,
+//     clients: Clients<SplitSink<WebSocket, Message>, SplitStream<WebSocket>>,
+// ) {
+//     tokio::spawn(async move {
+//         let (tx, mut rx) = mpsc::channel(32);
 
-        tokio::spawn(async move {
-            let mut clients_cloned = clients.write().await;
-            let extract_receiver = |(_, client): (&Uuid, &mut Client<SplitSink<WebSocket, Message>, SplitStream<WebSocket>>)| {
-                client.receiver.take()
-            };
-            let mut receivers = vec![clients_cloned
-                .iter_mut()
-                .filter_map(extract_receiver)];
-            let clients_cloned_2 = clients.clone();
-            loop {
-                let mut clients_c_c_r = clients_cloned_2.write().await;
-                let new_receivers = clients_c_c_r
-                    .iter_mut()
-                    .filter_map(extract_receiver);
+//         tokio::spawn(async move {
+//             let mut clients_cloned = clients.write().await;
+//             let extract_receiver = |(_, client): (&Uuid, &mut Client<SplitSink<WebSocket, Message>, SplitStream<WebSocket>>)| {
+//                 client.receiver.take()
+//             };
+//             let mut receivers = vec![clients_cloned
+//                 .iter_mut()
+//                 .filter_map(extract_receiver)];
+//             let clients_cloned_2 = clients.clone();
+//             loop {
+//                 let mut clients_c_c_r = clients_cloned_2.write().await;
+//                 let new_receivers = clients_c_c_r
+//                     .iter_mut()
+//                     .filter_map(extract_receiver);
 
-                receivers.push(new_receivers);
+//                 receivers.push(new_receivers);
 
-                let receivers_cloned = receivers
-                    .iter_mut()
-                    .map(|receiver| receiver);
+//                 let receivers_cloned = receivers
+//                     .iter_mut()
+//                     .map(|receiver| receiver);
 
-                let merged = futures::stream::select_all(&mut receivers_cloned.flatten()).fuse();
+//                 let merged = futures::stream::select_all(&mut receivers_cloned.flatten()).fuse();
 
-                let _ = tx
-                    .send(merged)
-                    .await
-                    .map_err(|err| println!("Error sending merged stream: {:?}", err.to_string()));
+//                 let _ = tx
+//                     .send(merged)
+//                     .await
+//                     .map_err(|err| println!("Error sending merged stream: {:?}", err.to_string()));
 
-                // sleep for 1 seconds
-                sleep(Duration::from_secs(1)).await;
-            }
-        });
+//                 // sleep for 1 seconds
+//                 sleep(Duration::from_secs(1)).await;
+//             }
+//         });
 
-        let mut task: Option<tokio::task::JoinHandle<()>> = None;
-        while let Some(mut merged) = rx.recv().await {
-            println!("Received a merged stream");
-            let event_queue_cloned = event_queue.clone();
-            if let Some(task) = task.take() {
-                task.abort();
-            }
-            // Spawn a task to produce events
-            task = Some(tokio::spawn(async move {
-                while let Some(msg) = merged.next().await {
-                    let msg = if let Ok(msg) = msg {
-                        msg
-                    } else {
-                        continue;
-                    };
+//         let mut task: Option<tokio::task::JoinHandle<()>> = None;
+//         while let Some(mut merged) = rx.recv().await {
+//             println!("Received a merged stream");
+//             let event_queue_cloned = event_queue.clone();
+//             if let Some(task) = task.take() {
+//                 task.abort();
+//             }
+//             // Spawn a task to produce events
+//             task = Some(tokio::spawn(async move {
+//                 while let Some(msg) = merged.next().await {
+//                     let msg = if let Ok(msg) = msg {
+//                         msg
+//                     } else {
+//                         continue;
+//                     };
 
-                    println!("Received a message: {:?}", &msg);
+//                     println!("Received a message: {:?}", &msg);
 
-                    let my_message = if let Ok(my_message) = MyMessage::try_from(msg.clone()) {
-                        my_message
-                    } else {
-                        // invalid message
-                        continue;
-                    };
-                    let event = Event {
-                        target_user_id: my_message.recipient.clone().into(),
-                        content: EventContent::Message(my_message),
-                    };
-                    event_queue_cloned.write().await.push_back(event);
-                }
-            }));
-        }
-    });
-}
+//                     let my_message = if let Ok(my_message) = MyMessage::try_from(msg.clone()) {
+//                         my_message
+//                     } else {
+//                         // invalid message
+//                         continue;
+//                     };
+//                     let event = Event {
+//                         target_user_id: my_message.recipient.clone().into(),
+//                         content: EventContent::Message(my_message),
+//                     };
+//                     event_queue_cloned.write().await.push_back(event);
+//                 }
+//             }));
+//         }
+//     });
+// }

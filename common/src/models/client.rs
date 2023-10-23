@@ -7,13 +7,12 @@ use super::message_model::Message;
 
 
 #[derive(Debug, Clone)]
-pub struct Client<T, U> {
+pub struct Client<T> {
     pub user_id: Uuid,
     pub sender: Option<T>,
-    pub receiver: Option<U>,
 }
 
-pub type Clients<T, U> = Arc<RwLock<HashMap<Uuid, Client<T, U>>>>;
+pub type Clients<T> = Arc<RwLock<HashMap<Uuid, Client<T>>>>;
 pub type EventQueue = Arc<RwLock<VecDeque<Event>>>;
 
 #[derive(Deserialize, Serialize, Clone)]
