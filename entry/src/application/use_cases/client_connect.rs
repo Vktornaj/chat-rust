@@ -1,22 +1,24 @@
 use futures_util::{Stream, StreamExt, stream::SplitSink};
 use uuid::Uuid;
 
-use common::models::{
-    client::{Client, EventContent, Event, Clients, EventQueue}, 
-    message::Message as MyMessage
+use common::domain::{models::{
+        client::{Client, EventContent, Event, Clients, EventQueue}, 
+        message::Message as MessageDomain,
+    }, 
+    types::{recipient::Recipient, id::Id}
 };
 
 
 pub async fn execute<T, U, E>(
     clients: Clients<SplitSink<T, U>>,
-    event_queue: EventQueue,
-    user_id: Uuid,
+    event_queue: EventQueue<MessageDomain>,
+    recipient_id: Uuid,
     socket: T,
 ) where 
     T: 'static + Stream<Item = Result<U, E>> + futures_util::Sink<U> + Send,
     U: std::fmt::Debug + Send,
     E: std::fmt::Debug + Send,
-    MyMessage: std::convert::TryFrom<U, Error = String>,
+    MessageDomain: std::convert::TryFrom<U, Error = String>,
 {
     let (sender, mut receiver) = socket.split::<U>();
     // Create a new client id
@@ -31,19 +33,23 @@ pub async fn execute<T, U, E>(
                 return;
             };
 
-            let my_message = if let Ok(message) = MyMessage::try_from(message) {
+            let message_domain: MessageDomain = if let Ok(message) = MessageDomain::try_from(message) {
                 message
             } else {
                 eprintln!("Message extraction error");
                 continue;
             };
-    
-            let event = Event {
-                target_user_id: user_id,
-                content: EventContent::Message(my_message),
-            };
-            event_queue.write().await.push_back(event);
+
+            event_queue.write().await.push_back(Event {
+                recipient_id: message_domain.recipient.clone(), 
+                content: EventContent::Message(message_domain) 
+            });
         }
+    };
+    let user_id = if let Ok(id) = Id::try_from(recipient_id) {
+        id
+    } else {
+        return;
     };
     let client = Client {
         user_id,

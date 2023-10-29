@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use common::types::error::ErrorMsg;
+use common::domain::types::error::ErrorMsg;
 use sqlx::query_builder::QueryBuilder;
 use sqlx::{Postgres, Pool};
 use uuid::Uuid;

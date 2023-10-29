@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use common::types::{email::Email, phone_number::PhoneNumber};
+use common::domain::types::{email::Email, phone_number::PhoneNumber};
 use uuid::Uuid;
 
 use super::errors::{

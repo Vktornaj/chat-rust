@@ -1,7 +1,7 @@
 use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 
-use common::types::{
+use common::domain::types::{
     text::Text,
     sender_type::Sender, 
     recipient::Recipient, 

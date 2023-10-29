@@ -1,5 +1,5 @@
 use auth::domain::auth::Auth;
-use common::types::{email::Email, phone_number::PhoneNumber};
+use common::domain::types::{email::Email, phone_number::PhoneNumber};
 
 use crate::application::port::driven::{
     user_repository::{UserRepositoryTrait, FindUser}, 

@@ -1,5 +1,5 @@
 use regex::Regex;
-use common::types::error::ErrorMsg;
+use common::domain::types::error::ErrorMsg;
 use serde::{Deserialize, Serialize};
 
 

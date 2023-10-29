@@ -1,7 +1,7 @@
 use futures_util::{Stream, stream::SplitSink};
 use uuid::Uuid;
 
-use common::models::{
+use common::domain::models::{
     client::Clients, 
     message::Message as MyMessage
 };

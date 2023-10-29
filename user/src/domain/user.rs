@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use common::types::{error::ErrorMsg, email::Email, phone_number::PhoneNumber, id::Id};
+use common::domain::types::{error::ErrorMsg, email::Email, phone_number::PhoneNumber, id::Id};
 
 
 use super::types::{

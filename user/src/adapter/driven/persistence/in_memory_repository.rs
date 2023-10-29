@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 use async_trait::async_trait;
 use chrono::Utc;
-use common::types::id::Id;
+use common::domain::types::id::Id;
 use uuid::Uuid;
 
 // use super::{user_repository::{UserRepositoryTrait, NewUser, UpdateUser, FindUser}, errors};

@@ -11,20 +11,19 @@ use axum::{
     routing::{delete, get, post, put},
     Router, TypedHeader,
 };
-use futures_util::{
-    stream::{SplitSink, SplitStream},
-    SinkExt,
-};
+use futures_util::stream::SplitSink;
 use prometheus::Encoder;
 use sqlx::{migrate::Migrator, PgPool};
 use systemstat::{Platform, System};
 use tower::ServiceBuilder;
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 
-use common::{
-    config::{self, AppState},
-    models::client::{Clients, EventContent, EventQueue},
+use common::adapter::state::AppState;
+use common::domain::models::{
+    client::{Clients, EventQueue},
+    message::Message as MessageDomain,
 };
+
 mod adapter;
 mod application;
 mod models;
@@ -32,15 +31,16 @@ use adapter::metrics;
 use application::use_cases;
 use user::handlers as user_handlers;
 
+
 pub async fn router() -> Router {
     let sys: System = System::new();
-    let app_state = config::AppState::new().await;
+    let app_state = AppState::new().await;
 
     // run migrations
     run_migrations(&app_state.db_sql_pool).await;
 
     // new thread to listen to event queue
-    run_consumer_event_queue(app_state.event_queue.clone(), app_state.clients.clone());
+    run_consumer_event_queue(app_state.event_queue.clone(), app_state.clients.clone()).await;
 
     // new thread to get metrics
     run_geting_metricts(sys);
@@ -186,14 +186,14 @@ fn run_geting_metricts(sys: System) {
     });
 }
 
-fn run_consumer_event_queue(
-    event_queue: EventQueue,
+async fn run_consumer_event_queue(
+    event_queue: EventQueue<MessageDomain>,
     clients: Clients<SplitSink<WebSocket, Message>>,
 ) {
     use_cases::consume_event::execute::<WebSocket, Message, axum::Error>(
         clients,
         event_queue,
-    );
+    ).await;
 }
 
 // fn run_producer_event_queue(

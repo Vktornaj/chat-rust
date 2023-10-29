@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use common::types::{email::Email, phone_number::PhoneNumber, error::ErrorMsg, id::Id};
+use common::domain::types::{email::Email, phone_number::PhoneNumber, error::ErrorMsg, id::Id};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use crate::domain::{

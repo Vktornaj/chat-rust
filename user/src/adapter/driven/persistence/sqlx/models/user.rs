@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use common::types::{error::ErrorMsg, phone_number::PhoneNumber, email::Email, id::Id};
+use common::domain::types::{error::ErrorMsg, phone_number::PhoneNumber, email::Email, id::Id};
 use sqlx::{postgres::PgRow, Row};
 use uuid::Uuid;
 

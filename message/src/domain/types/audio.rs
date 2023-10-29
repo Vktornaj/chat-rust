@@ -1,4 +1,4 @@
-use common::types::error::ErrorMsg;
+use common::domain::types::error::ErrorMsg;
 
 
 pub struct Audio(Vec<u8>);

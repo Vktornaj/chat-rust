@@ -1,4 +1,4 @@
-use common::config::Environment;
+use common::adapter::config::Environment;
 
 use crate::{application::port::driven::{
     user_cache::{UserCacheTrait, CreateUserCache}, 

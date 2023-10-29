@@ -1,19 +1,19 @@
 use futures_util::{Stream, stream::SplitSink, SinkExt};
 
-use common::models::{
+use common::domain::{models::{
     client::{EventContent, Clients, EventQueue}, 
-    message::Message as MyMessage
-};
+    message::Message as MessageDomain,
+}, types::id::Id};
 
 
 pub async fn execute<T, U, E>(
     clients: Clients<SplitSink<T, U>>,
-    event_queue: EventQueue,
+    event_queue: EventQueue<MessageDomain>,
 ) where 
     T: 'static + Stream<Item = Result<U, E>> + futures_util::Sink<U> + Send,
-    U: 'static + TryFrom<MyMessage, Error = String> + std::fmt::Debug + Send + Sync,
+    U: 'static + TryFrom<MessageDomain, Error = String> + std::fmt::Debug + Send + Sync,
     E: std::fmt::Debug + Send,
-    MyMessage: TryFrom<U, Error = String>,
+    MessageDomain: TryFrom<U, Error = String>,
     <T as futures_util::Sink<U>>::Error: Send,
 {
     // Spawn a task to listen for updates to the event queue
@@ -25,14 +25,13 @@ pub async fn execute<T, U, E>(
                 queue.pop_front()
             };
 
-            // Send the event to the channel
             if let Some(event) = event {
                 // Handle the event
                 let mut clients = clients.write().await;
                 let f = clients
                     .iter_mut()
                     .map(|(_, client)| {
-                        if client.user_id != event.target_user_id {
+                        if Into::<Id>::into(event.recipient_id.clone()) != client.user_id {
                             return None;
                         }
                         let message: U = match &event.content {

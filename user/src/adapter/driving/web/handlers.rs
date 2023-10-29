@@ -6,7 +6,7 @@ use axum::http::StatusCode;
 use axum::Json;
 use axum::headers::Authorization;
 use chrono::{TimeZone, Utc};
-use common::config::{DATE_FORMAT, Environment};
+use common::adapter::config::{DATE_FORMAT, Environment};
 use lettre::SmtpTransport;
 
 use super::schemas::{
@@ -14,12 +14,15 @@ use super::schemas::{
     UserContactInfo, UserContactInfo2, UserInfo, UserJson, ValidTransaction,
 };
 use crate::application::use_cases;
-use common::config::AppState;
+use common::adapter::state::AppState;
 
 // Adapters
-use crate::adapter::driven::cache::redis::user_cache::UserCache;
-use crate::adapter::driven::email_service::fake_email_service::FakeEmailService;
-use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
+use crate::adapter::driven::{
+    cache::redis::user_cache::UserCache,
+    email_service::fake_email_service::FakeEmailService,
+    persistence::sqlx::user_repository::UserRepository,
+};
+
 
 pub async fn handle_create_user_cache(
     State(state): State<AppState>,

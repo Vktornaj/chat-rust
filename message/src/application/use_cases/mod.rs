@@ -1,2 +1,2 @@
 pub mod send_message;
-pub mod register_client;
+pub mod receive_message;

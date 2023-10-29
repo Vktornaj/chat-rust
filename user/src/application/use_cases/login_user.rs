@@ -5,7 +5,7 @@ use crate::{
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use auth::domain::auth::Auth;
-use common::types::{email::Email, phone_number::PhoneNumber};
+use common::domain::types::{email::Email, phone_number::PhoneNumber};
 
 
 #[derive(Debug)]

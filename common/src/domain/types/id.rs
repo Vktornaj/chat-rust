@@ -1,9 +1,9 @@
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
-use super::error::ErrorMsg;
+use super::{error::ErrorMsg, recipient::Recipient};
 
 
-#[derive(PartialEq, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Clone, Serialize, Deserialize, Debug)]
 pub struct Id(Uuid);
 
 impl TryFrom<Uuid> for Id {
@@ -20,6 +20,15 @@ impl TryFrom<Uuid> for Id {
 impl From<Id> for Uuid {
     fn from(id: Id) -> Self {
         id.0
+    }
+}
+
+impl From<Recipient> for Id {
+    fn from(value: Recipient) -> Self {
+        match value {
+            Recipient::User(id) => id,
+            Recipient::Group(id) => id,
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-use common::types::{error::ErrorMsg, email::Email, phone_number::PhoneNumber};
+use common::domain::types::{error::ErrorMsg, email::Email, phone_number::PhoneNumber};
 
 use crate::application::port::driven::user_repository::FindUser;
 

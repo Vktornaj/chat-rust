@@ -1,6 +1,6 @@
 use auth::domain::auth::Auth;
 use chrono::{DateTime, Utc};
-use common::types::error::ErrorMsg;
+use common::domain::types::error::ErrorMsg;
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
