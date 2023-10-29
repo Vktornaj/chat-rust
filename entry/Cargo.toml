@@ -9,6 +9,7 @@ edition = "2021"
 # added
 user = { path = "../user"}
 message = { path = "../message"}
+auth = { path = "../auth"}
 common = { path = "../common"}
 #
 toml = "0.8.2"
@@ -28,4 +29,5 @@ tower = { version = "0.4.13", features = ["util"] }
 futures = "0.3.28"
 futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
 serde = "1.0.188"
+serde_json = "1.0.105"
 uuid = { version = "1.4.1", features = ["v4"] }

@@ -1,10 +1,15 @@
+use auth::domain::auth::Auth;
 use axum::{
-    extract::ws::{Message, WebSocket},
+    extract::{
+        ws::{Message, WebSocket},
+        State, WebSocketUpgrade,
+    },
+    headers::{authorization::Bearer, Authorization},
     http::{StatusCode, Uri},
     middleware,
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::{delete, get, post, put},
-    Router,
+    Router, TypedHeader,
 };
 use futures_util::{
     stream::{SplitSink, SplitStream},
@@ -17,15 +22,14 @@ use tower::ServiceBuilder;
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 
 use common::{
-    config,
-    models::client::{
-        Clients, 
-        EventContent, 
-        EventQueue
-    },
+    config::{self, AppState},
+    models::client::{Clients, EventContent, EventQueue},
 };
-mod metrics;
-use message::handlers as message_handlers;
+mod adapter;
+mod application;
+mod models;
+use adapter::metrics;
+use application::use_cases;
 use user::handlers as user_handlers;
 
 pub async fn router() -> Router {
@@ -34,9 +38,6 @@ pub async fn router() -> Router {
 
     // run migrations
     run_migrations(&app_state.db_sql_pool).await;
-
-    // new thread to produce event queue
-    // run_producer_event_queue(app_state.event_queue.clone(), app_state.clients.clone());
 
     // new thread to listen to event queue
     run_consumer_event_queue(app_state.event_queue.clone(), app_state.clients.clone());
@@ -94,10 +95,7 @@ pub async fn router() -> Router {
                             put(user_handlers::handle_password_reset_confirmation),
                         ),
                 )
-                .nest(
-                    "/message",
-                    Router::new().route("/ws", get(message_handlers::ws_handler)),
-                ),
+                .nest("/message", Router::new().route("/ws", get(ws_handler))),
         )
         .layer(
             ServiceBuilder::new()
@@ -117,7 +115,6 @@ async fn run_migrations(pool: &PgPool) {
 }
 
 // root handlers
-
 async fn handler_404(uri: Uri) -> impl IntoResponse {
     (StatusCode::NOT_FOUND, format!("No route for {}", uri))
 }
@@ -136,6 +133,30 @@ async fn handler_metrics() -> std::string::String {
     encoder.encode(&metric_families, &mut buffer).unwrap();
 
     String::from_utf8(buffer.clone()).unwrap()
+}
+
+// Websocket handlers
+pub async fn ws_handler(
+    ws: WebSocketUpgrade,
+    State(state): State<AppState>,
+    TypedHeader(token): TypedHeader<Authorization<Bearer>>,
+) -> Response {
+    let user_id = if let Ok(auth) = Auth::from_token(
+        &token.token().to_string(), 
+        &state.config.secret
+    ) {
+        auth.id
+    } else {
+        return StatusCode::UNAUTHORIZED.into_response();
+    };
+    ws.on_upgrade(move |socket| {
+        use_cases::client_connect::execute::<WebSocket, Message, axum::Error>(
+            state.clients,
+            state.event_queue,
+            user_id,
+            socket,
+        )
+    })
 }
 
 fn run_geting_metricts(sys: System) {
@@ -169,38 +190,10 @@ fn run_consumer_event_queue(
     event_queue: EventQueue,
     clients: Clients<SplitSink<WebSocket, Message>>,
 ) {
-    // Spawn a task to listen for updates to the event queue
-    tokio::spawn(async move {
-        loop {
-            // Wait for the next event to be pushed to the queue
-            let event = {
-                let mut queue = event_queue.write().await;
-                queue.pop_front()
-            };
-
-            // Send the event to the channel
-            if let Some(event) = event {
-                // Handle the event
-                let mut clients = clients.write().await;
-                let f = clients
-                    .iter_mut()
-                    .map(|(_, client)| {
-                        if client.user_id != event.target_user_id {
-                            return None;
-                        }
-                        let message: Message = match &event.content {
-                            EventContent::Message(message) => {
-                                Message::try_from(message.clone()).unwrap()
-                            }
-                            EventContent::Notification => Message::Text("notification".to_string()),
-                        };
-                        Some(client.sender.as_mut().unwrap().send(message))
-                    })
-                    .filter_map(|x| x);
-                futures::future::join_all(f).await;
-            }
-        }
-    });
+    use_cases::consume_event::execute::<WebSocket, Message, axum::Error>(
+        clients,
+        event_queue,
+    );
 }
 
 // fn run_producer_event_queue(

@@ -1,4 +1,4 @@
-use axum::extract::ws::WebSocket;
+use axum::extract::ws::{WebSocket, Message};
 use deadpool::managed::Pool;
 use deadpool_redis::{Connection, Manager};
 use futures_util::stream::SplitSink;
@@ -27,8 +27,8 @@ pub struct Config {
 }
 
 #[derive(Clone)]
-pub struct AppState<T> {
-    pub clients: Clients<SplitSink<WebSocket, T>>,
+pub struct AppState {
+    pub clients: Clients<SplitSink<WebSocket, Message>>,
     pub event_queue: EventQueue,
     pub db_sql_pool: PgPool,
     pub cache_pool: Pool<Manager, Connection>,

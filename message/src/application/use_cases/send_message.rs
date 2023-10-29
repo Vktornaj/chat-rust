@@ -6,7 +6,7 @@ use crate::application::port::driven::{
     media_repository::Media
 };
 use common::{
-    models::message_model::{Message, MessageContent as DomainMessageContent}, 
+    models::message::{Message, MessageContent as DomainMessageContent}, 
     types::{text::Text, sender_type::Sender, recipient::Recipient, id::Id}
 };
 

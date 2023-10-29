@@ -3,13 +3,14 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use super::message_model::Message;
+use super::message::Message;
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Client<T> {
     pub user_id: Uuid,
     pub sender: Option<T>,
+    pub task: tokio::task::JoinHandle<()>,
 }
 
 pub type Clients<T> = Arc<RwLock<HashMap<Uuid, Client<T>>>>;
