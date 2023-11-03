@@ -1,7 +1,8 @@
 use futures_util::{Stream, stream::SplitSink, SinkExt};
 
 use common::domain::{models::{
-    client::{EventContent, Clients, EventQueue}, 
+    client::Clients, 
+    event::{EventContent, EventQueue},
     message::Message as MessageDomain,
 }, types::id::Id};
 

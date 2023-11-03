@@ -2,10 +2,11 @@ use futures_util::{Stream, StreamExt, stream::SplitSink};
 use uuid::Uuid;
 
 use common::domain::{models::{
-        client::{Client, EventContent, Event, Clients, EventQueue}, 
+        client::{Client, Clients},
+        event::{Event, EventContent, EventQueue}, 
         message::Message as MessageDomain,
     }, 
-    types::{recipient::Recipient, id::Id}
+    types::id::Id
 };
 
 

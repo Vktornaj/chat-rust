@@ -20,7 +20,8 @@ use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 
 use common::adapter::state::AppState;
 use common::domain::models::{
-    client::{Clients, EventQueue},
+    client::Clients,
+    event::EventQueue,
     message::Message as MessageDomain,
 };
 

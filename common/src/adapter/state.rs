@@ -6,7 +6,8 @@ use futures_util::stream::SplitSink;
 use sqlx::PgPool;
 use tokio::sync::RwLock;
 
-use crate::domain::models::client::{Clients, EventQueue};
+use crate::domain::models::client::Clients;
+use crate::domain::models::event::EventQueue;
 use super::{config::Config, db, cache};
 use crate::domain::models::message::Message as DomainMessage;
 
