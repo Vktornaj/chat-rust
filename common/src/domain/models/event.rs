@@ -11,11 +11,5 @@ pub type EventQueue<T> = Arc<RwLock<VecDeque<Event<T>>>>;
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Event<T> {
     pub recipient_id: Recipient,
-    pub content: EventContent<T>,
-}
-
-#[derive(Deserialize, Serialize, Clone)]
-pub enum EventContent<T> {
-    Message(T),
-    Notification,
+    pub content: T,
 }

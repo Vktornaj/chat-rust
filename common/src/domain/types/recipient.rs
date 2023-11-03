@@ -1,19 +1,11 @@
 use serde::{Deserialize, Serialize};
+
 use super::id::Id;
-use uuid::Uuid;
+use super::group::Group;
 
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum Recipient {
     User(Id),
-    Group(Id),
-}
-
-impl From<Recipient> for Uuid {
-    fn from(value: Recipient) -> Self {
-        match value {
-            Recipient::User(id) => id.into(),
-            Recipient::Group(id) => id.into(),
-        }
-    }
+    Group(Group),
 }

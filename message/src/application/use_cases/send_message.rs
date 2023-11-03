@@ -1,15 +1,8 @@
-use auth::domain::auth::Auth;
-use uuid::Uuid;
-
-use crate::application::port::driven::{
-    message_queue::MessageQueue, 
-    media_repository::Media
-};
 use common::domain::{
-    models::message::{Message, MessageContent as DomainMessageContent}, 
-    types::{text::Text, sender_type::Sender, recipient::Recipient, id::Id}
+    models::{client::Clients, event::Event, message::Message as MessageDomain},
+    types::{group::Group, recipient::Recipient, id::Id},
 };
-
+use futures_util::{SinkExt, Stream};
 
 #[derive(Debug)]
 pub enum SendError {
@@ -19,74 +12,46 @@ pub enum SendError {
     Unautorized(String),
 }
 
-pub enum MessageContent {
-    Text(String),
-    Image(Vec<u8>),
-    Video(Vec<u8>),
-    Audio(Vec<u8>),
-    File(Vec<u8>),
-}
+pub async fn execute<T, U, E>(event: Event<MessageDomain>, clients: &Clients<T>) -> Result<Vec<Id>, SendError>
+where
+    T: 'static + Stream<Item = Result<U, E>> + futures_util::Sink<U> + Send + Unpin,
+    U: 'static + TryFrom<MessageDomain, Error = String> + std::fmt::Debug + Send + Sync + Clone,
+    E: std::fmt::Debug + Send,
+    MessageDomain: TryFrom<U, Error = String>,
+    <T as futures_util::Sink<U>>::Error: Send,
+{
+    // Handle the event
+    let mut clients = clients.write().await;
 
-impl TryFrom<MessageContent> for Media {
-    type Error = String;
-    fn try_from(content: MessageContent) -> Result<Self, String> {
-        match content {
-            MessageContent::Text(text) => Err("Text is not a media".to_string()),
-            MessageContent::Image(c) => Ok(Media::Image(c)),
-            MessageContent::Video(c) => Ok(Media::Video(c)),
-            MessageContent::Audio(c) => Ok(Media::Audio(c)),
-            MessageContent::File(c) => Ok(Media::File(c)),
-        }
-    }
-}
-
-pub struct Payload {
-    pub recipient: Uuid,
-    pub content: MessageContent,
-}
-
-pub async fn execute<T>(
-    conn: &T,
-    queue: &impl MessageQueue<T>,
-    secret: &[u8],
-    token: &String,
-    payload: Payload,
-) -> Result<Uuid, SendError> {
-    // authenticate
-    let id = if let Ok(auth) = Auth::from_token(token, secret) {
-        auth.id
+    let message: U = if let Ok(message) = U::try_from(event.content.clone()) {
+        message
     } else {
-        return Err(SendError::Unautorized("Invalid token".to_string()));
+        return Err(SendError::InvalidData("".to_string()));
     };
-    // create message
-    let sender_contact_data = Id::try_from(id)
-        .map_err(|e| SendError::InvalidData(e.to_string()))?;
-    let recipient_contact_data = Id::try_from(payload.recipient)
-        .map_err(|e| SendError::InvalidData(e.to_string()))?;
-    // create message content
-    let content = match payload.content {
-        MessageContent::Text(text) => DomainMessageContent::Text(
-            Text::try_from(text).map_err(|e| SendError::InvalidData(e.to_string()))?,
-        ),
-        MessageContent::Image(binary) => DomainMessageContent::Image(binary),
-        MessageContent::Video(binary) => DomainMessageContent::Video(binary),
-        MessageContent::Audio(binary) => DomainMessageContent::Audio(binary),
-        MessageContent::File(binary) => DomainMessageContent::File(binary),
-        
+
+    let ids = match event.recipient_id {
+        Recipient::User(user_id) => vec![user_id],
+        Recipient::Group(Group { members, .. }) => members.into_iter().collect(),
     };
-    // create message
-    let message = Message::new(
-        Sender::User(sender_contact_data),
-        Recipient::User(recipient_contact_data),
-        content,
-    );
-    // add message to queue
-    queue
-        .add(conn, &message)
+
+    let futures_ = clients
+        .iter_mut()
+        .map(|(_, client)| async {
+            if !ids.contains(&client.user_id) {
+                return None;
+            }
+            if let Some(f) = client.sender.as_mut().map(|x| x.send(message.clone())) {
+                f.await.map(|_| client.user_id).ok()
+            } else {
+                None
+            }
+        });
+
+    Ok(futures::future::join_all(futures_)
         .await
-        .map_err(|e| SendError::Unknown(e.to_string()))?;
-    
-    Ok(message.get_id().into())
+        .into_iter()
+        .flatten()
+        .collect::<Vec<Id>>())
 }
 
 #[cfg(test)]

@@ -27,30 +27,7 @@ pub async fn execute<T, U, E>(
             };
 
             if let Some(event) = event {
-                // Handle the event
-                let mut clients = clients.write().await;
-                let f = clients
-                    .iter_mut()
-                    .map(|(_, client)| {
-                        if Into::<Id>::into(event.recipient_id.clone()) != client.user_id {
-                            return None;
-                        }
-                        let message: U = match &event.content {
-                            EventContent::Message(message) => {
-                                if let Ok(message) = U::try_from(message.clone()) {
-                                    message
-                                } else {
-                                    return None;
-                                }
-                            },
-                            EventContent::Notification => {
-                                return None;                
-                            },
-                        };
-                        client.sender.as_mut().map(|x| x.send(message))
-                    })
-                    .filter_map(|x| x);
-                futures::future::join_all(f).await;
+                
             }
         }
     });
