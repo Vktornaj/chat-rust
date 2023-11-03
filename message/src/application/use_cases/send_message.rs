@@ -12,11 +12,10 @@ pub enum SendError {
     Unautorized(String),
 }
 
-pub async fn execute<T, U, E>(event: Event<MessageDomain>, clients: &Clients<T>) -> Result<Vec<Id>, SendError>
+pub async fn execute<T, U>(event: Event<MessageDomain>, clients: Clients<T>) -> Result<Vec<Id>, SendError>
 where
-    T: 'static + Stream<Item = Result<U, E>> + futures_util::Sink<U> + Send + Unpin,
+    T: 'static + futures_util::Sink<U> + Send + Unpin,
     U: 'static + TryFrom<MessageDomain, Error = String> + std::fmt::Debug + Send + Sync + Clone,
-    E: std::fmt::Debug + Send,
     MessageDomain: TryFrom<U, Error = String>,
     <T as futures_util::Sink<U>>::Error: Send,
 {
@@ -41,9 +40,12 @@ where
                 return None;
             }
             if let Some(f) = client.sender.as_mut().map(|x| x.send(message.clone())) {
-                f.await.map(|_| client.user_id).ok()
+                match f.await {
+                    Ok(_) => None,
+                    Err(_) => Some(client.user_id)
+                }
             } else {
-                None
+                Some(client.user_id)
             }
         });
 

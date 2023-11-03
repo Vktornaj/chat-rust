@@ -1,6 +1,6 @@
 use serde_json;
 
-use crate::adapter::schemas::{
+use crate::ws::schemas::{
     EventTypeJson, 
     EventJson, 
     EventContentJson, 

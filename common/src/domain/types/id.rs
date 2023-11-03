@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use super::error::ErrorMsg;
@@ -20,6 +22,12 @@ impl TryFrom<Uuid> for Id {
 impl From<Id> for Uuid {
     fn from(id: Id) -> Self {
         id.0
+    }
+}
+
+impl Display for Id {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.to_string().fmt(f)
     }
 }
 

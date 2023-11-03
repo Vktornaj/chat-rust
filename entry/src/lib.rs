@@ -25,11 +25,8 @@ use common::domain::models::{
     message::Message as MessageDomain,
 };
 
-mod adapter;
-mod application;
-mod models;
-use adapter::metrics;
-use application::use_cases;
+mod metrics;
+mod ws;
 use user::handlers as user_handlers;
 
 
@@ -151,7 +148,7 @@ pub async fn ws_handler(
         return StatusCode::UNAUTHORIZED.into_response();
     };
     ws.on_upgrade(move |socket| {
-        use_cases::client_connect::execute::<WebSocket, Message, axum::Error>(
+        ws::client_connect::execute(
             state.clients,
             state.event_queue,
             user_id,
@@ -188,13 +185,10 @@ fn run_geting_metricts(sys: System) {
 }
 
 async fn run_consumer_event_queue(
-    event_queue: EventQueue<MessageDomain>,
+    event_queue: EventQueue<MessageDomain>, 
     clients: Clients<SplitSink<WebSocket, Message>>,
 ) {
-    use_cases::consume_event::execute::<WebSocket, Message, axum::Error>(
-        clients,
-        event_queue,
-    ).await;
+    ws::consume_event::execute(clients, event_queue).await;
 }
 
 // fn run_producer_event_queue(

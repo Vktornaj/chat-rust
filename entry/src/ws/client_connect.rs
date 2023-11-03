@@ -1,27 +1,23 @@
-use futures_util::{Stream, StreamExt, stream::SplitSink};
+use axum::extract::ws::{WebSocket, Message};
+use futures_util::{StreamExt, stream::SplitSink};
 use uuid::Uuid;
 
 use common::domain::{models::{
         client::{Client, Clients},
-        event::{Event, EventContent, EventQueue}, 
+        event::{Event, EventQueue}, 
         message::Message as MessageDomain,
     }, 
     types::id::Id
 };
 
 
-pub async fn execute<T, U, E>(
-    clients: Clients<SplitSink<T, U>>,
+pub async fn execute(
+    clients: Clients<SplitSink<WebSocket, Message>>,
     event_queue: EventQueue<MessageDomain>,
     recipient_id: Uuid,
-    socket: T,
-) where 
-    T: 'static + Stream<Item = Result<U, E>> + futures_util::Sink<U> + Send,
-    U: std::fmt::Debug + Send,
-    E: std::fmt::Debug + Send,
-    MessageDomain: std::convert::TryFrom<U, Error = String>,
-{
-    let (sender, mut receiver) = socket.split::<U>();
+    socket: WebSocket,
+) {
+    let (sender, mut receiver) = socket.split();
     // Create a new client id
     let client_id = Uuid::new_v4();
     // 
@@ -43,7 +39,7 @@ pub async fn execute<T, U, E>(
 
             event_queue.write().await.push_back(Event {
                 recipient_id: message_domain.recipient.clone(), 
-                content: EventContent::Message(message_domain) 
+                content: message_domain 
             });
         }
     };
