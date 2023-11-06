@@ -80,5 +80,4 @@ impl TryFrom<ProtoRecipient> for Recipient {
             },
         }
     }
-    
 }

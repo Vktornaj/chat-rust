@@ -45,12 +45,12 @@ pub async fn execute(
                         proto_message
                     } else {
                         eprintln!("Message error");
-                        return;
+                        continue;
                     }
                 },
                 _ => {
                     eprintln!("Message error");
-                    return;
+                    continue;
                 }
             };
 
@@ -61,11 +61,11 @@ pub async fn execute(
                         recipient
                     } else {
                         eprintln!("Error converting recipient");
-                        return;
+                        continue;
                     }
                 } else {
                     eprintln!("Error getting recipient");
-                    return;
+                    continue;
                 },
                 proto_message.content,
             );
