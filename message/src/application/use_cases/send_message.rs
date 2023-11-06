@@ -12,7 +12,7 @@ pub enum SendError {
     Unautorized(String),
 }
 
-pub async fn execute<T, U>(event: Event<MessageDomain>, clients: Clients<T>) -> Result<Vec<Id>, SendError>
+pub async fn execute<'a, T, U>(event: Event<MessageDomain>, clients: Clients<T>) -> Result<Vec<Id>, SendError>
 where
     T: 'static + futures_util::Sink<U> + Send + Unpin,
     U: 'static + TryFrom<MessageDomain, Error = String> + std::fmt::Debug + Send + Sync + Clone,

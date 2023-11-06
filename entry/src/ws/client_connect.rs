@@ -1,4 +1,5 @@
 use axum::extract::ws::{WebSocket, Message};
+use protobuf;
 use futures_util::{StreamExt, stream::SplitSink};
 use uuid::Uuid;
 
@@ -9,18 +10,26 @@ use common::domain::{models::{
     }, 
     types::id::Id
 };
+use common::adapter::protos_schemas::proto_message::ProtoMessage;
 
 
 pub async fn execute(
     clients: Clients<SplitSink<WebSocket, Message>>,
     event_queue: EventQueue<MessageDomain>,
-    recipient_id: Uuid,
+    sender_id: Uuid,
     socket: WebSocket,
 ) {
     let (sender, mut receiver) = socket.split();
     // Create a new client id
     let client_id = Uuid::new_v4();
-    // 
+
+    let user_id: Id = if let Ok(user_id) = sender_id.try_into() {
+        user_id
+    } else {
+        eprintln!("Error converting Uuid to Id");
+        return;
+    };
+    
     let task = async move {
         while let Some(message) = receiver.next().await {
             let message = if let Ok(message) = message {
@@ -30,12 +39,36 @@ pub async fn execute(
                 return;
             };
 
-            let message_domain: MessageDomain = if let Ok(message) = MessageDomain::try_from(message) {
-                message
-            } else {
-                eprintln!("Message extraction error");
-                continue;
+            let proto_message: ProtoMessage = match message {
+                Message::Binary(bytes) => {
+                    if let Ok (proto_message) = protobuf::Message::parse_from_bytes(&bytes) {
+                        proto_message
+                    } else {
+                        eprintln!("Message error");
+                        return;
+                    }
+                },
+                _ => {
+                    eprintln!("Message error");
+                    return;
+                }
             };
+
+            let message_domain = MessageDomain::new(
+                user_id.clone().into(),
+                if let Some(recipient) = proto_message.recipient {
+                    if let Ok(recipient) = recipient.try_into() {
+                        recipient
+                    } else {
+                        eprintln!("Error converting recipient");
+                        return;
+                    }
+                } else {
+                    eprintln!("Error getting recipient");
+                    return;
+                },
+                proto_message.content,
+            );
 
             event_queue.write().await.push_back(Event {
                 recipient_id: message_domain.recipient.clone(), 
@@ -43,11 +76,7 @@ pub async fn execute(
             });
         }
     };
-    let user_id = if let Ok(id) = Id::try_from(recipient_id) {
-        id
-    } else {
-        return;
-    };
+
     let client = Client {
         user_id,
         sender: Some(sender),

@@ -17,3 +17,17 @@ impl From<Sender> for Uuid {
         }
     }
 }
+
+impl TryFrom<Uuid> for Sender {
+    type Error = &'static str;
+
+    fn try_from(value: Uuid) -> Result<Self, Self::Error> {
+        Ok(Self::Group(value))
+    }
+}
+
+impl From<Id> for Sender {
+    fn from(value: Id) -> Self {
+        Self::User(value)
+    }
+}

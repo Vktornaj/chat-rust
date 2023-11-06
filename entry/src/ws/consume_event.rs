@@ -23,16 +23,18 @@ pub async fn execute(
             if let Some(mut event) = event {
                 match handlers::send_message(event.clone(), clients.clone()).await {
                     Ok(unsent_ids) => {
-                        event.recipient_id = match event.recipient_id {
-                            Recipient::User(_) => Recipient::User(unsent_ids[0]),
-                            Recipient::Group(group) => {
-                                let mut group_clone = group.clone();
-                                group_clone.members = unsent_ids;
-                                return Recipient::Group(group_clone);
-                            }
-                        };
+                        if !unsent_ids.is_empty() {
+                            event.recipient_id = match event.recipient_id {
+                                Recipient::User(_) => Recipient::User(unsent_ids[0]),
+                                Recipient::Group(group) => {
+                                    let mut group_clone = group.clone();
+                                    group_clone.members = unsent_ids;
+                                    return Recipient::Group(group_clone);
+                                }
+                            };
 
-                        event_queue.write().await.push_back(event);
+                            event_queue.write().await.push_back(event);
+                        }
                     }
                     Err(_) => println!("Error sending message: {}", &event.content.id),
                 }

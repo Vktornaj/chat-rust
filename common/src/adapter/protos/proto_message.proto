@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+message ProtoUuid {
+    bytes value = 1; // UUID as 16 bytes
+}
+
+message ProtoGroup {
+    ProtoUuid id = 1;
+    string name = 2;
+    repeated ProtoUuid members = 3; // Array of UUIDs
+}
+
+message ProtoMessage {
+    oneof recipient {
+        ProtoUuid user = 1;
+        ProtoGroup group = 2;
+    }
+    bytes content = 3;
+}

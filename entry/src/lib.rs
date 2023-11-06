@@ -18,7 +18,10 @@ use systemstat::{Platform, System};
 use tower::ServiceBuilder;
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 
-use common::adapter::state::AppState;
+use common::adapter::{
+    state::AppState,
+    protos,
+};
 use common::domain::models::{
     client::Clients,
     event::EventQueue,
@@ -36,6 +39,9 @@ pub async fn router() -> Router {
 
     // run migrations
     run_migrations(&app_state.db_sql_pool).await;
+
+    // run build protos
+    protos::build::build();
 
     // new thread to listen to event queue
     run_consumer_event_queue(app_state.event_queue.clone(), app_state.clients.clone()).await;
