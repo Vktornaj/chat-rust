@@ -1,2 +1,2 @@
-pub mod send_message;
-pub mod receive_message;
+pub mod consume_message;
+pub mod produce_message;

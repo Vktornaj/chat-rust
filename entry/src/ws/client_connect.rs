@@ -56,7 +56,7 @@ pub async fn execute(
 
             let message_domain = MessageDomain::new(
                 user_id.clone().into(),
-                if let Some(recipient) = proto_message.recipient {
+                if let Some(recipient) = proto_message.recipient.recipient.clone() {
                     if let Ok(recipient) = recipient.try_into() {
                         recipient
                     } else {

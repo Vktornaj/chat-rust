@@ -1,32 +1,26 @@
 use axum::extract::ws::Message;
 use uuid::Uuid;
 
-use crate::domain::{
-    models::message::Message as MessageDomain, 
-    types::{error::ErrorMsg, recipient::Recipient, id::Id, group::Group}
+use crate::domain::types::sender_type::Sender;
+use crate::domain::types::{
+    error::ErrorMsg, 
+    recipient::Recipient, 
+    id::Id, 
+    group::Group,
+};
+use crate::domain::models::message::Message as MessageDomain;
+use super::protos_schemas::proto_message::{
+    ProtoUuid, 
+    ProtoGroup,
+    ProtoMessage,
+    ProtoSender,
+    ProtoRecipient,
 };
 use super::protos_schemas::proto_message::{
-    ProtoMessage, 
-    proto_message::Recipient as ProtoRecipient, ProtoUuid, ProtoGroup
+    proto_sender::Sender as ProtoSender2,
+    proto_recipient::Recipient as ProtoRecipient2,
 };
 
-
-impl TryFrom<MessageDomain> for Message {
-    type Error = String;
-
-    fn try_from(value: MessageDomain) -> Result<Self, Self::Error> {
-        // serialize value
-        todo!()
-    }
-}
-
-impl TryFrom<Message> for MessageDomain {
-    type Error = String;
-
-    fn try_from(value: Message) -> Result<Self, Self::Error> {
-        todo!()
-    }
-}
 
 impl TryFrom<ProtoUuid> for Id {
     type Error = ErrorMsg;
@@ -61,18 +55,18 @@ impl TryFrom<ProtoGroup> for Group {
     }
 }
 
-impl TryFrom<ProtoRecipient> for Recipient {
+impl TryFrom<ProtoRecipient2> for Recipient {
     type Error = ErrorMsg;
 
-    fn try_from(proto_recipient: ProtoRecipient) -> Result<Self, Self::Error> {
+    fn try_from(proto_recipient: ProtoRecipient2) -> Result<Self, Self::Error> {
         match proto_recipient {
-            ProtoRecipient::User(user_id) => {
+            ProtoRecipient2::User(user_id) => {
                 match user_id.try_into() {
                     Ok(id) => Ok(Recipient::User(id)),
                     Err(_) => Err(ErrorMsg("Error converting uuid to id".to_string())),
                 }
             },
-            ProtoRecipient::Group(group_id) => {
+            ProtoRecipient2::Group(group_id) => {
                 match group_id.try_into() {
                     Ok(id) => Ok(Recipient::Group(id)),
                     Err(_) => Err(ErrorMsg("Error converting uuid to id".to_string())),
@@ -81,3 +75,102 @@ impl TryFrom<ProtoRecipient> for Recipient {
         }
     }
 }
+
+impl From<Id> for ProtoUuid {
+    fn from(id: Id) -> Self {
+        let id: Uuid = id.into();
+        let id = id.to_bytes_le();
+        protobuf::Message::parse_from_bytes(&id).unwrap()
+    }
+}
+
+impl From<Group> for ProtoGroup {
+    fn from(group: Group) -> Self {
+        let id: ProtoUuid = group.id.into();
+        let members = group.members
+            .into_iter()
+            .map(|member| member.into())
+            .collect::<Vec<ProtoUuid>>();
+
+        Self { 
+            id: protobuf::MessageField(Some(Box::new(id))),
+            name: group.name, 
+            members, 
+            special_fields: protobuf::SpecialFields::default(),
+        }
+    }
+}
+
+impl From<Recipient> for ProtoRecipient2 {
+    fn from(recipient: Recipient) -> Self {
+        match recipient {
+            Recipient::User(user_id) => {
+                let user_id: ProtoUuid = user_id.into();
+                Self::User(user_id)
+            },
+            Recipient::Group(group_id) => {
+                let group_id: ProtoGroup = group_id.into();
+                Self::Group(group_id)
+            },
+        }
+    }
+}
+
+impl From<Sender> for ProtoSender2 {
+    fn from(sender: Sender) -> Self {
+        match sender {
+            Sender::User(user_id) => {
+                let user_id: ProtoUuid = user_id.into();
+                Self::User(user_id)
+            },
+            Sender::Group(group_id) => {
+                let group_id: ProtoUuid = group_id.into();
+                Self::Group(group_id)
+            },
+        }
+    }
+}
+
+impl TryFrom<MessageDomain> for ProtoMessage {
+    type Error = String;
+
+    fn try_from(message: MessageDomain) -> Result<Self, Self::Error> {
+        let id: ProtoUuid = message.id.into();
+        let sender: ProtoSender2 = message.sender.into();
+        let recipient: ProtoRecipient2 = message.recipient.into();
+        let content = message.content;
+        let timestamp = message.timestamp;
+        let special_fields = protobuf::SpecialFields::default();
+
+        let sender: ProtoSender = ProtoSender {
+            sender: Some(sender),
+            special_fields: protobuf::SpecialFields::default(),
+        };
+
+        let recipient: ProtoRecipient = ProtoRecipient {
+            recipient: Some(recipient),
+            special_fields: protobuf::SpecialFields::default(),
+        };
+
+        Ok(Self { 
+            id: protobuf::MessageField(Some(Box::new(id))), 
+            sender: protobuf::MessageField(Some(Box::new(sender))), 
+            recipient: protobuf::MessageField(Some(Box::new(recipient))), 
+            content, 
+            timestamp: timestamp as i64,
+            special_fields 
+        })
+    }
+}
+
+impl TryFrom<MessageDomain> for Message {
+    type Error = String;
+
+    fn try_from(message: MessageDomain) -> Result<Self, Self::Error> {
+        let message: ProtoMessage = message.try_into()?;
+        let proto_message: Vec<u8> = protobuf::Message::write_to_bytes(&message)
+            .map_err(|_| "Error encoding message".to_string())?;
+        Ok(Self::Binary(proto_message))
+    }
+}
+

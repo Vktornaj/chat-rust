@@ -10,11 +10,11 @@ use super::super::types::{
 
 #[derive(Clone)]
 pub struct Message {
+    pub id: Id,
     pub sender: Sender,
     pub recipient: Recipient,
     pub content: Vec<u8>,
     pub timestamp: u64,
-    pub id: Id,
 }
 
 impl Message {
