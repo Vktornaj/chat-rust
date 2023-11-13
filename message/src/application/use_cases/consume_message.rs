@@ -2,7 +2,7 @@ use common::domain::{
     models::{client::Clients, event::Event, message::Message as MessageDomain},
     types::{group::Group, recipient::Recipient, id::Id},
 };
-use futures_util::{SinkExt, Stream};
+use futures_util::SinkExt;
 
 #[derive(Debug)]
 pub enum SendError {
