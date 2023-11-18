@@ -111,7 +111,11 @@ pub async fn router() -> Router {
                     CorsLayer::new()
                         .allow_methods([ Method::GET, Method::POST, Method::PUT, Method::DELETE])
                         .allow_headers(Any)
-                        .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
+                        .allow_origin([
+                            "http://localhost:5173".parse::<HeaderValue>().unwrap(),
+                            "http://192.168.1.120:5173".parse::<HeaderValue>().unwrap(),
+                            "http://192.168.1.120".parse::<HeaderValue>().unwrap(),
+                        ])
                     )
         )
         .fallback(handler_404)

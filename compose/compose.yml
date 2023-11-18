@@ -25,7 +25,8 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d
     restart: unless-stopped
     depends_on:
-      - web
+      web:
+        condition: service_healthy
 
   web:
     build:
@@ -40,6 +41,12 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
   db:
     image: postgres

@@ -7,7 +7,7 @@ remote_port=22
 remote_user="vktornaj"
 local_path_app=$(pwd)/
 local_path_compose=$(pwd)/compose/
-remote_path_app="/home/${remote_user}/chat_rust/"
+remote_path_app="/home/${remote_user}/chat_rust"
 ssh_key="~/Desktop/Files/vktserver/id_rsa"
 tag='0.0.6'
 
