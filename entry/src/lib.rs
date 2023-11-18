@@ -5,18 +5,23 @@ use axum::{
         State, WebSocketUpgrade,
     },
     headers::{authorization::Bearer, Authorization},
-    http::{StatusCode, Uri},
+    http::{StatusCode, Uri, Method},
     middleware,
     response::{IntoResponse, Response},
     routing::{delete, get, post, put},
-    Router, TypedHeader,
+    Router, 
+    TypedHeader,
+    http::HeaderValue,
 };
 use futures_util::stream::SplitSink;
 use prometheus::Encoder;
 use sqlx::{migrate::Migrator, PgPool};
 use systemstat::{Platform, System};
 use tower::ServiceBuilder;
-use tower_http::trace::{DefaultMakeSpan, TraceLayer};
+use tower_http::{
+    trace::{DefaultMakeSpan, TraceLayer}, 
+    cors::{CorsLayer, Any},
+};
 
 use common::adapter::state::AppState;
 use common::domain::models::{
@@ -101,7 +106,13 @@ pub async fn router() -> Router {
                 .layer(
                     TraceLayer::new_for_http()
                         .make_span_with(DefaultMakeSpan::default().include_headers(true)),
-                ),
+                )
+                .layer(
+                    CorsLayer::new()
+                        .allow_methods([ Method::GET, Method::POST, Method::PUT, Method::DELETE])
+                        .allow_headers(Any)
+                        .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
+                    )
         )
         .fallback(handler_404)
         .with_state(app_state)

@@ -1,5 +1,7 @@
 use axum::extract::ws::{Message, WebSocket};
 use futures_util::stream::SplitSink;
+use tokio::time::sleep;
+use std::time::Duration;
 
 use common::domain::{
     models::{client::Clients, event::EventQueue, message::Message as MessageDomain},
@@ -39,6 +41,8 @@ pub async fn execute(
                     Err(_) => println!("Error sending message: {}", &event.content.id),
                 }
             }
+            // Sleep for a bit
+            sleep(Duration::from_millis(100)).await;
         }
     });
 }
