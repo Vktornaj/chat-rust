@@ -1,7 +1,9 @@
 use async_trait::async_trait;
 
+
+#[derive(Debug)]
 pub enum EmailSendError {
-    Unknown,
+    Unknown(String),
     NotFound,
 }
 
