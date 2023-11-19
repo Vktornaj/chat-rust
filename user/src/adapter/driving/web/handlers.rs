@@ -6,13 +6,13 @@ use axum::http::StatusCode;
 use axum::Json;
 use axum::headers::Authorization;
 use chrono::{TimeZone, Utc};
-use common::adapter::config::{DATE_FORMAT, Environment};
-use lettre::SmtpTransport;
 
+use common::adapter::config::{DATE_FORMAT, Environment};
 use super::schemas::{
     Credentials, Credentials2, Credentials3, IdTransaction, JsonToken, NewUserJson,
     UserContactInfo, UserContactInfo2, UserInfo, UserJson, ValidTransaction,
 };
+use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailService;
 use crate::application::use_cases;
 use common::adapter::state::AppState;
 
@@ -33,17 +33,14 @@ pub async fn handle_create_user_cache(
     } else {
         return Err((StatusCode::BAD_REQUEST, "Invalid birthday format".into()));
     };
-    let email_conn = match state.config.environment  {
-        Environment::Production => Some(SmtpTransport::relay("smtp.gmail.com").unwrap().build()),
-        Environment::Development => None,
-    };
+    
     match use_cases::create_user_cache::execute(
         &state.db_sql_pool,
         &state.cache_pool,
-        &email_conn,
+        &state.email_conn,
         &UserRepository {},
         &UserCache {},
-        &FakeEmailService {},
+        &AWSEmailService {},
         &state.config.environment,
         use_cases::create_user_cache::Payload {
             email: payload.email,
@@ -282,17 +279,13 @@ pub async fn handle_update_user_contact_info_cache(
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(user_info): Json<UserContactInfo>,
 ) -> Result<String, StatusCode> {
-    let email_conn = match state.config.environment  {
-        Environment::Production => Some(SmtpTransport::relay("smtp.gmail.com").unwrap().build()),
-        Environment::Development => None,
-    };
     match use_cases::update_contact_info_cache::execute(
         &state.db_sql_pool,
         &state.cache_pool,
-        &email_conn,
+        &state.email_conn,
         &UserRepository {},
         &UserCache {},
-        &FakeEmailService {},
+        &AWSEmailService {},
         &state.config.secret,
         &token.token().to_string(),
         use_cases::update_contact_info_cache::Payload {
@@ -350,15 +343,11 @@ pub async fn handle_password_recovery_request(
     State(state): State<AppState>,
     Json(data): Json<UserContactInfo2>,
 ) -> Result<(), StatusCode> {
-    let email_conn = match state.config.environment  {
-        Environment::Production => Some(SmtpTransport::relay("smtp.gmail.com").unwrap().build()),
-        Environment::Development => None,
-    };
     match use_cases::reset_password_request::execute(
         &state.db_sql_pool,
-        &email_conn,
+        &state.email_conn,
         &UserRepository {},
-        &FakeEmailService {},
+        &AWSEmailService {},
         &state.config.secret,
         use_cases::reset_password_request::Payload {
             email: data.email,

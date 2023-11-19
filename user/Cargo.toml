@@ -9,7 +9,10 @@ edition = "2021"
 # locals
 auth = { path = "../auth"}
 common = { path = "../common"}
-#
+# aws
+aws-config = { git = "https://github.com/awslabs/aws-sdk-rust", branch = "next", features = ["behavior-version-latest"]}
+aws-sdk-sesv2 = { git = "https://github.com/awslabs/aws-sdk-rust", branch = "next" }
+
 # rocket = { version = "0.5.0-rc.3", features=["json"]}
 toml = "0.8.2"
 serde_with = "3.0.0"
@@ -31,13 +34,6 @@ prometheus = "0.13.3"
 axum = { version = "0.6.20", features = ["headers"]}
 tokio = { version = "1.32.0", features=["full"] }
 futures = "0.3.28"
-
-# aws
-aws-config = { git = "https://github.com/awslabs/aws-sdk-rust", branch = "next", features = ["behavior-version-latest"]}
-aws-sdk-sesv2 = { git = "https://github.com/awslabs/aws-sdk-rust", branch = "next" }
-# tokio = { version = "1.20.1", features = ["full"] }
-# clap = { version = "~4.4", features = ["derive"] }
-# tracing-subscriber = { version = "0.3.15", features = ["env-filter"] }
 
 [dev-dependencies]
 async-imap = { version = "0.9.1", default-features = false, features = [ "runtime-tokio" ] }

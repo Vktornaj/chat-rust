@@ -825,6 +825,8 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "async-std",
+ "aws-config",
+ "aws-sdk-sesv2",
  "axum",
  "axum-extra",
  "deadpool",
