@@ -90,16 +90,6 @@ services:
       - ./grafana.ini:/etc/grafana/grafana.ini
       - grafana:/var/lib/grafana
 
-  smtp:
-    image: rnwood/smtp4dev:v3
-    environment:
-      - ServerOptions__HostName=smtp
-      - ServerOptions__TlsMode=ImplicitTls
-    ports:
-      - 3000:80
-      - 25:25
-      - 587:587
-
 volumes:
   db:
     driver: local
