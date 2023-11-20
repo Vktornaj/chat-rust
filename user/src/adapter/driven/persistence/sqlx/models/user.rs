@@ -1,16 +1,15 @@
 use chrono::{DateTime, Utc};
+use common::domain::types::{error::ErrorMsg, phone_number::PhoneNumber, email::Email, id::Id};
 use sqlx::{postgres::PgRow, Row};
 use uuid::Uuid;
 
 use crate::domain::{
     user::User as UserDomain, types::{
-        id::Id, email::Email, 
-        phone_number::PhoneNumber, 
         first_name::FirstName, 
         last_name::LastName, 
         birthday::Birthday, 
         nationality::Nationality, 
-        language::Language, error::ErrorMsg
+        language::Language, 
     }
 };
 

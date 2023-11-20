@@ -1,11 +1,9 @@
 use auth::domain::auth::Auth;
+use common::domain::types::{email::Email, phone_number::PhoneNumber};
 
-use crate::{
-    application::port::driven::{
-        user_repository::{UserRepositoryTrait, FindUser}, 
-        email_service::EmailServiceTrait
-    }, 
-    domain::types::{email::Email, phone_number::PhoneNumber}
+use crate::application::port::driven::{
+    user_repository::{UserRepositoryTrait, FindUser}, 
+    email_service::EmailServiceTrait
 };
 
 
@@ -73,17 +71,17 @@ pub async fn execute<T, U>(
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Mutex;
+    // use std::sync::Mutex;
 
-    // use crate::repositories::pokemon::InMemoryRepository;
-    use chrono::{Utc, NaiveDate, DateTime};
-    use rocket::tokio;
-    use uuid::Uuid;
-    use super::*;
-    use crate::{
-        adapter::driven::persistence::in_memory_repository::InMemoryRepository, 
-        domain::types::id::Id
-    };
+    // // use crate::repositories::pokemon::InMemoryRepository;
+    // use chrono::{Utc, NaiveDate, DateTime};
+    // use rocket::tokio;
+    // use uuid::Uuid;
+    // use super::*;
+    // use crate::{
+    //     adapter::driven::persistence::in_memory_repository::InMemoryRepository, 
+    //     domain::types::id::Id
+    // };
     
     // #[tokio::test]
     // async fn it_should_return_the_user_otherwise() {

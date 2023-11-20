@@ -1,20 +1,17 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use common::domain::types::{email::Email, phone_number::PhoneNumber, error::ErrorMsg, id::Id};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use crate::domain::{
     types::{
-        email::Email, 
-        phone_number::PhoneNumber, 
         first_name::FirstName, 
         last_name::LastName, 
         birthday::Birthday, 
         nationality::Nationality, 
         language::Language, 
         code::Code, 
-        error::ErrorMsg, 
-        password::Password, 
-        id::Id
+        password::Password,
     }, 
     user::NewUser};
 

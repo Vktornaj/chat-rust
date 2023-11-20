@@ -54,15 +54,15 @@ pub async fn execute<T>(
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Mutex;
+    // use std::sync::Mutex;
 
     // use crate::repositories::pokemon::InMemoryRepository;
-    use chrono::{Utc, NaiveDate};
-    use rocket::tokio;
-    use uuid::Uuid;
-    use super::*;
-    use crate::{adapter::driven::persistence::in_memory_repository::InMemoryRepository, domain::types::id::Id, application::port::driven::errors::RepoSelectError};
-    use super::super::create_user_cache;
+    // use chrono::{Utc, NaiveDate};
+    // use rocket::tokio;
+    // use uuid::Uuid;
+    // use super::*;
+    // use crate::{adapter::driven::persistence::in_memory_repository::InMemoryRepository, domain::types::id::Id, application::port::driven::errors::RepoSelectError};
+    // use super::super::create_user_cache;
 
     // #[tokio::test]
     // async fn delete_user_successful() {

@@ -25,7 +25,8 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d
     restart: unless-stopped
     depends_on:
-      - web
+      web:
+        condition: service_healthy
 
   web:
     build:
@@ -40,6 +41,12 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
   db:
     image: postgres
@@ -82,16 +89,6 @@ services:
     volumes:
       - ./grafana.ini:/etc/grafana/grafana.ini
       - grafana:/var/lib/grafana
-
-  smtp:
-    image: rnwood/smtp4dev:v3
-    environment:
-      - ServerOptions__HostName=smtp
-      - ServerOptions__TlsMode=ImplicitTls
-    ports:
-      - 3000:80
-      - 25:25
-      - 587:587
 
 volumes:
   db:

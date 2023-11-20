@@ -7,10 +7,10 @@
 ################################################################################
 # Create a stage for building the application.
 
-ARG RUST_VERSION=1.72.0
+ARG RUST_VERSION=1.74.0
 ARG APP_NAME=entry
 ARG SQLX_OFFLINE=true
-FROM rust:${RUST_VERSION}-slim-bullseye AS build
+FROM rust:${RUST_VERSION}-slim-bookworm AS build
 ARG APP_NAME
 
 RUN update-ca-certificates
@@ -29,7 +29,7 @@ WORKDIR /app
 RUN --mount=type=bind,source=auth,target=auth \
     --mount=type=bind,source=common,target=common \
     --mount=type=bind,source=entry,target=entry \
-    --mount=type=bind,source=todo,target=todo \
+    --mount=type=bind,source=message,target=message \
     --mount=type=bind,source=user,target=user \
     --mount=type=bind,source=.sqlx,target=.sqlx \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
@@ -53,7 +53,7 @@ EOF
 # most recent version of that tag when you build your Dockerfile. If
 # reproducability is important, consider using a digest
 # (e.g.,    debian@sha256:ac707220fbd7b67fc19b112cee8170b41a9e97f703f588b2cdbbcdcecdd8af57).
-FROM debian:bullseye-slim AS final
+FROM debian:bookworm-slim AS final
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/   #user
@@ -66,16 +66,16 @@ RUN adduser \
     --no-create-home \
     --uid "${UID}" \
     appuser
+
+RUN apt-get -y update; apt-get -y install curl
+
 USER appuser
 
 # Copy the executable from the "build" stage.
 COPY --from=build /bin/server /bin/
 
-# Set the environment variables that the application will read at runtime.
-ENV ROCKET_ADDRESS=0.0.0.0
-
 # Expose the port that the application listens on.
-EXPOSE 8000
+EXPOSE 3000
 
 # What the container should run when it is started.
 CMD ["/bin/server"]

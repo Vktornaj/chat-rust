@@ -1,9 +1,10 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use rocket::futures::future::join_all;
+use common::domain::types::error::ErrorMsg;
 use sqlx::query_builder::QueryBuilder;
 use sqlx::{Postgres, Pool};
 use uuid::Uuid;
+use futures::future::join_all;
 
 use crate::application::port::driven::user_repository::{UserRepositoryTrait, UpdateUser, FindUser};
 use crate::application::port::driven::errors::{
@@ -12,7 +13,6 @@ use crate::application::port::driven::errors::{
     RepoSelectError, 
     RepoUpdateError,
 };
-use crate::domain::types::error::ErrorMsg;
 use crate::domain::user::{User as UserDomain, NewUser};
 use super::models::user::User as UserDB;
 
@@ -113,19 +113,13 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                     return Err(RepoSelectError::Unknown("Error getting users".to_string()));
                 };
 
-                let futures = users.iter()
-                    .map(|x| get_languages(conn, &x.id));
+                let futures = users.iter().map(|x| get_languages(conn, &x.id));
 
-                let every_languages: Result<Vec<Vec<String>>, RepoSelectError> = join_all(futures)
+                // run futures all at once
+                let every_languages = join_all(futures)
                     .await
                     .into_iter()
-                    .collect();
-
-                let every_languages = if let Ok(every_languages) = every_languages {
-                    every_languages
-                } else {
-                    return Err(RepoSelectError::Unknown("Error getting languages".to_string()));
-                };
+                    .collect::<Result<Vec<Vec<String>>, RepoSelectError>>()?;
                 
                 let users: Result<Vec<UserDomain>, ErrorMsg> = users.into_iter().zip(every_languages)
                     .map(|(user, languages)| {

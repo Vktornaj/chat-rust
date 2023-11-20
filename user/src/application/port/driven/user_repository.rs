@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use common::domain::types::{email::Email, phone_number::PhoneNumber};
 use uuid::Uuid;
 
 use super::errors::{
@@ -12,8 +13,6 @@ use super::errors::{
 use crate::domain::{
     user::{User, NewUser}, 
     types::{
-        email::Email, 
-        phone_number::PhoneNumber, 
         language::Language, 
         nationality::Nationality, 
         first_name::FirstName, 
