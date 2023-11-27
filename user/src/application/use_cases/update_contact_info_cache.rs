@@ -1,4 +1,4 @@
-use auth::domain::auth::Auth;
+use auth::domain::token_data::TokenData;
 use common::domain::types::{email::Email, phone_number::PhoneNumber, id::Id};
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
@@ -53,7 +53,7 @@ pub async fn execute<T, U, ES>(
         None
     };
     // verify token is valid
-    let id = if let Ok(auth) = Auth::from_token(token, &secret) {
+    let id = if let Ok(auth) = TokenData::from_token(token, &secret) {
         auth.id
     } else {
         return Err(UpdateError::Unautorized);

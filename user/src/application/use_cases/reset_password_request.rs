@@ -1,4 +1,4 @@
-use auth::domain::auth::Auth;
+use auth::domain::token_data::TokenData;
 use common::domain::types::{email::Email, phone_number::PhoneNumber};
 
 use crate::application::port::driven::{
@@ -55,7 +55,7 @@ pub async fn execute<T, U>(
     };
 
     // Generate link
-    let token = Auth::new_reset_password_token(&user.id.into());
+    let token = TokenData::new_reset_password_token(&user.id.into());
     let link = format!("http://{}/api/password-reset/{}", payload.domain, token.token(secret));
 
     // Send reset password email

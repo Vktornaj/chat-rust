@@ -1,7 +1,11 @@
 use regex::Regex;
 use argon2::{
     password_hash::{
-        PasswordHash, PasswordVerifier, Error, SaltString, rand_core::OsRng
+        PasswordHash, 
+        PasswordVerifier, 
+        Error, 
+        SaltString, 
+        rand_core::OsRng
     },
     Argon2, PasswordHasher
 };

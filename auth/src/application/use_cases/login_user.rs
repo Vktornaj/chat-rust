@@ -1,10 +1,9 @@
+use crate::application::port::driven::auth_repository::FindContactInfo;
 use crate::{
     domain::types::password::Password, 
-    application::port::driven::user_repository::FindUser
+    application::port::driven::auth_repository::AuthRepositoryTrait,
 };
-
-use super::super::port::driven::user_repository::UserRepositoryTrait;
-use auth::domain::token_data::TokenData;
+use crate::domain::token_data::TokenData;
 use common::domain::types::{email::Email, phone_number::PhoneNumber};
 
 
@@ -23,7 +22,7 @@ pub struct Payload {
 // TODO: improve when criteria will implemented onto the traid
 pub async fn execute<T>(
     conn: &T,
-    repo: &impl UserRepositoryTrait<T>, 
+    repo: &impl AuthRepositoryTrait<T>,
     secret: &[u8],
     payload: Payload,
 ) -> Result<String, LoginError> {
@@ -50,18 +49,13 @@ pub async fn execute<T>(
         Ok(password) => password,
         Err(_) => return Err(LoginError::NotFound)
     };
-    let find_user = FindUser { 
-        email, 
-        phone_number, 
-        ..Default::default() 
+    let find_auth = FindContactInfo { 
+        email: email.map(|email| email.into()), 
+        phone_number: phone_number.map(|phone_number| phone_number.into()), 
     };
-    if let Ok(mut users) = repo.find_by_criteria(conn, find_user, 0, 1).await {
-        if users.len() < 1 {
-            return Err(LoginError::NotFound);
-        }
-        let user = users.swap_remove(0);
-        if password.verify_password(&user.hashed_password).is_ok() {
-            Ok(TokenData::new(&user.id.into()).token(secret))
+    if let Ok(auth) = repo.find_by_contact_info(conn, find_auth).await {
+        if password.verify_password(&auth.hashed_password).is_ok() {
+            Ok(TokenData::new(&auth.user_id.into()).token(secret))
         } else  {
             Err(LoginError::Unauthorized)
         }
@@ -69,4 +63,3 @@ pub async fn execute<T>(
         Err(LoginError::NotFound)
     }
 }
-

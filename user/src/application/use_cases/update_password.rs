@@ -1,4 +1,4 @@
-use auth::domain::auth::Auth;
+use auth::domain::token_data::TokenData;
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
@@ -45,7 +45,7 @@ pub async fn execute<T>(
         return Err(UpdateError::InvalidData("Invalid new password".to_string()));
     };
     // verify user exist and token is valid
-    let id = if let Ok(auth) = Auth::from_token(token, &secret) {
+    let id = if let Ok(auth) = TokenData::from_token(token, &secret) {
         auth.id
     } else {
         return Err(UpdateError::Unautorized);

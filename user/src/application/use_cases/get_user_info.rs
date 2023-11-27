@@ -1,4 +1,4 @@
-use auth::domain::auth::Auth;
+use auth::domain::token_data::TokenData;
 use crate::domain::user::User;
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
@@ -16,7 +16,7 @@ pub async fn execute<T>(
     secret: &[u8],
     token: &String
 ) -> Result<User, FindError> {
-    let id = if let Ok(auth) = Auth::from_token(token, secret) {
+    let id = if let Ok(auth) = TokenData::from_token(token, secret) {
         auth.id
     } else {
         return Err(FindError::Unautorized("Invalid token".to_string()));

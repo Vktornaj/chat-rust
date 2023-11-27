@@ -1,4 +1,4 @@
-use auth::domain::auth::Auth;
+use auth::domain::token_data::TokenData;
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
@@ -31,7 +31,7 @@ pub async fn execute<T, U>(
     payload: Payload,
 ) -> Result<User, UpdateError> {
     // verify token is valid
-    if Auth::from_token(token, &secret).is_err() {
+    if TokenData::from_token(token, &secret).is_err() {
         return Err(UpdateError::Unautorized);
     };
     // validate confirmation code

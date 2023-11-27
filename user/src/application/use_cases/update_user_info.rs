@@ -1,4 +1,4 @@
-use auth::domain::auth::Auth;
+use auth::domain::token_data::TokenData;
 use chrono::{DateTime, Utc};
 use common::domain::types::error::ErrorMsg;
 
@@ -85,7 +85,7 @@ pub async fn execute<T>(
         None
     };
     // verify user exist and token is valid
-    let id = if let Ok(auth) = Auth::from_token(token, &secret) {
+    let id = if let Ok(auth) = TokenData::from_token(token, &secret) {
         auth.id
     } else {
         return Err(UpdateError::Unautorized);

@@ -1,4 +1,4 @@
-use auth::domain::auth::Auth;
+use auth::domain::token_data::TokenData;
 
 use crate::{
     application::port::driven::user_repository::{UserRepositoryTrait, UpdateUser}, 
@@ -29,7 +29,7 @@ pub async fn execute<T>(
         ResetError::InvalidData("Invalid password".to_string())
     })?;
     // Get user id
-    let id = if let Ok(auth) = Auth::from_token(&payload.token, secret) {
+    let id = if let Ok(auth) = TokenData::from_token(&payload.token, secret) {
         auth.id
     } else {
         return Err(ResetError::InvalidData("Invalid token".to_string()));

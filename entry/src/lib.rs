@@ -1,4 +1,4 @@
-use auth::domain::auth::Auth;
+use auth::domain::token_data::TokenData;
 use axum::{
     extract::{
         ws::{Message, WebSocket},
@@ -154,7 +154,7 @@ pub async fn ws_handler(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
 ) -> Response {
-    let user_id = if let Ok(auth) = Auth::from_token(
+    let user_id = if let Ok(auth) = TokenData::from_token(
         &token.token().to_string(), 
         &state.config.secret
     ) {
