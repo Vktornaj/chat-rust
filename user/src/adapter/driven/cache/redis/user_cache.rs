@@ -1,7 +1,6 @@
 use deadpool::managed::Pool;
 use deadpool_redis::{Manager, Connection, redis::{cmd, RedisError}};
 use async_trait::async_trait;
-use rocket::serde::json::serde_json;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::to_string;
 

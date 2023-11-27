@@ -1,8 +1,10 @@
 [workspace]
 members = [
   "auth",
-  "todo",
+  "message",
   "user",
   "entry",
   "common",
 ]
+
+resolver = "2"

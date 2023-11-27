@@ -1,9 +1,10 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use rocket::futures::future::join_all;
+use common::domain::types::error::ErrorMsg;
 use sqlx::query_builder::QueryBuilder;
 use sqlx::{Postgres, Pool};
 use uuid::Uuid;
+use futures::future::join_all;
 
 use crate::application::port::driven::user_repository::{UserRepositoryTrait, UpdateUser, FindUser};
 use crate::application::port::driven::errors::{
@@ -12,7 +13,6 @@ use crate::application::port::driven::errors::{
     RepoSelectError, 
     RepoUpdateError,
 };
-use crate::domain::types::error::ErrorMsg;
 use crate::domain::user::{User as UserDomain, NewUser};
 use super::models::user::User as UserDB;
 
@@ -113,19 +113,13 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                     return Err(RepoSelectError::Unknown("Error getting users".to_string()));
                 };
 
-                let futures = users.iter()
-                    .map(|x| get_languages(conn, &x.id));
+                let futures = users.iter().map(|x| get_languages(conn, &x.id));
 
-                let every_languages: Result<Vec<Vec<String>>, RepoSelectError> = join_all(futures)
+                // run futures all at once
+                let every_languages = join_all(futures)
                     .await
                     .into_iter()
-                    .collect();
-
-                let every_languages = if let Ok(every_languages) = every_languages {
-                    every_languages
-                } else {
-                    return Err(RepoSelectError::Unknown("Error getting languages".to_string()));
-                };
+                    .collect::<Result<Vec<Vec<String>>, RepoSelectError>>()?;
                 
                 let users: Result<Vec<UserDomain>, ErrorMsg> = users.into_iter().zip(every_languages)
                     .map(|(user, languages)| {
@@ -187,43 +181,44 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
     }
 
     async fn update(&self, conn: &Pool<Postgres>, user: UpdateUser) -> Result<UserDomain, RepoUpdateError> {
-        let mut query = QueryBuilder::new("UPDATE users SET");
+        let mut query_builder = QueryBuilder::new("UPDATE users SET ");
+        let mut separated = query_builder.separated(", ");
     
         if let Some(email) = user.email {
-            query.push(" email = ");
-            query.push_bind(email.map(|x| Into::<String>::into(x)));
+            separated.push("email = ");
+            separated.push_bind_unseparated(email.map(|x| Into::<String>::into(x)));
         }
         if let Some(phone_number) = user.phone_number {
-            query.push(" phone_number = ");
-            query.push_bind(phone_number.map(|x| Into::<String>::into(x)));
+            separated.push("phone_number = ");
+            separated.push_bind_unseparated(phone_number.map(|x| Into::<String>::into(x)));
         }
         if let Some(hashed_password) = user.hashed_password {
-            query.push(" hashed_password = ");
-            query.push_bind(Into::<String>::into(hashed_password));
+            separated.push("hashed_password = ");
+            separated.push_bind_unseparated(Into::<String>::into(hashed_password));
         }
         if let Some(first_name) = user.first_name {
-            query.push(" first_name = ");
-            query.push_bind(Into::<String>::into(first_name));
+            separated.push("first_name = ");
+            separated.push_bind_unseparated(Into::<String>::into(first_name));
         }
         if let Some(last_name) = user.last_name {
-            query.push(" last_name = ");
-            query.push_bind(Into::<String>::into(last_name));
+            separated.push("last_name = ");
+            separated.push_bind_unseparated(Into::<String>::into(last_name));
         }
         if let Some(birthday) = user.birthday {
-            query.push(" birthday = ");
-            query.push_bind(Into::<DateTime<Utc>>::into(birthday));
+            separated.push("birthday = ");
+            separated.push_bind_unseparated(Into::<DateTime<Utc>>::into(birthday));
         }
         if let Some(nationality) = user.nationality {
-            query.push(" nationality = ");
-            query.push_bind(Into::<String>::into(nationality));
+            separated.push("nationality = ");
+            separated.push_bind_unseparated(Into::<String>::into(nationality));
         }
 
         // Add the WHERE clause with the user ID
-        query.push(" WHERE id = ");
-        query.push_bind(user.id);
+        separated.push_unseparated(" WHERE id =");
+        separated.push_bind_unseparated(user.id);
     
         // Execute the update query
-        match query.build().execute(conn).await {
+        match query_builder.build().execute(conn).await {
             Ok(result) => {
                 if result.rows_affected() > 0 {
                     match self.find_by_id(conn, user.id).await {
@@ -234,7 +229,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                     Err(RepoUpdateError::NotFound)
                 }
             },
-            Err(err) => return Err(RepoUpdateError::Unknown(err.to_string())),
+            Err(err) => return Err(RepoUpdateError::Unknown(format!("Error updating user {} {}", err.to_string(), query_builder.into_sql()))),
         }
     }
 

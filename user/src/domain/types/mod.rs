@@ -1,7 +1,3 @@
-pub mod error;
-pub mod id;
-pub mod email;
-pub mod phone_number;
 pub mod password;
 pub mod first_name;
 pub mod last_name;

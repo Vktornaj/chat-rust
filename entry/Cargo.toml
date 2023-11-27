@@ -8,11 +8,28 @@ edition = "2021"
 [dependencies]
 # added
 user = { path = "../user"}
-todo = { path = "../todo"}
+message = { path = "../message"}
+auth = { path = "../auth"}
 common = { path = "../common"}
 #
-rocket = { version = "0.5.0-rc.3", features=["json"]}
-toml = "0.7.1"
+toml = "0.8.2"
 sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }
-deadpool = "0.9.5"
-deadpool-redis = "0.12.0"
+deadpool = "0.10.0"
+deadpool-redis = "0.13.0"
+prometheus = "0.13.3"
+systemstat = "0.2.3"
+lazy_static = "1.4.0"
+axum = { version = "0.6.20" }
+axum-extra = { version = "0.8.0", features = ["protobuf"] }
+tokio = { version = "1.32.0", features=["full"] }
+tokio-tungstenite = "0.20.1"
+tower-http = { version = "0.4.4", features=["fs", "trace", "cors"] }
+tracing-subscriber = { version = "0.3.17", features=["env-filter"] }
+tracing = "0.1.37"
+tower = { version = "0.4.13", features = ["util"] }
+futures = "0.3.28"
+futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
+serde = "1.0.188"
+serde_json = "1.0.105"
+uuid = { version = "1.4.1", features = ["v4"] }
+protobuf = "3.3.0"

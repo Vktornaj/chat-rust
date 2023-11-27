@@ -1,12 +1,11 @@
 use crate::{
-    domain::types::{
-        email::Email, phone_number::PhoneNumber, password::Password
-    }, 
+    domain::types::password::Password, 
     application::port::driven::user_repository::FindUser
 };
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use auth::domain::auth::Auth;
+use common::domain::types::{email::Email, phone_number::PhoneNumber};
 
 
 #[derive(Debug)]

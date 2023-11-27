@@ -1,6 +1,6 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use super::error::ErrorMsg;
+use common::domain::types::error::ErrorMsg;
 
 
 #[derive(PartialEq, Debug, Clone, Deserialize, Serialize)]
