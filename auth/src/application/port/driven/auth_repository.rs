@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 
-use crate::domain::auth::Auth;
+use crate::domain::{auth::Auth, identification::ContactValue};
 
 
 pub enum RepoSelectError {
@@ -35,11 +35,6 @@ pub struct UpdateTokenMetadata {
     pub is_active: Option<bool>,
 }
 
-pub struct FindContactInfo {
-    pub email: Option<String>,
-    pub phone_number: Option<String>,
-}
-
 #[async_trait]
 pub trait AuthRepositoryTrait<T> {
     /// Find and return one single record from the persistence system by id
@@ -48,7 +43,7 @@ pub trait AuthRepositoryTrait<T> {
     async fn find_by_contact_info(
         &self, 
         conn: &T, 
-        contact_info: FindContactInfo,
+        contact_info: ContactValue,
     ) -> Result<Auth, RepoSelectError>;
 
     /// Insert the received entity in the persistence system

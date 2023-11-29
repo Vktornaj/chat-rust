@@ -53,6 +53,16 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
         };
         let res = lock.iter()
             .filter(|x| {
+                if let Some(email) = &find_user.email {
+                    if x.email.as_ref() != Some(email) {
+                        return false
+                    }
+                }
+                if let Some(phone_number) = &find_user.phone_number {
+                    if x.phone_number.as_ref() != Some(phone_number) {
+                        return false
+                    }
+                }
                 if let Some(birthday) = &find_user.birthday {
                     if let Some(birthday_from) = birthday.0 {
                         if x.birthday < Birthday::try_from(birthday_from).unwrap() {
@@ -90,8 +100,23 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
             Ok(lock) => lock,
             Err(_) => return Err(errors::RepoCreateError::Unknown("Failed to lock mutex".to_string()))
         };
+        if let Some(email) = new_user.email {
+            if lock.iter().any(|u| u.email.as_ref() == Some(&email)) {
+                return Err(errors::RepoCreateError::Conflict("Email already in use".to_string()))
+            }
+            new_user.email = Some(email);
+        }
+        if let Some(phone_number) = new_user.phone_number {
+            if lock.iter().any(|u| u.phone_number.as_ref() == Some(&phone_number)) {
+                return Err(errors::RepoCreateError::Conflict("Phone number already in use".to_string()))
+            }
+            new_user.phone_number = Some(phone_number);
+        }
         let user = UserDomain {
             id: Id::try_from(uuid::Uuid::new_v4()).unwrap(),
+            email: new_user.email,
+            phone_number: new_user.phone_number,
+            hashed_password: new_user.hashed_password,
             first_name: new_user.first_name,
             last_name: new_user.last_name,
             birthday: new_user.birthday,
@@ -117,6 +142,15 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
 
         let mut user = lock.iter_mut().find(|x| x.id == id).unwrap();
 
+        if let Some(email) = update_user.email {
+            user.email = email;
+        }
+        if let Some(phone_number) = update_user.phone_number {
+            user.phone_number = phone_number;
+        }
+        if let Some(hashed_password) = update_user.hashed_password {
+            user.hashed_password = hashed_password;
+        }
         if let Some(first_name) = update_user.first_name {
             user.first_name = first_name;
         }

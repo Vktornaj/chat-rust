@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use common::domain::types::{error::ErrorMsg, id::Id};
+use common::domain::types::{error::ErrorMsg, phone_number::PhoneNumber, email::Email, id::Id};
 use sqlx::{postgres::PgRow, Row};
 use uuid::Uuid;
 
@@ -15,7 +15,10 @@ use crate::domain::{
 
 
 pub struct User {
-    pub user_id: Uuid,
+    pub id: Uuid,
+    pub email: Option<String>,
+    pub phone_number: Option<String>,
+    pub hashed_password: String,
     pub first_name: String,
     pub last_name: String,
     pub birthday: DateTime<Utc>,
@@ -27,7 +30,10 @@ pub struct User {
 impl User {
     pub fn from_pgrow(row: &PgRow) -> Result<Self, sqlx::Error> {
         Ok(User {
-            user_id: row.try_get("user_id")?,
+            id: row.try_get("id")?,
+            email: row.try_get("email")?,
+            phone_number: row.try_get("phone_number")?,
+            hashed_password: row.try_get("hashed_password")?,
             first_name: row.try_get("first_name")?,
             last_name: row.try_get("last_name")?,
             birthday: row.try_get("birthday")?,
@@ -41,7 +47,10 @@ impl User {
         let languages: Result<Vec<Language>, ErrorMsg> = languages.into_iter()
             .map(|x| Language::try_from(x)).collect();
         Ok(UserDomain {
-            id: Id::try_from(self.user_id)?,
+            id: Id::try_from(self.id)?,
+            email: self.email.map(|x| Email::try_from(x)).transpose()?,
+            phone_number: self.phone_number.map(|x| PhoneNumber::try_from(x)).transpose()?,
+            hashed_password: self.hashed_password,
             first_name: FirstName::try_from(self.first_name)?,
             last_name: LastName::try_from(self.last_name)?,
             birthday: Birthday::try_from(self.birthday)?,

@@ -3,16 +3,15 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE users (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    email TEXT UNIQUE,
-    phone_number TEXT UNIQUE,
-    hashed_password TEXT NOT NULL,
+    user_id UUID NOT NULL PRIMARY KEY,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     birthday TIMESTAMPTZ NOT NULL,
     nationality TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_auth FOREIGN KEY(user_id) REFERENCES auths(user_id)
+
 );
 
 CREATE TABLE languages (
@@ -22,7 +21,7 @@ CREATE TABLE languages (
 );
 
 CREATE TABLE users_languages (
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id UUID NOT NULL REFERENCES users(user_id),
     language_id INTEGER NOT NULL REFERENCES languages(id),
     CONSTRAINT users_languages_pkey PRIMARY KEY (user_id, language_id)
 );
@@ -30,9 +29,7 @@ CREATE TABLE users_languages (
 --=================== Functions ===================--
 -- User 
 CREATE FUNCTION insert_user(
-    p_email TEXT,
-    p_phone_number TEXT,
-    p_hashed_password TEXT,
+    p_id UUID,
     p_first_name TEXT,
     p_last_name TEXT,
     p_birthday TIMESTAMPTZ,
@@ -56,10 +53,10 @@ RETURNS TABLE (
         _language_code TEXT;
         id UUID;
     BEGIN
-        INSERT INTO users (email, phone_number, hashed_password, first_name, last_name, birthday, nationality)
-        VALUES (p_email, p_phone_number, p_hashed_password, p_first_name, p_last_name, p_birthday, p_nationality) 
-        RETURNING users.id, users.email, users.phone_number, users.hashed_password, users.first_name, users.last_name, users.birthday, users.nationality, users.created_at, users.updated_at
-        INTO id, email, phone_number, hashed_password, first_name, last_name, birthday, nationality, created_at, updated_at;
+        INSERT INTO users (id, first_name, last_name, birthday, nationality)
+        VALUES (p_id, p_first_name, p_last_name, p_birthday, p_nationality)
+        RETURNING users.id, users.first_name, users.last_name, users.birthday, users.nationality, users.created_at, users.updated_at
+        INTO id, first_name, last_name, birthday, nationality, created_at, updated_at;
 
         FOR _language_code IN SELECT unnest(p_languages) LOOP
             SELECT l.id into _language_id

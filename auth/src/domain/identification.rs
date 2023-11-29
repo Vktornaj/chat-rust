@@ -12,10 +12,10 @@ pub enum ContactValue {
     PhoneNumber(PhoneNumber),
 }
 
-pub struct ContactDetails {
+pub struct Identification {
     pub id: Id,
     pub user_id: Id,
-    pub contact_value: ContactValue,
+    pub identification_value: ContactValue,
     pub created_at:  DateTime<Utc>,
     pub updated_at:  DateTime<Utc>,
 }

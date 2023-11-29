@@ -27,6 +27,7 @@ pub struct User {
 
 pub struct NewUser {
     // you need to hash the password type Password before storing it
+    pub user_id: Id,
     pub first_name: FirstName,
     pub last_name: LastName,
     pub birthday: Birthday,
@@ -36,8 +37,7 @@ pub struct NewUser {
 
 impl NewUser {
     pub fn new(
-        email: Option<String>,
-        phone_number: Option<String>,
+        user_id: String,
         password: String,
         first_name: String,
         last_name: String,
@@ -49,6 +49,7 @@ impl NewUser {
             .map(|x| Language::try_from(x))
             .collect();
         Ok(NewUser {
+            user_id: Id::try_from(user_id)?,
             first_name: FirstName::try_from(first_name)?, 
             last_name: LastName::try_from(last_name)?, 
             birthday: Birthday::try_from(birthday)?, 

@@ -25,13 +25,13 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         let user = sqlx::query_as!(
             UserDB,
             r#"
-                SELECT * FROM users WHERE user_id = $1
+                SELECT * FROM users WHERE id = $1
             "#,
             id
         ).fetch_one(conn).await;
         match user {
             Ok(user) => {
-                let user_id = user.user_id;
+                let user_id = user.id;
                 let languages = if let Ok(languages) = get_languages(conn, &user_id).await {
                     languages
                 } else {
@@ -113,7 +113,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                     return Err(RepoSelectError::Unknown("Error getting users".to_string()));
                 };
 
-                let futures = users.iter().map(|x| get_languages(conn, &x.user_id));
+                let futures = users.iter().map(|x| get_languages(conn, &x.id));
 
                 // run futures all at once
                 let every_languages = join_all(futures)
@@ -141,9 +141,11 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
     async fn create(&self, conn: &Pool<Postgres>, user: NewUser) -> Result<UserDomain, RepoCreateError> {
         let result = sqlx::query!(
             r#"
-                SELECT * FROM insert_user($1, $2, $3, $4, $5, $6);
+                SELECT * FROM insert_user($1, $2, $3, $4, $5, $6, $7, $8);
             "#,
-            Into::<Uuid>::into(user.user_id),
+            user.email.map(|x| Into::<String>::into(x)),
+            user.phone_number.map(|x| Into::<String>::into(x)),
+            Into::<String>::into(user.hashed_password),
             Into::<String>::into(user.first_name),
             Into::<String>::into(user.last_name),
             Into::<DateTime<Utc>>::into(user.birthday),
@@ -153,7 +155,10 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         match result {
             Ok(result) => {
                 let user = UserDB {
-                    user_id: result.id.unwrap(),
+                    id: result.id.unwrap(),
+                    email: result.email,
+                    phone_number: result.phone_number,
+                    hashed_password: result.hashed_password.unwrap(),
                     first_name: result.first_name.unwrap(),
                     last_name: result.last_name.unwrap(),
                     birthday: result.birthday.unwrap(),
@@ -232,8 +237,11 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         let result = sqlx::query_as!(
             UserDB,
             r#"
-                DELETE FROM users WHERE user_id = $1 RETURNING 
-                user_id, 
+                DELETE FROM users WHERE id = $1 RETURNING 
+                id, 
+                email, 
+                phone_number, 
+                hashed_password, 
                 first_name, 
                 last_name, 
                 birthday, 
@@ -246,7 +254,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         match result {
             Ok(result) => {
                 if let Some(user) = result {
-                    match get_languages(conn, &user.user_id).await {
+                    match get_languages(conn, &user.id).await {
                         Ok(languages) => match user.to_user_domain(languages) {
                             Ok(user) => return Ok(user),
                             Err(err) => return Err(RepoDeleteError::Unknown(err.to_string())),
@@ -267,9 +275,9 @@ async fn get_languages(conn: &Pool<Postgres>, user_id: &Uuid) -> Result<Vec<Stri
         r#"
             SELECT l.code
             FROM users AS u
-            JOIN users_languages AS ul ON ul.user_id = u.user_id
+            JOIN users_languages AS ul ON ul.user_id = u.id
             JOIN languages AS l ON l.id = ul.language_id
-            WHERE u.user_id = $1;
+            WHERE u.id = $1;
         "#,
         user_id
     ).fetch_all(conn).await;
