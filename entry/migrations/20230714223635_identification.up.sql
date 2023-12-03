@@ -2,7 +2,12 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE identificaions (
+-- CREATE TYPE identification_types AS ENUM (
+--     'Email', 
+--     'PhoneNumber'
+-- );
+
+CREATE TABLE identifications (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID NOT NULL,
     identification_type TEXT NOT NULL,

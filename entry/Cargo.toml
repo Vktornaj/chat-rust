@@ -19,11 +19,11 @@ deadpool-redis = "0.13.0"
 prometheus = "0.13.3"
 systemstat = "0.2.3"
 lazy_static = "1.4.0"
-axum = { version = "0.6.20" }
-axum-extra = { version = "0.8.0", features = ["protobuf"] }
+axum = { version = "0.7.1" }
+axum-extra = { version = "0.9.0", features = ["protobuf"] }
 tokio = { version = "1.32.0", features=["full"] }
 tokio-tungstenite = "0.20.1"
-tower-http = { version = "0.4.4", features=["fs", "trace", "cors"] }
+tower-http = { version = "0.5.0", features=["fs", "trace", "cors"] }
 tracing-subscriber = { version = "0.3.17", features=["env-filter"] }
 tracing = "0.1.37"
 tower = { version = "0.4.13", features = ["util"] }

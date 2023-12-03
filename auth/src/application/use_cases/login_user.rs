@@ -1,7 +1,10 @@
-use crate::domain::{types::password::Password, identification::ContactValue};
+use crate::domain::types::{
+    password::Password, 
+    identification::IdentificationValue,
+    token_data::TokenData,
+};
 
 use super::super::port::driven::auth_repository::AuthRepositoryTrait;
-use crate::domain::token_data::TokenData;
 use common::domain::types::{email::Email, phone_number::PhoneNumber};
 
 
@@ -48,9 +51,9 @@ pub async fn execute<T>(
         Err(_) => return Err(LoginError::NotFound)
     };
     let find_auth = if let Some(email) = email {
-        ContactValue::Email(email)
+        IdentificationValue::Email(email)
     } else if let Some(phone_number) = phone_number {
-        ContactValue::PhoneNumber(phone_number)
+        IdentificationValue::PhoneNumber(phone_number)
     } else {
         return Err(LoginError::NotFound);
 

@@ -1,17 +1,12 @@
 // extern crate rocket;
 
 use axum::extract::{State, Path, TypedHeader};
-use axum::headers::authorization::Bearer;
 use axum::http::StatusCode;
 use axum::Json;
 use axum::headers::Authorization;
 use chrono::{TimeZone, Utc};
 
 use common::adapter::config::{DATE_FORMAT, Environment};
-use super::schemas::{
-    Credentials, Credentials2, Credentials3, IdTransaction, JsonToken, NewUserJson,
-    UserContactInfo, UserContactInfo2, UserInfo, UserJson, ValidTransaction,
-};
 use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailService;
 use crate::application::use_cases;
 use common::adapter::state::AppState;

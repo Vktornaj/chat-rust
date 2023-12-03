@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 
-use crate::domain::{auth::Auth, identification::ContactValue};
+use crate::domain::auth::Auth;
+use crate::domain::types::identification::{IdentificationValue, Identification, NewIdentification};
 
 
 pub enum RepoSelectError {
@@ -35,28 +36,40 @@ pub struct UpdateTokenMetadata {
     pub is_active: Option<bool>,
 }
 
+pub enum UpdateIdentify<T, U> {
+    Add(T),
+    Delete(U),
+}
+
 #[async_trait]
 pub trait AuthRepositoryTrait<T> {
     /// Find and return one single record from the persistence system by id
-    async fn find_by_id(&self, conn: &T, id: Uuid) -> Result<Auth, RepoSelectError>;
+    async fn find_by_id(&self, conn: &T, user_id: Uuid) -> Result<Auth, RepoSelectError>;
 
-    async fn find_by_contact_info(
+    async fn find_by_identification(
         &self, 
         conn: &T, 
-        contact_info: ContactValue,
+        identification: IdentificationValue,
     ) -> Result<Auth, RepoSelectError>;
 
     /// Insert the received entity in the persistence system
     async fn create(&self, conn: &T, auth: Auth) -> Result<Auth, RepoCreateError>;
 
     /// Update one single record already present in the persistence system
-    async fn update(
+    async fn update_password(
         &self, 
         conn: &T, 
-        id: Uuid, 
+        user_id: Uuid, 
         new_hashed_password: String
+    ) -> Result<Auth, RepoUpdateError>;
+   
+    /// Update one single record already present in the persistence system
+    async fn update_identifications(
+        &self, 
+        conn: &T, 
+        identification_operation: UpdateIdentify<NewIdentification, Uuid>
     ) -> Result<Auth, RepoUpdateError>;
 
     /// Delete one single record from the persistence system
-    async fn delete(&self, conn: &T, id: Uuid) -> Result<Auth, RepoDeleteError>;
+    async fn delete(&self, conn: &T, user_id: Uuid) -> Result<Auth, RepoDeleteError>;
 }
