@@ -19,6 +19,13 @@ impl IdentificationValue {
             Self::PhoneNumber(_) => "PHONE_NUMBER".to_string(),
         }
     }
+
+    pub fn get_value(&self) -> String {
+        match self {
+            Self::Email(email) => email.to_string(),
+            Self::PhoneNumber(phone_number) => phone_number.to_string(),
+        }
+    }
 }
 
 pub struct Identification {

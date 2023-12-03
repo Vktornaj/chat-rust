@@ -1,53 +1,53 @@
-use lettre::message::header::ContentType;
-use lettre::{Message, SmtpTransport, Transport};
-use async_trait::async_trait;
+// use lettre::message::header::ContentType;
+// use lettre::{Message, SmtpTransport, Transport};
+// use async_trait::async_trait;
 
-use crate::application::port::driven::email_service::{EmailServiceTrait, EmailSendError};
+// use crate::application::port::driven::email_service::{EmailServiceTrait, EmailSendError};
 
-pub struct FakeEmailService();
+// pub struct FakeEmailService();
 
-#[async_trait]
-impl EmailServiceTrait<Option<SmtpTransport>> for FakeEmailService {
-    async fn send_confirmation_email(&self, conn: &Option<SmtpTransport>, address: String, code: String) -> Result<(), EmailSendError> {
-        let email = Message::builder()
-            .from("Staff <staff@domain.tld>".parse().unwrap())
-            .reply_to("You <you@domain.tld>".parse().unwrap())
-            .to(format!("You <{}>", address).parse().unwrap())
-            .subject(String::from("Confirm your email"))
-            .header(ContentType::TEXT_PLAIN)
-            .body(format!("Code: {}", code))
-            .unwrap();
+// #[async_trait]
+// impl EmailServiceTrait<Option<SmtpTransport>> for FakeEmailService {
+//     async fn send_confirmation_email(&self, conn: &Option<SmtpTransport>, address: String, code: String) -> Result<(), EmailSendError> {
+//         let email = Message::builder()
+//             .from("Staff <staff@domain.tld>".parse().unwrap())
+//             .reply_to("You <you@domain.tld>".parse().unwrap())
+//             .to(format!("You <{}>", address).parse().unwrap())
+//             .subject(String::from("Confirm your email"))
+//             .header(ContentType::TEXT_PLAIN)
+//             .body(format!("Code: {}", code))
+//             .unwrap();
 
-        // Send the email
-        match conn {
-            Some(conn) => match conn.send(&email) {
-                Ok(_) => Ok(()),
-                Err(e) => panic!("Could not send email: {e:?}"),
-            },
-            None => Ok(())
-        }
-    }
+//         // Send the email
+//         match conn {
+//             Some(conn) => match conn.send(&email) {
+//                 Ok(_) => Ok(()),
+//                 Err(e) => panic!("Could not send email: {e:?}"),
+//             },
+//             None => Ok(())
+//         }
+//     }
 
-    async fn send_reset_password_email(&self, conn: &Option<SmtpTransport>, address: String, link: String) -> Result<(), EmailSendError> {
-        let email = Message::builder()
-            .from("Staff <staff@domain.tld>".parse().unwrap())
-            .reply_to("You <you@domain.tld>".parse().unwrap())
-            .to(format!("You <{}>", address).parse().unwrap())
-            .subject(String::from("Reset your password"))
-            .header(ContentType::TEXT_PLAIN)
-            .body(format!("Link: {}", link))
-            .unwrap();
+//     async fn send_reset_password_email(&self, conn: &Option<SmtpTransport>, address: String, link: String) -> Result<(), EmailSendError> {
+//         let email = Message::builder()
+//             .from("Staff <staff@domain.tld>".parse().unwrap())
+//             .reply_to("You <you@domain.tld>".parse().unwrap())
+//             .to(format!("You <{}>", address).parse().unwrap())
+//             .subject(String::from("Reset your password"))
+//             .header(ContentType::TEXT_PLAIN)
+//             .body(format!("Link: {}", link))
+//             .unwrap();
 
-        // Send the email
-        match conn {
-            Some(conn) => match conn.send(&email) {
-                Ok(_) => Ok(()),
-                Err(e) => panic!("Could not send email: {e:?}"),
-            },
-            None => Ok(())
-        }
-    }
-}
+//         // Send the email
+//         match conn {
+//             Some(conn) => match conn.send(&email) {
+//                 Ok(_) => Ok(()),
+//                 Err(e) => panic!("Could not send email: {e:?}"),
+//             },
+//             None => Ok(())
+//         }
+//     }
+// }
 
 // // write tests
 // #[cfg(test)]

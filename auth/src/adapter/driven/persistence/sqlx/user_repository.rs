@@ -13,7 +13,7 @@ pub struct AuthRepository();
 #[async_trait]
 impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
     async fn find_by_id(&self, conn: &Pool<Postgres>, user_id: Uuid) -> Result<Auth, String> {
-        let auth = sqlx::query_as!(
+        let auth: Result<AuthSQL, sqlx::Error> = sqlx::query_as!(
             AuthSQL,
             r#"
                 SELECT * FROM auths WHERE user_id = $1
@@ -56,12 +56,12 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         &self, 
         conn: &Pool<Postgres>,
         identification_value: IdentificationValue,
-    ) -> Result<Vec<Auth>, String> {
+    ) -> Result<Auth, String> {
         let identification_value: String = match identification_value {
             IdentificationValue::Email(email) => email.into(),
             IdentificationValue::PhoneNumber(phone_number) => phone_number.into(),
         };
-        let auth_sql = sqlx::query_as!(
+        let auth_sql: Result<AuthSQL, sqlx::Error> = sqlx::query_as!(
             AuthSQL,
             r#"
                 SELECT a.* 
@@ -103,7 +103,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         };
 
         match auth_sql {
-            Ok(auth) => auth.to_auth_domain(identifications, tokens_metadata).into(),
+            Ok(auth) => auth.to_auth_domain(identifications, tokens_metadata).map_err(|err| err.to_string()),
             Err(err) => match err {
                 sqlx::Error::RowNotFound => return Err("User not found".to_string()),
                 _ => return Err(err.to_string()),
@@ -115,7 +115,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         &self, 
         conn: &Pool<Postgres>, 
         auth: NewAuth, 
-        new_identification: NewIdentification
+        new_identification: NewIdentification,
     ) -> Result<Auth, String> {
         let res_auth = sqlx::query_as!(
             AuthSQL,
@@ -131,15 +131,15 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             Err(err) => return Err(err.to_string()),
         };
 
-        let res_identification_id = sqlx::query_as!(
+        let res_identification_id: Result<IdentificationSQL, sqlx::Error> = sqlx::query_as!(
             IdentificationSQL,
             r#"
-                INSERT INTO identifications (user_id, identification_type, identification_value) 
+                INSERT INTO identifications (user_id, identification_type, identification_value)
                 VALUES ($1, $2, $3) RETURNING *;
             "#,
             auth_sql.user_id,
             new_identification.identification_value.get_type(),
-            new_identification.identification_value,
+            new_identification.identification_value.get_value(),
         ).fetch_one(conn).await;
 
         let identification = match res_identification_id {
@@ -155,7 +155,8 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             },
         };
 
-        auth_sql.to_auth_domain(vec![identification], vec!()).into()
+        auth_sql.to_auth_domain(vec![identification], vec!())
+            .map_err(|err| err.to_string())
         
     }
 
@@ -205,9 +206,10 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
     }
 
     async fn update_identifications(
+        &self,
         conn: &Pool<Postgres>, 
-        identification_operation: UpdateIdentify<NewIdentification, Uuid>
-    ) {
+        identification_operation: UpdateIdentify<NewIdentification, Uuid>,
+    ) -> Result<Auth, String> {
         let res_user_id = match identification_operation {
             UpdateIdentify::Add(new_identification) => {
                 sqlx::query!(
@@ -215,10 +217,10 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
                         INSERT INTO identifications (user_id, identification_type, identification_value) 
                         VALUES ($1, $2, $3) RETURNING user_id;
                     "#,
-                    new_identification.user_id,
+                    Uuid::from(new_identification.user_id),
                     new_identification.identification_value.get_type(),
-                    new_identification.identification_value,
-                ).fetch_one(conn).await
+                    new_identification.identification_value.get_value(),
+                ).fetch_one(conn).await.and_then(|res| Ok(res.user_id))
             },
             UpdateIdentify::Delete(identification_id) => {
                 sqlx::query!(
@@ -226,19 +228,19 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
                         DELETE FROM identifications WHERE id = $1 RETURNING user_id;
                     "#,
                     identification_id,
-                ).execute(conn).await
+                ).fetch_one(conn).await.and_then(|res| Ok(res.user_id))
             },
         };
 
         let user_id = match res_user_id {
-            Ok(res_user_id) => res_user_id.user_id,
+            Ok(res_user_id) => res_user_id,
             Err(err) => match err {
-                sqlx::Error::RowNotFound => Err("User not found".to_string()),
-                _ => Err(err.to_string()),
+                sqlx::Error::RowNotFound => return Err("User not found".to_string()),
+                _ => return Err(err.to_string()),
             }
         };
 
-        let res_auth = sqlx::query_as!(
+        let res_auth: Result<AuthSQL, sqlx::Error> = sqlx::query_as!(
             AuthSQL,
             r#"
                 SELECT * FROM auths WHERE user_id = $1;
@@ -246,8 +248,14 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             user_id
         ).fetch_one(conn).await;
 
+        let identifications = get_identifications(conn, &user_id)
+            .await.map_err(|err| err.to_string())?;
+        let tokens_metadata = get_tokens_metadata(conn, &user_id)
+            .await.map_err(|err| err.to_string())?;
+
         match res_auth {
-            Ok(auth) => Ok(auth),
+            Ok(auth) => Ok(auth.to_auth_domain(identifications, tokens_metadata)
+                .map_err(|err| err.to_string())?),
             Err(err) => match err {
                 sqlx::Error::RowNotFound => Err("User not found".to_string()),
                 _ => Err(err.to_string()),
@@ -287,8 +295,10 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             }
         };
 
-        let indentifications = get_identifications(conn, &user_id).await;
-        let tokens_metadata = get_tokens_metadata(conn, &user_id).await;
+        let indentifications = get_identifications(conn, &user_id).await
+            .map_err(|err| err.to_string())?;
+        let tokens_metadata = get_tokens_metadata(conn, &user_id).await
+            .map_err(|err| err.to_string())?;
 
         auth_sql.to_auth_domain(indentifications, tokens_metadata)
             .map_err(|err| err.to_string())
@@ -296,35 +306,21 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
 }
 
 async fn get_identifications(conn: &Pool<Postgres>, user_id: &Uuid) -> Result<Vec<IdentificationSQL>, sqlx::Error> { 
-    let identifications = sqlx::query!(
+    sqlx::query_as!(
+        IdentificationSQL,
         r#"
             SELECT * FROM identifications i WHERE i.user_id = $1;
         "#,
         user_id
-    ).fetch_all(conn).await;
-    match identifications {
-        Ok(identifications) => Ok(identifications.iter()
-            .map(|r| IdentificationSQL::from_pgrow(r)?).collect()),
-        Err(err) => match err {
-            sqlx::Error::RowNotFound => Err("User not found".to_string()),
-            _ => Err(err.to_string()),
-        }
-    }
+    ).fetch_all(conn).await
 }
 
 async fn get_tokens_metadata(conn: &Pool<Postgres>, user_id: &Uuid) -> Result<Vec<TokenMetadataSQL>, sqlx::Error> { 
-    let tokens_metadata = sqlx::query!(
+    sqlx::query_as!(
+        TokenMetadataSQL,
         r#"
             SELECT * FROM tokens_metadata tm WHERE tm.user_id = $1;
         "#,
         user_id
-    ).fetch_all(conn).await;
-    match tokens_metadata {
-        Ok(tokens_metadata) => Ok(tokens_metadata.iter()
-            .map(|r| TokenMetadataSQL::from_pgrow(r)?).collect()),
-        Err(err) => match err {
-            sqlx::Error::RowNotFound => Err("User not found".to_string()),
-            _ => Err(err.to_string()),
-        }
-    }
+    ).fetch_all(conn).await
 }

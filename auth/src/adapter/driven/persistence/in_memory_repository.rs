@@ -14,18 +14,21 @@ pub struct InMemoryRepository();
 impl AuthRepositoryTrait<Mutex<Vec<Auth>>> for InMemoryRepository {
     async fn find_by_id(&self, conn: &Mutex<Vec<Auth>>, user_id: Uuid) -> Result<Auth, String> {
         // TODO: Implement this method
+        todo!()
     }
 
     async fn find_by_identification(
         &self, 
         conn: &Mutex<Vec<Auth>>, 
-        identification: &IdentificationValue,
+        identification: IdentificationValue,
     ) -> Result<Auth, String> {
         // TODO: Implement this method
+        todo!()
     }
 
     async fn create(&self, conn: &Mutex<Vec<Auth>>, auth: Auth) -> Result<Auth, String> {
         // TODO: Implement this method
+        todo!()
     }
 
     async fn update_password(
@@ -35,6 +38,7 @@ impl AuthRepositoryTrait<Mutex<Vec<Auth>>> for InMemoryRepository {
         new_hashed_password: String,
     ) -> Result<Auth, String> {
         // TODO: Implement this method
+        todo!()
     }
 
     async fn update_identifications(
@@ -43,9 +47,11 @@ impl AuthRepositoryTrait<Mutex<Vec<Auth>>> for InMemoryRepository {
         identification_operation: UpdateIdentify<NewIdentification, Uuid>
     ) -> Result<Auth, String> {
         // TODO: Implement this method
+        todo!()
     }
 
-    async fn delete(&self, conn: &Mutex<Vec<Auth>>, user_id: &Uuid) -> Result<Auth, String> {
+    async fn delete(&self, conn: &Mutex<Vec<Auth>>, user_id: Uuid) -> Result<Auth, String> {
         // TODO: Implement this method
+        todo!()
     }
 }

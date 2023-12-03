@@ -3,7 +3,7 @@ use common::domain::types::{error::ErrorMsg, id::Id, email::Email, phone_number:
 use sqlx::{postgres::PgRow, Row};
 use uuid::Uuid;
 
-use crate::domain::{auth::Auth, types::{identification::{Identification, IdentificationValue}, token_metadata::TokenMetadata}};
+use crate::domain::{auth::Auth, types::{identification::{Identification, IdentificationValue, self}, token_metadata::TokenMetadata}};
 
 
 pub struct AuthSQL {
@@ -25,11 +25,17 @@ impl AuthSQL {
 
     pub fn to_auth_domain(
         self, 
-        identifications: Vec<Identification>,
-        tokens_metadata: Vec<TokenMetadata>,
+        identifications: Vec<IdentificationSQL>,
+        tokens_metadata: Vec<TokenMetadataSQL>,
     ) -> Result<Auth, ErrorMsg> {
+        let identifications = identifications.into_iter().map(|identification| {
+            identification.to_identification_domain()
+        }).collect::<Result<Vec<Identification>, ErrorMsg>>()?;
+        let tokens_metadata = tokens_metadata.into_iter().map(|token_metadata| {
+            token_metadata.to_token_metadata_domain()
+        }).collect::<Result<Vec<TokenMetadata>, ErrorMsg>>()?;
         Ok(Auth {
-            user_id: Id::try_from(self.id)?,
+            user_id: Id::try_from(self.user_id)?,
             identifications,
             hashed_password: self.hashed_password,
             tokens_metadata,
@@ -54,23 +60,12 @@ pub struct IdentificationSQL {
 }
 
 impl IdentificationSQL {
-    pub fn from_pgrow(row: &PgRow) -> Result<Self, sqlx::Error> {
-        Ok(Self {
-            id: row.try_get("id")?,
-            user_id: row.try_get("user_id")?,
-            identification_type: row.try_get("identification_type")?,
-            identification_value: row.try_get("identification_value")?,
-            created_at: row.try_get("created_at")?,
-            updated_at: row.try_get("updated_at")?,
-        })
-    }
-
     pub fn to_identification_domain(self) -> Result<Identification, ErrorMsg> {
 
         let identification_value = match self.identification_type.as_str() {
             "email" => IdentificationValue::Email(Email::try_from(self.identification_value)?),
             "phone_number" => IdentificationValue::PhoneNumber(PhoneNumber::try_from(self.identification_value)?),
-            _ => return Err(ErrorMsg::new("Invalid identification type")),
+            _ => return Err(ErrorMsg("Invalid identification type".to_string())),
         };
 
         Ok(Identification {
@@ -84,6 +79,7 @@ impl IdentificationSQL {
 
 pub struct TokenMetadataSQL {
     pub token_id: Uuid,
+    pub user_id: Uuid,
     pub creation_timestamp: i64,
     pub last_use_timestamp: i64,
     pub is_active: bool,
@@ -92,17 +88,6 @@ pub struct TokenMetadataSQL {
 }
 
 impl TokenMetadataSQL {
-    pub fn from_pgrow(row: &PgRow) -> Result<Self, sqlx::Error> {
-        Ok(Self {
-            token_id: row.try_get("token_id")?,
-            creation_timestamp: row.try_get("creation_timestamp")?,
-            last_use_timestamp: row.try_get("last_use_timestamp")?,
-            is_active: row.try_get("is_active")?,
-            browser: row.try_get("browser")?,
-            os: row.try_get("os")?,
-        })
-    }
-
     pub fn to_token_metadata_domain(self) -> Result<TokenMetadata, ErrorMsg> {
         Ok(TokenMetadata {
             token_id: self.token_id,

@@ -5,21 +5,19 @@ use serde::{de::DeserializeOwned, Serialize};
 use serde_json::to_string;
 
 // use super::{user_repository::{UserRepositoryTrait, NewUser, UpdateUser, FindUser}, errors};
-use crate::application::port::driven::{
-    user_cache::UserCacheTrait, errors::{RepoSelectError, RepoCreateError, RepoDeleteError}
-};
+use crate::application::port::driven::auth_cache::AuthCacheTrait;
 
 
-pub struct UserCache();
+pub struct AuthCache();
 
 #[async_trait]
-impl UserCacheTrait<Pool<Manager, Connection>> for UserCache {
-    async fn find_by_id<T>(&self, pool: &Pool<Manager, Connection>, id: String) -> Result<Option<T>, RepoSelectError>
+impl AuthCacheTrait<Pool<Manager, Connection>> for AuthCache {
+    async fn find_by_id<T>(&self, pool: &Pool<Manager, Connection>, id: String) -> Result<Option<T>, String>
     where
         T: DeserializeOwned,
     {
         let mut conn = pool.get().await.map_err(|e| {
-            RepoSelectError::ConnectionError(format!("Failed to get connection from pool: {}", e))
+            format!("Failed to get connection from pool: {}", e)
         })?;
 
         let result: Result<Option<String>, RedisError> = cmd("GET")
@@ -33,13 +31,13 @@ impl UserCacheTrait<Pool<Manager, Connection>> for UserCache {
                     if let Ok(value) = serde_json::from_str(&data) {
                         Ok(Some(value))
                     } else {
-                        Err(RepoSelectError::Unknown("Failed to deserialize value".to_string()))
+                        Err("Failed to deserialize value".to_string())
                     }
                 } else {
                     Ok(None)
                 }
             }
-            Err(err) => Err(RepoSelectError::Unknown(format!("Failed to get value {}", err))),
+            Err(err) => Err(format!("Failed to get value {}", err)),
         }
     }
 
@@ -49,16 +47,16 @@ impl UserCacheTrait<Pool<Manager, Connection>> for UserCache {
         id: String,
         payload: T,
         exp: u32, // Expiration time in seconds
-    ) -> Result<String, RepoCreateError>
+    ) -> Result<String, String>
     where
         T: Serialize + Send,
     {
         // Serialize payload to JSON
         let payload_str = to_string(&payload)
-            .map_err(|e| RepoCreateError::SerializeError(format!("Serialization error: {}", e)))?;
+            .map_err(|e| format!("Serialization error: {}", e))?;
     
         let mut conn = pool.get().await.map_err(|e| {
-            RepoCreateError::ConnectionError(format!("Failed to get connection from pool: {}", e))
+            format!("Failed to get connection from pool: {}", e)
         })?;
     
         // Use SETEX to set the key with expiration
@@ -69,16 +67,13 @@ impl UserCacheTrait<Pool<Manager, Connection>> for UserCache {
     
         match res {
             Ok(_) => Ok(id),
-            Err(e) => Err(RepoCreateError::Unknown(format!(
-                "Failed to set value: {}",
-                e
-            ))),
+            Err(e) => Err(format!("Failed to set value: {}", e)),
         }
     }
 
-    async fn delete(&self, pool: &Pool<Manager, Connection>, id: String) -> Result<(), RepoDeleteError> {
+    async fn delete(&self, pool: &Pool<Manager, Connection>, id: String) -> Result<(), String> {
         let mut conn = pool.get().await.map_err(|e| {
-            RepoDeleteError::ConnectionError(format!("Failed to get connection from pool: {}", e))
+            format!("Failed to get connection from pool: {}", e)
         })?;
     
         let result: Result<(), RedisError> = cmd("DEL")
@@ -88,9 +83,7 @@ impl UserCacheTrait<Pool<Manager, Connection>> for UserCache {
     
         match result {
             Ok(_) => Ok(()),
-            Err(err) => {
-                Err(RepoDeleteError::SerializeError(format!("Failed to delete value {}", err)))
-            }
+            Err(err) => Err(format!("Failed to delete value {}", err))
         }
     }
 }
