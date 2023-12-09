@@ -11,7 +11,7 @@ use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailServic
 use crate::adapter::driven::persistence::sqlx::user_repository::AuthRepository;
 use crate::application::use_cases;
 use common::adapter::state::AppState;
-use super::schemas::{AuthJson, ValidateTransaction, Credentials, JsonToken, UpdatePassword, IdentificationJson, ResetPasswordValidation};
+use super::schemas::{AuthJson, ValidateTransaction, Credentials, JsonToken, UpdatePassword, IdentificationJson};
 
 
 pub async fn handle_create_auth_cache(
@@ -252,15 +252,15 @@ pub async fn handle_password_recovery_request(
 pub async fn handle_password_reset_confirmation(
     State(state): State<AppState>,
     Path(token): Path<String>,
-    Json(payload): Json<ResetPasswordValidation>,
+    Json(new_password): Json<String>,
 ) -> Result<Json<Uuid>, StatusCode> {
     match use_cases::reset_password_confirm::execute(
         &state.db_sql_pool,
         &AuthRepository {},
         &state.config.secret,
         use_cases::reset_password_confirm::Payload {
-            token: payload.token,
-            password: payload.new_password,
+            token,
+            password: new_password,
         }
     ).await {
         Ok(auth) => Ok(Json(auth.user_id.into())),

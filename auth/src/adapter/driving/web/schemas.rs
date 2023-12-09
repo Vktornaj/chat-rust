@@ -61,10 +61,3 @@ pub struct Credentials {
     pub identifier: String,
     pub password: String,
 }
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ResetPasswordValidation {
-    pub token: String,
-    pub new_password: String,
-}
