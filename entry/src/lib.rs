@@ -1,18 +1,16 @@
-use auth::domain::auth::Auth;
 use axum::{
     extract::{
         ws::{Message, WebSocket},
         State, WebSocketUpgrade,
     },
-    headers::{authorization::Bearer, Authorization},
     http::{StatusCode, Uri, Method},
     middleware,
     response::{IntoResponse, Response},
     routing::{delete, get, post, put},
     Router, 
-    TypedHeader,
     http::HeaderValue,
 };
+use axum_extra::{TypedHeader, headers::{Authorization, authorization::Bearer}};
 use futures_util::stream::SplitSink;
 use prometheus::Encoder;
 use sqlx::{migrate::Migrator, PgPool};
@@ -32,7 +30,8 @@ use common::domain::models::{
 
 mod metrics;
 mod ws;
-use user::handlers as user_handlers;
+use profile::handlers as profile_handlers;
+use auth::{handlers as auth_handlers, TokenData};
 
 
 pub async fn router() -> Router {
@@ -55,49 +54,42 @@ pub async fn router() -> Router {
             "/api",
             Router::new()
                 .nest(
-                    "/user",
+                    "/auth",
                     Router::new()
                         .route(
-                            "/create-user-request",
-                            post(user_handlers::handle_create_user_cache),
+                            "/create-auth-request",
+                            post(auth_handlers::handle_create_auth_request),
                         )
                         .route(
                             "/create-user-confirmation",
-                            post(user_handlers::handle_create_user_confirmation),
+                            post(auth_handlers::handle_create_auth_confirmation),
                         )
-                        .route("/get-user", get(user_handlers::handle_get_user_info))
-                        .route("/update-user", put(user_handlers::handle_update_user_info))
-                        .route("/delete-user", delete(user_handlers::handle_delete_account))
+                        .route("/identifier", put(auth_handlers::handle_add_identifier_request))
+                        .route("/auth", delete(auth_handlers::handle_delete_account))
                         .route(
-                            "/email-available/:email",
-                            get(user_handlers::handle_email_available),
+                            "/identifier-available/:identifier",
+                            get(auth_handlers::handle_identifier_available),
                         )
+                        .route("/login", post(auth::handlers::handle_login))
                         .route(
-                            "/phone-number-available/:phone",
-                            get(user_handlers::handle_phone_number_available),
-                        )
-                        .route("/login", post(user_handlers::handle_login))
-                        .route(
-                            "/update-password",
-                            put(user_handlers::handle_update_password),
-                        )
-                        .route(
-                            "/update-user-contact-info-cache",
-                            put(user_handlers::handle_update_user_contact_info_cache),
-                        )
-                        .route(
-                            "/update-user-contact-info-confirmation",
-                            put(user_handlers::handle_update_user_contact_info_confirmation),
+                            "/password",
+                            put(auth_handlers::handle_update_password),
                         )
                         .route(
                             "/password-recovery-request",
-                            post(user_handlers::handle_password_recovery_request),
+                            post(auth_handlers::handle_password_recovery_request),
                         )
                         .route(
                             "/password-reset-confirmation/:token",
-                            put(user_handlers::handle_password_reset_confirmation),
+                            put(auth_handlers::handle_password_reset_confirmation),
                         ),
                 )
+                .nest(
+                    "/profile", 
+                    Router::new()
+                        .route("/profile", get(profile_handlers::handle_get_user_info))
+                        .route("/profile", put(profile_handlers::handle_update_user_info))
+                    )
                 .nest("/message", Router::new().route("/ws", get(ws_handler))),
         )
         .layer(
@@ -154,7 +146,7 @@ pub async fn ws_handler(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
 ) -> Response {
-    let user_id = if let Ok(auth) = Auth::from_token(
+    let user_id = if let Ok(auth) = TokenData::from_token(
         &token.token().to_string(), 
         &state.config.secret
     ) {
@@ -205,78 +197,3 @@ async fn run_consumer_event_queue(
 ) {
     ws::consume_event::execute(clients, event_queue).await;
 }
-
-// fn run_producer_event_queue(
-//     event_queue: EventQueue,
-//     clients: Clients<SplitSink<WebSocket, Message>, SplitStream<WebSocket>>,
-// ) {
-//     tokio::spawn(async move {
-//         let (tx, mut rx) = mpsc::channel(32);
-
-//         tokio::spawn(async move {
-//             let mut clients_cloned = clients.write().await;
-//             let extract_receiver = |(_, client): (&Uuid, &mut Client<SplitSink<WebSocket, Message>, SplitStream<WebSocket>>)| {
-//                 client.receiver.take()
-//             };
-//             let mut receivers = vec![clients_cloned
-//                 .iter_mut()
-//                 .filter_map(extract_receiver)];
-//             let clients_cloned_2 = clients.clone();
-//             loop {
-//                 let mut clients_c_c_r = clients_cloned_2.write().await;
-//                 let new_receivers = clients_c_c_r
-//                     .iter_mut()
-//                     .filter_map(extract_receiver);
-
-//                 receivers.push(new_receivers);
-
-//                 let receivers_cloned = receivers
-//                     .iter_mut()
-//                     .map(|receiver| receiver);
-
-//                 let merged = futures::stream::select_all(&mut receivers_cloned.flatten()).fuse();
-
-//                 let _ = tx
-//                     .send(merged)
-//                     .await
-//                     .map_err(|err| println!("Error sending merged stream: {:?}", err.to_string()));
-
-//                 // sleep for 1 seconds
-//                 sleep(Duration::from_secs(1)).await;
-//             }
-//         });
-
-//         let mut task: Option<tokio::task::JoinHandle<()>> = None;
-//         while let Some(mut merged) = rx.recv().await {
-//             println!("Received a merged stream");
-//             let event_queue_cloned = event_queue.clone();
-//             if let Some(task) = task.take() {
-//                 task.abort();
-//             }
-//             // Spawn a task to produce events
-//             task = Some(tokio::spawn(async move {
-//                 while let Some(msg) = merged.next().await {
-//                     let msg = if let Ok(msg) = msg {
-//                         msg
-//                     } else {
-//                         continue;
-//                     };
-
-//                     println!("Received a message: {:?}", &msg);
-
-//                     let my_message = if let Ok(my_message) = MyMessage::try_from(msg.clone()) {
-//                         my_message
-//                     } else {
-//                         // invalid message
-//                         continue;
-//                     };
-//                     let event = Event {
-//                         target_user_id: my_message.recipient.clone().into(),
-//                         content: EventContent::Message(my_message),
-//                     };
-//                     event_queue_cloned.write().await.push_back(event);
-//                 }
-//             }));
-//         }
-//     });
-// }

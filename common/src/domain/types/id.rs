@@ -19,9 +19,24 @@ impl TryFrom<Uuid> for Id {
     }
 }
 
+impl TryFrom<String> for Id {
+    type Error = ErrorMsg;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let value = Uuid::parse_str(&value).map_err(|err| ErrorMsg(err.to_string()))?;
+        Self::try_from(value)
+    }
+}
+
 impl From<Id> for Uuid {
     fn from(id: Id) -> Self {
         id.0
+    }
+}
+
+impl From<Id> for String {
+    fn from(id: Id) -> Self {
+        id.0.to_string()
     }
 }
 
