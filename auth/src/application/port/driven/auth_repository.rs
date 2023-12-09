@@ -24,11 +24,12 @@ pub enum RepoDeleteError {
     Unknown,
 }
 
-pub struct UpdateAuth {
-    pub id: Uuid,
-    pub new_hashed_password: Option<String>,
-    pub token_metadata: Option<UpdateTokenMetadata>,
-}
+// #[derive(Default)]
+// pub struct UpdateAuth {
+//     pub id: Uuid,
+//     pub new_hashed_password: Option<String>,
+//     pub token_metadata: Option<UpdateTokenMetadata>,
+// }
 
 pub struct UpdateTokenMetadata {
     pub id: Uuid,

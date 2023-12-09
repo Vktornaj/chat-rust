@@ -5,12 +5,6 @@ use serde::{Deserialize, Serialize};
 #[derive(PartialEq, Clone, PartialOrd, Deserialize, Serialize)]
 pub struct Code(String);
 
-impl From<Code> for String {
-    fn from(id: Code) -> Self {
-        id.0
-    }
-}
-
 impl Code {
     pub fn new(digits: u8) -> Self {
         let mut rng = rand::thread_rng();
@@ -28,6 +22,18 @@ impl Code {
             code.push_str("0");
         }
         Self(code)
+    }
+}
+
+impl From<Code> for String {
+    fn from(id: Code) -> Self {
+        id.0
+    }
+}
+
+impl PartialEq<String> for Code {
+    fn eq(&self, other: &String) -> bool {
+        self.0 == *other
     }
 }
 

@@ -2,11 +2,11 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use common::domain::types::{error::ErrorMsg, id::Id};
-use crate::domain::types::{
+use crate::domain::{types::{
     code::Code, 
     password::Password,
     identification::IdentificationValue,
-};
+}, auth::NewAuth};
 
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -31,6 +31,13 @@ impl CreateAuthRequest {
             confirmation_code,
             identity,
         })
+    }
+
+    pub fn to_new_auth(self) -> NewAuth {
+        NewAuth {
+            hashed_password: self.hashed_password,
+            identifications: vec![self.identity],
+        }
     }
 }
 

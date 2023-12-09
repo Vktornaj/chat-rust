@@ -46,7 +46,7 @@ pub async fn execute<T, U, ES>(
     let auth_request = match CreateAuthRequest::new(
         payload.password,
         confirmation_code, 
-        identity,
+        identity.clone(),
     ) {
         Ok(new_user) => new_user,
         Err(error) => return Err(CreateError::InvalidData(error.to_string())),

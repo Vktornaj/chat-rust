@@ -1,5 +1,5 @@
 use crate::{
-    application::port::driven::auth_repository::{AuthRepositoryTrait, UpdateAuth}, 
+    application::port::driven::auth_repository::AuthRepositoryTrait, 
     domain::{auth::Auth, types::{password::Password, token_data::TokenData}},
 };
 
@@ -40,13 +40,13 @@ pub async fn execute<T>(
         return Err(UpdateError::InvalidData("Invalid new password".to_string()));
     };
     // verify user exist and token is valid
-    let id = if let Ok(auth) = TokenData::from_token(token, &secret) {
+    let user_id = if let Ok(auth) = TokenData::from_token(token, &secret) {
         auth.id
     } else {
         return Err(UpdateError::Unautorized);
     };
     // verify user exists and password match
-    if let Ok(auth) = repo.find_by_id(conn, id.into()).await {
+    if let Ok(auth) = repo.find_by_id(conn, user_id.into()).await {
         if password.verify_password(&auth.hashed_password).is_err() {
             return Err(UpdateError::Unautorized);
         }
@@ -55,13 +55,12 @@ pub async fn execute<T>(
     };
     // hash new password
     let new_hashed_password = if let Ok(hashed_password) = new_password.hash_password() {
-        Some(hashed_password)
+        hashed_password
     } else {
         return Err(UpdateError::Unknown("Unknown error".to_string()));
     };
     // update password
-    let user_update = UpdateAuth { id: id.into(), new_hashed_password, ..Default::default() };
-    match repo.update(conn, user_update).await {
+    match repo.update_password(conn, user_id, new_hashed_password).await {
         Ok(user) => Ok(user),
         Err(e) => Err(UpdateError::Unknown(format!("{:?}", e))),
     }

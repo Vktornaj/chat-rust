@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use common::domain::types::id::Id;
 use super::types::{
     token_metadata::TokenMetadata, 
-    identification::Identification,
+    identification::{Identification, IdentificationValue},
 };
 
 
@@ -18,5 +18,5 @@ pub struct Auth {
 
 pub struct NewAuth {
     pub hashed_password: String,
-    pub identifications: Vec<Identification>,
+    pub identifications: Vec<IdentificationValue>,
 }

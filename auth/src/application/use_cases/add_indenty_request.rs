@@ -56,8 +56,8 @@ pub async fn execute<T, U, ES>(
     // verify user exists, data is not the same, user contact data integrity and password match
     if let Ok(auth) = repo.find_by_id(conn, user_id.into()).await {
         if auth.identifications.iter()
-            .map(|i| i.identification_value).collect::<Vec<&IdentificationValue>>()
-            .contains(identity) 
+            .map(|i| &i.identification_value).collect::<Vec<&IdentificationValue>>()
+            .contains(&&identity)
         {
             return Err(UpdateError::Conflict("Phone number is the same".to_string()));
         }
@@ -65,14 +65,14 @@ pub async fn execute<T, U, ES>(
         return Err(UpdateError::NotFound);
     };
     // verify email is not in use
-    if let Ok(users) = repo.find_by_identification(conn, identity).await {
+    if repo.find_by_identification(conn, identity.clone()).await.is_ok() {
         return Err(UpdateError::Conflict("Email already in use".to_string()));
     }
     // create request to update sensitive info
     let confirmation_code = Code::new(6);
     let update_aurh_request = AddIdentificationRequest {
         user_id: Id::try_from(user_id).unwrap(),
-        identity,
+        identity: identity.clone(),
         confirmation_code: confirmation_code.clone(),
     };
     let res = match repo_cache

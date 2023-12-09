@@ -1,11 +1,7 @@
-use auth::domain::token_data::TokenData;
-use common::domain::types::{email::Email, phone_number::PhoneNumber};
-
-use crate::application::port::driven::{
-    user_repository::{UserRepositoryTrait, FindUser}, 
-    email_service::EmailServiceTrait
+use crate::{
+    application::port::driven::{auth_repository::AuthRepositoryTrait, email_service::EmailServiceTrait}, 
+    domain::types::{identification::IdentificationValue, token_data::TokenData},
 };
-
 
 #[derive(Debug)]
 pub enum ResetError {
@@ -15,52 +11,37 @@ pub enum ResetError {
 }
 
 pub struct Payload {
-    pub email: Option<String>, 
-    pub phone_number: Option<String>,
+    pub identifier_value: String,
+    pub identifier_type: String,
     pub domain: String,
 }
 
 pub async fn execute<T, U>(
     conn: &T,
     email_conn: &U,
-    repo: &impl UserRepositoryTrait<T>,
+    repo: &impl AuthRepositoryTrait<T>,
     email_service: &impl EmailServiceTrait<U>,
     secret: &[u8],
     payload: Payload
 ) -> Result<(), ResetError> {
     // Get user id
-    let find_user = if let Some(email) = payload.email.clone() {
-        FindUser {
-            email: Some(Email::try_from(email).unwrap()),
-            ..Default::default()
-        }
-    } else if let Some(phone_number) = payload.phone_number.clone() {
-        FindUser {
-            phone_number: Some(PhoneNumber::try_from(phone_number).unwrap()),
-            ..Default::default()
-        }
-    } else {
-        return Err(ResetError::InvalidData("Email or phone number required".to_string()));
-    };
-
-    let user = match repo
-        .find_by_criteria(conn, find_user, 0, 1).await {
-        Ok(users) => {
-            if users.len() == 0 {
-                return Err(ResetError::InvalidData("Email or phone number not found".to_string()));
-            }
-            users[0].clone()
-        },
+    let identifier = IdentificationValue::from_string(
+        payload.identifier_value.clone(),
+        payload.identifier_type.clone()
+    ).map_err(|_| {
+        ResetError::InvalidData("Invalid identifier".to_string())
+    })?;
+    let auth = match repo.find_by_identification(conn, identifier.clone()).await {
+        Ok(auth) => auth,
         Err(_) => return Err(ResetError::NotFound("Unknown error".to_string())),
     };
-
     // Generate link
-    let token = TokenData::new_reset_password_token(&user.id.into());
+    let token = TokenData::new_reset_password_token(&auth.user_id.into());
     let link = format!("http://{}/api/password-reset/{}", payload.domain, token.token(secret));
 
     // Send reset password email
-    if let Some(email) = payload.email.clone() {
-        match email_service.send_reset_password_email(email_conn, email, link).await {
+    if let IdentificationValue::Email(email) = identifier {
+        match email_service.send_reset_password_email(email_conn, email.into(), link).await {
             Ok(_) => (),
             Err(_) => return Err(ResetError::Unknown("Unknown error".to_string())),
         };

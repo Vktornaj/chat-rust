@@ -43,10 +43,12 @@ impl IdentificationValue {
         }
     }
 
-    pub fn from_string(value: String, value_type: String) -> Result<Self, String> {
-        match value_type.as_str() {
-            "EMAIL" => Ok(Self::Email(Email::try_from(value)?)),
-            "PHONE_NUMBER" => Ok(Self::PhoneNumber(PhoneNumber::try_from(value)?)),
+    pub fn from_string(value: String, identifier_type: String) -> Result<Self, String> {
+        match identifier_type.as_str() {
+            "EMAIL" => Ok(Self::Email(Email::try_from(value)
+                .map_err(|err| err.to_string())?)),
+            "PHONE_NUMBER" => Ok(Self::PhoneNumber(PhoneNumber::try_from(value)
+                .map_err(|err| err.to_string())?)),
             _ => Err("Invalid identification value type".to_string()),
         }
     }
@@ -57,12 +59,18 @@ impl TryFrom<String> for IdentificationValue {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         if Email::try_from(value.to_owned()).is_ok() {
-            return Ok(Self::Email(Email::try_from(value)?));
+            return Ok(Self::Email(Email::try_from(value).map_err(|err| err.to_string())?));
         }
         if PhoneNumber::try_from(value.to_owned()).is_ok() {
-            return Ok(Self::PhoneNumber(PhoneNumber::try_from(value)?));
+            return Ok(Self::PhoneNumber(PhoneNumber::try_from(value).map_err(|err| err.to_string())?));
         }
         Err("Invalid identification value".to_string())
+    }
+}
+
+impl PartialEq<IdentificationValue> for IdentificationValue {
+    fn eq(&self, other: &IdentificationValue) -> bool {
+        self.get_value() == other.get_value()
     }
 }
 

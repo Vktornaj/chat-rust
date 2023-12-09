@@ -36,11 +36,12 @@ pub async fn execute<T, U>(
     };
     // validate confirmation code
     let add_identify: AddIdentificationRequest = match repo_cache
-        .find_by_id::<AddIdentificationRequest>(cache_conn, payload.transaction_id.clone()).await {
+        .find_by_id::<AddIdentificationRequest>(cache_conn, payload.transaction_id.clone()).await
+    {
         Ok(update) => match update {
             Some(update) => {
-                if Into::<String>::into(update.confirmation_code.clone()) == payload.confirmation_code {
-                    update.to_update_user()
+                if update.confirmation_code == payload.confirmation_code {
+                    update
                 } else {
                     return Err(UpdateError::InvalidData("invalid confirmation code".to_string()));
                 }
