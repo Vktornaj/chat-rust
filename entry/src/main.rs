@@ -1,4 +1,4 @@
-use tokio::runtime::Builder;
+use tokio::{runtime::Builder, net::TcpListener};
 use tracing_subscriber;
 
 
@@ -17,9 +17,9 @@ fn main() {
             // build our application with a single route
             let app = entry::router().await; 
 
+            let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
             // run it with hyper on localhost:3000
-            axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
-                .serve(app.into_make_service())
+            axum::serve(listener, app.into_make_service())
                 .await
                 .unwrap();
         });

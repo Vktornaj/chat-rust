@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use super::error::ErrorMsg;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -24,6 +26,12 @@ impl TryFrom<String> for PhoneNumber {
 impl From<PhoneNumber> for String {
     fn from(phone_number: PhoneNumber) -> Self {
         phone_number.0
+    }
+}
+
+impl Display for PhoneNumber {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", PhoneNumber::from(self.clone()))
     }
 }
 

@@ -2,7 +2,7 @@ use std::time::Instant;
 use axum::{
     http::Request,
     response::Response,
-    middleware::Next,
+    middleware::Next, body::Body,
 };
 
 use prometheus::{
@@ -54,9 +54,9 @@ lazy_static! {
     ).unwrap();
 }
 
-pub async fn metrics_middleware<B>(
-    req: Request<B>,
-    next: Next<B>,
+pub async fn metrics_middleware(
+    req: Request<Body>,
+    next: Next,
 ) -> Response {
     // do something with `request`...
     let start = Instant::now();

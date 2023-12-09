@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use regex::Regex;
 use super::error::ErrorMsg;
 use serde::{Deserialize, Serialize};
@@ -24,6 +26,12 @@ impl TryFrom<String> for Email {
 impl From<Email> for String {
     fn from(email: Email) -> Self {
         email.0
+    }
+}
+
+impl Display for Email {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.as_str())
     }
 }
 
