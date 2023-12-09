@@ -1,11 +1,6 @@
-use auth::domain::token_data::TokenData;
-
-use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
-    domain::{
-        user::User, types::password::Password
-    }, 
-    application::port::driven::user_repository::UpdateUser
+    application::port::driven::auth_repository::{AuthRepositoryTrait, UpdateAuth}, 
+    domain::{auth::Auth, types::{password::Password, token_data::TokenData}},
 };
 
 
@@ -25,11 +20,11 @@ pub struct Payload {
 
 pub async fn execute<T>(
     conn: &T, 
-    repo: &impl UserRepositoryTrait<T>, 
+    repo: &impl AuthRepositoryTrait<T>, 
     secret: &[u8],
     token: &String,
     payload: Payload,
-) -> Result<User, UpdateError> {
+) -> Result<Auth, UpdateError> {
     if payload.password == payload.new_password {
         return Err(UpdateError::Conflict("New password is the same as old password".to_string()));
     }
@@ -51,25 +46,21 @@ pub async fn execute<T>(
         return Err(UpdateError::Unautorized);
     };
     // verify user exists and password match
-    if let Ok(user) = repo.find_by_id(conn, id.into()).await {
-        if password.verify_password(&user.hashed_password).is_err() {
+    if let Ok(auth) = repo.find_by_id(conn, id.into()).await {
+        if password.verify_password(&auth.hashed_password).is_err() {
             return Err(UpdateError::Unautorized);
         }
     } else {
         return Err(UpdateError::NotFound);
     };
     // hash new password
-    let hashed_password = if let Ok(hashed_password) = new_password.hash_password() {
+    let new_hashed_password = if let Ok(hashed_password) = new_password.hash_password() {
         Some(hashed_password)
     } else {
         return Err(UpdateError::Unknown("Unknown error".to_string()));
     };
     // update password
-    let user_update = UpdateUser {
-        id: id.into(),
-        hashed_password,
-        ..Default::default()
-    };
+    let user_update = UpdateAuth { id: id.into(), new_hashed_password, ..Default::default() };
     match repo.update(conn, user_update).await {
         Ok(user) => Ok(user),
         Err(e) => Err(UpdateError::Unknown(format!("{:?}", e))),
