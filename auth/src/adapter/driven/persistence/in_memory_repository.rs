@@ -30,7 +30,6 @@ impl AuthRepositoryTrait<Mutex<Vec<Auth>>> for InMemoryRepository {
         &self, 
         conn: &Mutex<Vec<Auth>>, 
         auth: NewAuth, 
-        identification: NewIdentification
     ) -> Result<Auth, String> {
         // TODO: Implement this method
         todo!()

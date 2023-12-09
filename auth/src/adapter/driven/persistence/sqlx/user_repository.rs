@@ -72,7 +72,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             identification_value
         ).fetch_one(conn).await;
 
-        let identifications = match auth_sql {
+        let identifications = match &auth_sql {
             Ok(auth) => if let Ok(identifications) = get_identifications(
                 conn, 
                 &auth.user_id
@@ -87,7 +87,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             }
         };
 
-        let tokens_metadata = match auth_sql {
+        let tokens_metadata = match &auth_sql {
             Ok(auth) => if let Ok(tokens_metadata) = get_tokens_metadata(
                 conn, 
                 &auth.user_id
@@ -115,7 +115,6 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         &self, 
         conn: &Pool<Postgres>, 
         auth: NewAuth, 
-        new_identification: NewIdentification,
     ) -> Result<Auth, String> {
         let res_auth = sqlx::query_as!(
             AuthSQL,
@@ -138,14 +137,14 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
                 VALUES ($1, $2, $3) RETURNING *;
             "#,
             auth_sql.user_id,
-            new_identification.identification_value.get_type(),
-            new_identification.identification_value.get_value(),
+            auth.identifications[0].get_type(),
+            auth.identifications[0].get_value(),
         ).fetch_one(conn).await;
 
         let identification = match res_identification_id {
             Ok(res_identification_id) => res_identification_id,
             Err(err) => {
-                sqlx::query!(
+                let _ = sqlx::query!(
                     r#"
                         DELETE FROM auths WHERE user_id = $1;
                     "#,
@@ -157,7 +156,6 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
 
         auth_sql.to_auth_domain(vec![identification], vec!())
             .map_err(|err| err.to_string())
-        
     }
 
     async fn update_password(
@@ -265,29 +263,31 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
 
     async fn delete(&self, conn: &Pool<Postgres>, user_id: Uuid) -> Result<Auth, String> {
 
-        let res_identifications = sqlx::query!(
+        if sqlx::query!(
             r#"
                 DELETE FROM identifications WHERE user_id = $1 RETURNING *;
             "#,
             user_id
-        ).fetch_all(conn).await;
+        ).fetch_all(conn).await.is_err() {
+            return Err("Error deleting identifications".to_string());
+        }
 
-        let res_tokens_metadata = sqlx::query!(
+        if sqlx::query!(
             r#"
                 DELETE FROM tokens_metadata WHERE user_id = $1 RETURNING *;
             "#,
             user_id
-        ).fetch_all(conn).await;
+        ).fetch_all(conn).await .is_err() {
+            return Err("Error deleting tokens metadata".to_string());
+        }
 
-        let res_auth_sql = sqlx::query_as!(
+        let auth_sql = match sqlx::query_as!(
             AuthSQL,
             r#"
                 DELETE FROM auths WHERE user_id = $1 RETURNING *;
             "#,
             user_id
-        ).fetch_one(conn).await;
-
-        let auth_sql = match res_auth_sql {
+        ).fetch_one(conn).await {
             Ok(auth_sql) => auth_sql,
             Err(err) => match err {
                 sqlx::Error::RowNotFound => return Err("User not found".to_string()),

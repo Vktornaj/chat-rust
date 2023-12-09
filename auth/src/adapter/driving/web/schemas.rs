@@ -6,13 +6,13 @@ use crate::domain::types::identification::{Identification, IdentificationValue};
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdentificationJson {
-    value: String,
-    id_type: String,
+    pub value: String,
+    pub id_type: String,
 }
 
 impl From<Identification> for IdentificationJson {
     fn from(identification: Identification) -> Self {
-        let value = match identification.identification_value {
+        let value = match identification.identification_value.clone() {
             IdentificationValue::Email(email) => email.to_string(),
             IdentificationValue::PhoneNumber(phone_number) => phone_number.to_string(),
         };

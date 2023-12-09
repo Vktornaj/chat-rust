@@ -1,60 +1,42 @@
-// extern crate rocket;
-
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use chrono::{TimeZone, Utc};
-use uuid::Uuid;
 
-use common::adapter::config::DATE_FORMAT;
+use crate::adapter::driven::cache::redis::user_cache::AuthCache;
 use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailService;
+use crate::adapter::driven::persistence::sqlx::user_repository::AuthRepository;
 use crate::application::use_cases;
 use common::adapter::state::AppState;
 use super::schemas::AuthJson;
 
 
-pub async fn handle_create_user_cache(
+pub async fn handle_create_auth_cache(
     State(state): State<AppState>,
     Json(payload): Json<AuthJson>,
-) -> Result<Json<Uuid>, (StatusCode, String)> {
-    let date = if let Ok(date) = Utc.datetime_from_str(&payload.birthday, DATE_FORMAT) {
-        date
-    } else {
-        return Err((StatusCode::BAD_REQUEST, "Invalid birthday format".into()));
-    };
-    
+) -> Result<Json<String>, (StatusCode, String)> {
     match use_cases::create_auth_request::execute(
         &state.db_sql_pool,
         &state.cache_pool,
         &state.email_conn,
-        &UserRepository {},
-        &UserCache {},
+        &AuthRepository {},
+        &AuthCache {},
         &AWSEmailService {},
         &state.config.environment,
-        use_cases::create_user_cache::Payload {
-            email: payload.email,
-            phone_number: payload.phone_number,
+        use_cases::create_auth_request::Payload {
             password: payload.password,
-            first_name: payload.first_name,
-            last_name: payload.last_name,
-            birthday: date,
-            nationality: payload.nationality,
-            languages: payload.languages,
+            identification_type: payload.identifications[0].id_type.clone(),
+            identification_value: payload.identifications[0].value.clone(),
         },
-    )
-    .await
-    {
-        Ok(user) => Ok(Json(IdTransaction {
-            id_transaction: user,
-        })),
+    ).await {
+        Ok(user) => Ok(Json(user)),
         Err(error) => match error {
-            use_cases::create_user_cache::CreateError::InvalidData(err) => {
+            use_cases::create_auth_request::CreateError::InvalidData(err) => {
                 Err((StatusCode::BAD_REQUEST, err))
             }
-            use_cases::create_user_cache::CreateError::Unknown(err) => {
+            use_cases::create_auth_request::CreateError::Unknown(err) => {
                 Err((StatusCode::INTERNAL_SERVER_ERROR, err))
             }
-            use_cases::create_user_cache::CreateError::Conflict(err) => {
+            use_cases::create_auth_request::CreateError::Conflict(err) => {
                 Err((StatusCode::CONFLICT, err))
             }
         },
