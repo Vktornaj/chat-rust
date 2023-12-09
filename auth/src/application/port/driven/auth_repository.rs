@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::domain::auth::{Auth, NewAuth};
-use crate::domain::types::identification::{IdentificationValue, Identification, NewIdentification};
+use crate::domain::types::identification::{IdentificationValue, NewIdentification};
 
 
 pub enum RepoSelectError {
@@ -63,7 +63,7 @@ pub trait AuthRepositoryTrait<T> {
     async fn update_identifications(
         &self, 
         conn: &T, 
-        identification_operation: UpdateIdentify<NewIdentification, Uuid>
+        identification_operation: UpdateIdentify<NewIdentification, Uuid>,
     ) -> Result<Auth, String>;
 
     /// Delete one single record from the persistence system

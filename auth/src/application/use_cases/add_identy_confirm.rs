@@ -1,9 +1,9 @@
-use auth::domain::token_data::TokenData;
-
-use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
-    application::port::driven::user_cache::{UserCacheTrait, UpdateUserCDCache}, 
-    domain::user::User
+    application::port::driven::{
+        auth_cache::{AuthCacheTrait, AddIdentificationRequest}, 
+        auth_repository::{AuthRepositoryTrait, UpdateIdentify},
+    }, 
+    domain::{types::{token_data::TokenData, identification::NewIdentification}, auth::Auth},
 };
 
 
@@ -24,19 +24,19 @@ pub struct Payload {
 pub async fn execute<T, U>(
     conn: &T, 
     cache_conn: &U, 
-    repo: &impl UserRepositoryTrait<T>,
-    repo_cache: &impl UserCacheTrait<U>,
+    repo: &impl AuthRepositoryTrait<T>,
+    repo_cache: &impl AuthCacheTrait<U>,
     secret: &[u8],
     token: &String,
     payload: Payload,
-) -> Result<User, UpdateError> {
+) -> Result<Auth, UpdateError> {
     // verify token is valid
     if TokenData::from_token(token, &secret).is_err() {
         return Err(UpdateError::Unautorized);
     };
     // validate confirmation code
-    let update_user = match repo_cache
-        .find_by_id::<UpdateUserCDCache>(cache_conn, payload.transaction_id.clone()).await {
+    let add_identify: AddIdentificationRequest = match repo_cache
+        .find_by_id::<AddIdentificationRequest>(cache_conn, payload.transaction_id.clone()).await {
         Ok(update) => match update {
             Some(update) => {
                 if Into::<String>::into(update.confirmation_code.clone()) == payload.confirmation_code {
@@ -54,8 +54,12 @@ pub async fn execute<T, U>(
         Ok(_) => (),
         Err(error) => return Err(UpdateError::Unknown(format!("Unknown error: {:?}", error))),
     };
-    // create user
-    match repo.update(conn, update_user).await {
+    // add identification to user
+    let identification_operation = UpdateIdentify::Add(NewIdentification {
+        user_id: add_identify.user_id,
+        identification_value: add_identify.identity,
+    });
+    match repo.update_identifications(conn, identification_operation).await {
         Ok(user) => Ok(user),
         Err(error) => Err(UpdateError::Unknown(format!("Unknown error: {:?}", error))),
     }

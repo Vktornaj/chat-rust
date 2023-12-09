@@ -5,7 +5,7 @@ use common::domain::types::{error::ErrorMsg, id::Id};
 use crate::domain::types::{
     code::Code, 
     password::Password,
-    identification::{Identification, IdentificationValue},
+    identification::IdentificationValue,
 };
 
 
@@ -38,7 +38,7 @@ impl CreateAuthRequest {
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AddIdentificationRequest {
     pub user_id: Id,
-    pub identity: Identification,
+    pub identity: IdentificationValue,
     pub confirmation_code: Code,
 }
 
