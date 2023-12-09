@@ -1,7 +1,8 @@
-use auth::domain::token_data::TokenData;
+use crate::{
+    application::port::driven::auth_repository::AuthRepositoryTrait, 
+    domain::{types::{token_data::TokenData, password::Password}, auth::Auth}
+};
 
-use super::super::port::driven::user_repository::UserRepositoryTrait;
-use crate::domain::{user::User, types::password::Password};
 
 
 #[derive(Debug)]
@@ -17,14 +18,14 @@ pub struct Payload {
 
 pub async fn execute<T>(
     conn: &T, 
-    repo: &impl UserRepositoryTrait<T>, 
+    repo: &impl AuthRepositoryTrait<T>, 
     secret: &[u8],
     token: &String,
     payload: Payload,
-) -> Result<User, DeleteError> {
+) -> Result<Auth, DeleteError> {
     // verify user exist and token is valid
-    let id = if let Ok(auth) = TokenData::from_token(token, &secret) {
-        auth.id
+    let user_id = if let Ok(token) = TokenData::from_token(token, &secret) {
+        token.id
     } else {
         return Err(DeleteError::Unautorized);
     };
@@ -34,20 +35,20 @@ pub async fn execute<T>(
     } else {
         return Err(DeleteError::Unautorized);
     };
-    // get user
-    let user = if let Ok(user) = repo.find_by_id(conn, id.into()).await {
-        user
+    // get auth
+    let auth = if let Ok(auth) = repo.find_by_id(conn, user_id.into()).await {
+        auth
     } else {
         return Err(DeleteError::NotFound);
     };
     // verify password
-    if password.verify_password(&user.hashed_password).is_err() {
+    if password.verify_password(&auth.hashed_password).is_err() {
         return Err(DeleteError::Unautorized);
     }
     // TODO: delete user articles
-    // delete user
-    match repo.delete(conn, id.into()).await {
-        Ok(user) => Ok(user),
+    // delete auth
+    match repo.delete(conn, user_id.into()).await {
+        Ok(auth) => Ok(auth),
         Err(error) => Err(DeleteError::Unknown(format!("Unknown error: {:?}", error))),
     }
 }
