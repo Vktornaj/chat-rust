@@ -1,4 +1,4 @@
-use auth::domain::token_data::TokenData;
+use auth::TokenData;
 use chrono::{DateTime, Utc};
 use common::domain::types::error::ErrorMsg;
 

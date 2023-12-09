@@ -71,14 +71,6 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             query.push_bind(languages);
             query.push(")");
         }
-        if let Some(email) = find_user.email {
-            query.push(" AND email = ");
-            query.push_bind(Into::<String>::into(email));
-        }
-        if let Some(phone_number) = find_user.phone_number {
-            query.push(" AND phone_number = ");
-            query.push_bind(Into::<String>::into(phone_number));
-        }
         if let Some(birthday) = &find_user.birthday {
             query.push(" AND birthday >= ");
             query.push_bind(birthday.0);
@@ -179,18 +171,6 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         let mut query_builder = QueryBuilder::new("UPDATE users SET ");
         let mut separated = query_builder.separated(", ");
     
-        if let Some(email) = user.email {
-            separated.push("email = ");
-            separated.push_bind_unseparated(email.map(|x| Into::<String>::into(x)));
-        }
-        if let Some(phone_number) = user.phone_number {
-            separated.push("phone_number = ");
-            separated.push_bind_unseparated(phone_number.map(|x| Into::<String>::into(x)));
-        }
-        if let Some(hashed_password) = user.hashed_password {
-            separated.push("hashed_password = ");
-            separated.push_bind_unseparated(Into::<String>::into(hashed_password));
-        }
         if let Some(first_name) = user.first_name {
             separated.push("first_name = ");
             separated.push_bind_unseparated(Into::<String>::into(first_name));

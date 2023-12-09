@@ -14,7 +14,7 @@ use common::adapter::state::AppState;
 use super::schemas::{AuthJson, ValidateTransaction, Credentials, JsonToken, UpdatePassword, IdentificationJson};
 
 
-pub async fn handle_create_auth_cache(
+pub async fn handle_create_auth_request(
     State(state): State<AppState>,
     Json(payload): Json<AuthJson>,
 ) -> Result<Json<String>, (StatusCode, String)> {
@@ -166,7 +166,7 @@ pub async fn handle_add_identifier_request(
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(identifier): Json<IdentificationJson>,
 ) -> Result<String, StatusCode> {
-    match use_cases::add_indenty_request::execute(
+    match use_cases::add_identy_request::execute(
         &state.db_sql_pool,
         &state.cache_pool,
         &state.email_conn,
@@ -175,7 +175,7 @@ pub async fn handle_add_identifier_request(
         &AWSEmailService {},
         &state.config.secret,
         &token.token().to_string(),
-        use_cases::add_indenty_request::Payload {
+        use_cases::add_identy_request::Payload {
             identify_value: identifier.value,
             identify_type: identifier.id_type,
         }
@@ -188,8 +188,8 @@ pub async fn handle_add_identifier_request(
         },
         Err(err) => {
             match err {
-                use_cases::add_indenty_request::UpdateError::Unknown(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
-                use_cases::add_indenty_request::UpdateError::Unautorized => Err(StatusCode::UNAUTHORIZED),
+                use_cases::add_identy_request::UpdateError::Unknown(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+                use_cases::add_identy_request::UpdateError::Unautorized => Err(StatusCode::UNAUTHORIZED),
                 _ => Err(StatusCode::BAD_REQUEST),
             }
         },

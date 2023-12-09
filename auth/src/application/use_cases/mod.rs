@@ -6,6 +6,6 @@ pub mod delete_auth;
 pub mod is_data_in_use;
 pub mod reset_password_request;
 pub mod reset_password_confirm;
-pub mod add_indenty_request;
+pub mod add_identy_request;
 pub mod add_identy_confirm;
 pub mod update_password;

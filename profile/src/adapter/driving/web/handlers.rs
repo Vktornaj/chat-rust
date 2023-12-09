@@ -1,8 +1,7 @@
-use axum::extract::{State, TypedHeader};
-use axum::headers::authorization::Bearer;
+use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use axum::headers::Authorization;
+use axum_extra::{TypedHeader, headers::{Authorization, authorization::Bearer}};
 use chrono::{TimeZone, Utc};
 
 use common::adapter::config::DATE_FORMAT;

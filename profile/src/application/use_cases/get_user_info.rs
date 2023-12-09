@@ -1,6 +1,5 @@
-use auth::domain::token_data::TokenData;
+use auth::TokenData;
 use crate::domain::user::User;
-
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 
 

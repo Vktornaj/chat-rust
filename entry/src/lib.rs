@@ -1,18 +1,16 @@
-use auth::domain::token_data::TokenData;
 use axum::{
     extract::{
         ws::{Message, WebSocket},
         State, WebSocketUpgrade,
     },
-    headers::{authorization::Bearer, Authorization},
     http::{StatusCode, Uri, Method},
     middleware,
     response::{IntoResponse, Response},
     routing::{delete, get, post, put},
     Router, 
-    TypedHeader,
     http::HeaderValue,
 };
+use axum_extra::{TypedHeader, headers::{Authorization, authorization::Bearer}};
 use futures_util::stream::SplitSink;
 use prometheus::Encoder;
 use sqlx::{migrate::Migrator, PgPool};
@@ -32,7 +30,8 @@ use common::domain::models::{
 
 mod metrics;
 mod ws;
-use user::handlers as user_handlers;
+use profile::handlers as profile_handlers;
+use auth::{handlers as auth_handlers, TokenData};
 
 
 pub async fn router() -> Router {
@@ -55,49 +54,42 @@ pub async fn router() -> Router {
             "/api",
             Router::new()
                 .nest(
-                    "/user",
+                    "/auth",
                     Router::new()
                         .route(
-                            "/create-user-request",
-                            post(user_handlers::handle_create_user_cache),
+                            "/create-auth-request",
+                            post(auth_handlers::handle_create_auth_request),
                         )
                         .route(
                             "/create-user-confirmation",
-                            post(user_handlers::handle_create_user_confirmation),
+                            post(auth_handlers::handle_create_auth_confirmation),
                         )
-                        .route("/get-user", get(user_handlers::handle_get_user_info))
-                        .route("/update-user", put(user_handlers::handle_update_user_info))
-                        .route("/delete-user", delete(user_handlers::handle_delete_account))
+                        .route("/identifier", put(auth_handlers::handle_add_identifier_request))
+                        .route("/auth", delete(auth_handlers::handle_delete_account))
                         .route(
-                            "/email-available/:email",
-                            get(user_handlers::handle_email_available),
+                            "/identifier-available/:identifier",
+                            get(auth_handlers::handle_identifier_available),
                         )
+                        .route("/login", post(auth::handlers::handle_login))
                         .route(
-                            "/phone-number-available/:phone",
-                            get(user_handlers::handle_phone_number_available),
-                        )
-                        .route("/login", post(user_handlers::handle_login))
-                        .route(
-                            "/update-password",
-                            put(user_handlers::handle_update_password),
-                        )
-                        .route(
-                            "/update-user-contact-info-cache",
-                            put(user_handlers::handle_update_user_contact_info_cache),
-                        )
-                        .route(
-                            "/update-user-contact-info-confirmation",
-                            put(user_handlers::handle_update_user_contact_info_confirmation),
+                            "/password",
+                            put(auth_handlers::handle_update_password),
                         )
                         .route(
                             "/password-recovery-request",
-                            post(user_handlers::handle_password_recovery_request),
+                            post(auth_handlers::handle_password_recovery_request),
                         )
                         .route(
                             "/password-reset-confirmation/:token",
-                            put(user_handlers::handle_password_reset_confirmation),
+                            put(auth_handlers::handle_password_reset_confirmation),
                         ),
                 )
+                .nest(
+                    "/profile", 
+                    Router::new()
+                        .route("/profile", get(profile_handlers::handle_get_user_info))
+                        .route("/profile", put(profile_handlers::handle_update_user_info))
+                    )
                 .nest("/message", Router::new().route("/ws", get(ws_handler))),
         )
         .layer(

@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 # added
-user = { path = "../user"}
+profile = { path = "../profile"}
 message = { path = "../message"}
 auth = { path = "../auth"}
 common = { path = "../common"}
@@ -20,7 +20,7 @@ prometheus = "0.13.3"
 systemstat = "0.2.3"
 lazy_static = "1.4.0"
 axum = { version = "0.7.1" }
-axum-extra = { version = "0.9.0", features = ["protobuf"] }
+axum-extra = { version = "0.9.0", features = ["protobuf", "typed-header"] }
 tokio = { version = "1.32.0", features=["full"] }
 tokio-tungstenite = "0.21.0"
 tower-http = { version = "0.5.0", features=["fs", "trace", "cors"] }

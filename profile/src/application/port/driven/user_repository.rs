@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use common::domain::types::{email::Email, phone_number::PhoneNumber};
 use uuid::Uuid;
 
 use super::errors::{
@@ -25,8 +24,6 @@ pub struct DateRange(pub Option<DateTime<Utc>>, pub Option<DateTime<Utc>>);
 
 #[derive(Default)]
 pub struct FindUser {
-    pub email: Option<Email>,
-    pub phone_number: Option<PhoneNumber>,
     pub birthday: Option<DateRange>,
     pub languages: Option<Vec<Language>>,
     pub nationality: Option<Nationality>,
@@ -36,9 +33,6 @@ pub struct FindUser {
 #[derive(Default)]
 pub struct UpdateUser {
     pub id: Uuid,
-    pub email: Option<Option<Email>>,
-    pub phone_number: Option<Option<PhoneNumber>>,
-    pub hashed_password: Option<String>,
     pub first_name: Option<FirstName>,
     pub last_name: Option<LastName>,
     pub birthday: Option<Birthday>,    

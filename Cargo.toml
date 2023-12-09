@@ -1,10 +1,10 @@
 [workspace]
 members = [
-  "auth",
-  "message",
-  "user",
-  "entry",
   "common",
+  "auth",
+  "profile",
+  "message",
+  "entry",
 ]
 
 resolver = "2"
