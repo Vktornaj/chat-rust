@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::domain::identification::{Identification, IdentificationValue};
+use crate::domain::types::identification::{Identification, IdentificationValue};
 
 
 #[derive(Serialize, Deserialize)]

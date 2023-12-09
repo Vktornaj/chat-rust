@@ -1,10 +1,10 @@
 use common::adapter::config::Environment;
 
 use crate::{application::port::driven::{
-    user_cache::{UserCacheTrait, CreateUserCache}, 
-    user_repository::UserRepositoryTrait, 
+    auth_cache::{AuthCacheTrait, CreateAuthRequest}, 
+    auth_repository::AuthRepositoryTrait, 
     email_service::EmailServiceTrait
-}, domain::types::code::Code};
+}, domain::types::{code::Code, identification::IdentificationValue}};
 use super::is_data_in_use;
 
 
@@ -16,22 +16,17 @@ pub enum CreateError {
 }
 
 pub struct Payload {
-    pub email: Option<String>, 
-    pub phone_number: Option<String>, 
     pub password: String, 
-    pub first_name: String, 
-    pub last_name: String, 
-    pub birthday: chrono::DateTime<chrono::Utc>, 
-    pub nationality: String, 
-    pub languages: Vec<String>
+    pub identification_value: String,
+    pub identification_type: String,
 }
 
 pub async fn execute<T, U, ES>(
     conn: &T,
     cache_conn: &U,
     email_conn: &ES,
-    repo: &impl UserRepositoryTrait<T>, 
-    repo_cache: &impl UserCacheTrait<U>,
+    repo: &impl AuthRepositoryTrait<T>, 
+    repo_cache: &impl AuthCacheTrait<U>,
     email_service: &impl EmailServiceTrait<ES>,
     environment: &Environment,
     payload: Payload
@@ -41,79 +36,67 @@ pub async fn execute<T, U, ES>(
         Environment::Development => Code::new_0s(6),
         Environment::Production => Code::new(6),
     };
-    let cache_user = match CreateUserCache::new(
-        payload.email,
-        payload.phone_number, 
-        payload.password, 
-        payload.first_name, 
-        payload.last_name, 
-        payload.birthday, 
-        payload.nationality, 
-        payload.languages,
-        confirmation_code
+    let identity = match IdentificationValue::from_string(
+        payload.identification_value,
+        payload.identification_type
+    ) {
+        Ok(identification) => identification,
+        Err(error) => return Err(CreateError::InvalidData(error.to_string())),
+    };
+    let auth_request = match CreateAuthRequest::new(
+        payload.password,
+        confirmation_code, 
+        identity,
     ) {
         Ok(new_user) => new_user,
         Err(error) => return Err(CreateError::InvalidData(error.to_string())),
     };
-    // verify no email in cache
-    if let Some(email) = cache_user.email.clone() {
-        match repo_cache.find_by_id::<CreateUserCache>(cache_conn, email.into()).await {
-            Ok(user) => {
-                if user.is_some() {
-                    return Err(CreateError::Conflict("email unavailable".to_string()));
-                }
-            },
-            Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
-        }
-    }
-    // verify no phone number in cache
-    if let Some(phone_number) = cache_user.phone_number.clone() {
-        match repo_cache.find_by_id::<CreateUserCache>(cache_conn, phone_number.into()).await {
-            Ok(user) => {
-                if user.is_some() {
-                    return Err(CreateError::Conflict("phone number unavailable".to_string()));
-                }
-            },
-            Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
-        }
+    // verify no identity in cache
+    match repo_cache.find_by_id::<CreateAuthRequest>(cache_conn, auth_request.identity.get_value().clone()).await {
+        Ok(user) => {
+            if user.is_some() {
+                return Err(CreateError::Conflict("identification id unavailable".to_string()));
+            }
+        },
+        Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     }
     // verify no user with same email or phone number
     if let Ok(res) = is_data_in_use::execute(
         conn, 
         repo, 
         is_data_in_use::Payload {
-            email: cache_user.email.as_ref().map(|x| x.to_owned().into()), 
-            phone_number: cache_user.phone_number.as_ref().map(|x| x.to_owned().into())
+            identify_value: auth_request.identity.get_value().clone(),
+            identify_type: auth_request.identity.get_type().clone(),
         }
     ).await {
         if res {
-            return Err(CreateError::Conflict("email or phone already in use".to_string()));
+            return Err(CreateError::Conflict("identification value is already in use".to_string()));
         }
     } else {
         return Err(CreateError::Unknown("unknown error".to_string()));
     }
-    // create cache user
-    let id: String = if let Some(email) = cache_user.email.clone() {
+    // create auth request 
+    let id: String = if let Some(email) = auth_request.email.clone() {
         email.into()
     } else {
-        cache_user.phone_number.clone().unwrap().into()
+        auth_request.phone_number.clone().unwrap().into()
     };
     let res = match repo_cache
-        .add_request::<CreateUserCache>(
+        .add_request::<CreateAuthRequest>(
             cache_conn,
             id,
-            cache_user.clone(),
+            auth_request.clone(),
             60
         ).await {
         Ok(transaction_id) => Ok(transaction_id),
         Err(error) => Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     };
     // Send confirmation email
-    if let Some(email) = cache_user.email.clone() {
+    if let IdentificationValue::Email(email) = auth_request.identity {
         if email_service.send_confirmation_email(
             email_conn, 
             email.into(), 
-            cache_user.confirmation_code.into()
+            auth_request.confirmation_code.into()
         ).await.is_err() {
             return Err(CreateError::Unknown("Email invalid".to_string()));
         }

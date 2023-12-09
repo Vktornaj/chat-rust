@@ -5,7 +5,7 @@ use common::domain::types::{error::ErrorMsg, id::Id};
 use crate::domain::types::{
     code::Code, 
     password::Password,
-    identification::Identification,
+    identification::{Identification, IdentificationValue},
 };
 
 
@@ -13,14 +13,14 @@ use crate::domain::types::{
 pub struct CreateAuthRequest {
     pub hashed_password: String,
     pub confirmation_code: Code,
-    pub identity: Identification,
+    pub identity: IdentificationValue,
 }
 
 impl CreateAuthRequest {
     pub fn new(
         password: String,
         confirmation_code: Code,
-        identity: Identification,
+        identity: IdentificationValue,
     ) -> Result<Self, ErrorMsg> {
         let hashed_password = match Password::try_from(password)?.hash_password() {
             Ok(hashed_password) => hashed_password,

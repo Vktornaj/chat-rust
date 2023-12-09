@@ -58,7 +58,7 @@ pub async fn execute<T>(
         return Err(LoginError::NotFound);
 
     };
-    if let Ok(user) = repo.find_by_contact_info(conn, find_auth).await {
+    if let Ok(user) = repo.find_by_identification(conn, find_auth).await {
         if password.verify_password(&user.hashed_password).is_ok() {
             Ok(TokenData::new(&user.user_id.into()).token(secret))
         } else  {

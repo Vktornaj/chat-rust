@@ -1,2 +1,11 @@
-pub mod login_user;
+pub mod login_auth;
 pub mod authenticate;
+pub mod create_auth_request;
+pub mod create_auth_confirm;
+pub mod delete_auth;
+pub mod is_data_in_use;
+pub mod reset_password_request;
+pub mod reset_password_confirm;
+pub mod add_indenty_request;
+pub mod add_identy_confirm;
+pub mod update_password;

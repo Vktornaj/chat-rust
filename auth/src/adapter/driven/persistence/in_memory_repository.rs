@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::{
     application::port::driven::auth_repository::{AuthRepositoryTrait, UpdateIdentify}, 
-    domain::{auth::Auth, types::identification::{IdentificationValue, NewIdentification}}
+    domain::{auth::{Auth, NewAuth}, types::identification::{IdentificationValue, NewIdentification}}
 };
 
 
@@ -26,7 +26,12 @@ impl AuthRepositoryTrait<Mutex<Vec<Auth>>> for InMemoryRepository {
         todo!()
     }
 
-    async fn create(&self, conn: &Mutex<Vec<Auth>>, auth: Auth) -> Result<Auth, String> {
+    async fn create(
+        &self, 
+        conn: &Mutex<Vec<Auth>>, 
+        auth: NewAuth, 
+        identification: NewIdentification
+    ) -> Result<Auth, String> {
         // TODO: Implement this method
         todo!()
     }
