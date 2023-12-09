@@ -1,5 +1,8 @@
-use super::super::port::driven::user_repository::UserRepositoryTrait;
-use crate::{domain::user::User, application::port::driven::user_cache::{UserCacheTrait, CreateUserCache}};
+use crate::{application::port::driven::{
+    auth_repository::AuthRepositoryTrait, auth_cache::{AuthCacheTrait, CreateAuthRequest}}, 
+    domain::auth::Auth
+};
+
 
 
 #[derive(Debug)]
@@ -18,18 +21,18 @@ pub struct Payload {
 pub async fn execute<T, U>(
     conn: &T,
     cache_conn: &U,
-    repo: &impl UserRepositoryTrait<T>, 
-    repo_cache: &impl UserCacheTrait<U>,
-    payload: Payload
-) -> Result<User, CreateError> {
+    repo: &impl AuthRepositoryTrait<T>, 
+    repo_cache: &impl AuthCacheTrait<U>,
+    payload: Payload,
+) -> Result<Auth, CreateError> {
     // validate confirmation code
-    let new_user = match repo_cache.find_by_id::<CreateUserCache>(cache_conn, payload.transaction_id.clone()).await {
-        Ok(user) => match user {
-            Some(user) => {
-                if Into::<String>::into(user.confirmation_code.clone()) == payload.confirmation_code {
-                    println!("confirmation code {}", Into::<String>::into(user.confirmation_code.clone()));
+    let new_auth = match repo_cache.find_by_id::<CreateAuthRequest>(cache_conn, payload.transaction_id.clone()).await {
+        Ok(auth) => match auth {
+            Some(auth) => {
+                if Into::<String>::into(auth.confirmation_code.clone()) == payload.confirmation_code {
+                    println!("confirmation code {}", Into::<String>::into(auth.confirmation_code.clone()));
                     println!("payload code {}", payload.confirmation_code);
-                    user.to_new_user()
+                    auth.to_new_user()
                 } else {
                     return Err(CreateError::InvalidData("invalid confirmation code".to_string()));
                 }
@@ -43,8 +46,8 @@ pub async fn execute<T, U>(
         Ok(_) => (),
         Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     };
-    // create user
-    match repo.create(conn, new_user).await {
+    // create auth
+    match repo.create(conn, new_auth).await {
         Ok(user) => Ok(user),
         Err(error) => Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     }

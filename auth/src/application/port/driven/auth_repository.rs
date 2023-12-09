@@ -49,7 +49,7 @@ pub trait AuthRepositoryTrait<T> {
     async fn find_by_identification(&self, conn: &T, identification: IdentificationValue) -> Result<Auth, String>;
 
     /// Insert the received entity in the persistence system
-    async fn create(&self, conn: &T, auth: NewAuth, new_identification: NewIdentification) -> Result<Auth, String>;
+    async fn create(&self, conn: &T, auth: NewAuth) -> Result<Auth, String>;
 
     /// Update one single record already present in the persistence system
     async fn update_password(

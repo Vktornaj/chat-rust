@@ -76,15 +76,10 @@ pub async fn execute<T, U, ES>(
         return Err(CreateError::Unknown("unknown error".to_string()));
     }
     // create auth request 
-    let id: String = if let Some(email) = auth_request.email.clone() {
-        email.into()
-    } else {
-        auth_request.phone_number.clone().unwrap().into()
-    };
     let res = match repo_cache
         .add_request::<CreateAuthRequest>(
             cache_conn,
-            id,
+            identity.get_value().clone(),
             auth_request.clone(),
             60
         ).await {
