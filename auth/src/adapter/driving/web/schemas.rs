@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::domain::types::identification::{Identification, IdentificationValue};
+use crate::domain::{types::identification::{Identification, IdentificationValue}, auth::Auth};
 
 
 #[derive(Serialize, Deserialize)]
@@ -53,4 +53,18 @@ pub struct UpdatePassword {
 pub struct ValidateTransaction {
     pub transaction_id: String,
     pub confirmation_code: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Credentials {
+    pub identifier: String,
+    pub password: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResetPasswordValidation {
+    pub token: String,
+    pub new_password: String,
 }
