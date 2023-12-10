@@ -32,8 +32,6 @@ pub async fn execute<T, U>(
         Ok(auth) => match auth {
             Some(auth) => {
                 if Into::<String>::into(auth.confirmation_code.clone()) == payload.confirmation_code {
-                    println!("confirmation code {}", Into::<String>::into(auth.confirmation_code.clone()));
-                    println!("payload code {}", payload.confirmation_code);
                     auth.to_new_auth()
                 } else {
                     return Err(CreateError::InvalidData("invalid confirmation code".to_string()));

@@ -17,8 +17,8 @@ pub enum IdentificationValue {
 impl IdentificationValue {
     pub fn get_type(&self) -> String {
         match self {
-            Self::Email(_) => "EMAIL".to_string(),
-            Self::PhoneNumber(_) => "PHONE_NUMBER".to_string(),
+            Self::Email(_) => "email".to_string(),
+            Self::PhoneNumber(_) => "phone_number".to_string(),
         }
     }
 

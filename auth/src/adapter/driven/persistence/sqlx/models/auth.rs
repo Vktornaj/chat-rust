@@ -45,11 +45,6 @@ impl AuthSQL {
     }
 } 
 
-pub enum IdentificationSQLType {
-    Email,
-    PhoneNumber,
-}
-
 pub struct IdentificationSQL {
     pub id: Uuid,
     pub user_id: Uuid,
