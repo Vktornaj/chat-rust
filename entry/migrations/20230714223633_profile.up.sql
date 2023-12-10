@@ -2,7 +2,7 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE users (
+CREATE TABLE profiles (
     user_id UUID NOT NULL PRIMARY KEY,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
@@ -20,15 +20,15 @@ CREATE TABLE languages (
     code TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE users_languages (
-    user_id UUID NOT NULL REFERENCES users(user_id),
+CREATE TABLE profiles_languages (
+    user_id UUID NOT NULL REFERENCES profiles(user_id),
     language_id INTEGER NOT NULL REFERENCES languages(id),
-    CONSTRAINT users_languages_pkey PRIMARY KEY (user_id, language_id)
+    CONSTRAINT profiles_languages_pkey PRIMARY KEY (user_id, language_id)
 );
 
 --=================== Functions ===================--
 -- User 
-CREATE FUNCTION insert_user(
+CREATE FUNCTION insert_profile(
     p_id UUID,
     p_first_name TEXT,
     p_last_name TEXT,
@@ -53,9 +53,9 @@ RETURNS TABLE (
         _language_code TEXT;
         id UUID;
     BEGIN
-        INSERT INTO users (id, first_name, last_name, birthday, nationality)
+        INSERT INTO profiles (id, first_name, last_name, birthday, nationality)
         VALUES (p_id, p_first_name, p_last_name, p_birthday, p_nationality)
-        RETURNING users.id, users.first_name, users.last_name, users.birthday, users.nationality, users.created_at, users.updated_at
+        RETURNING profiles.id, profiles.first_name, profiles.last_name, profiles.birthday, profiles.nationality, profiles.created_at, profiles.updated_at
         INTO id, first_name, last_name, birthday, nationality, created_at, updated_at;
 
         FOR _language_code IN SELECT unnest(p_languages) LOOP
@@ -63,7 +63,7 @@ RETURNS TABLE (
             FROM languages AS l
             WHERE l.code = _language_code;
 
-            INSERT INTO users_languages (user_id, language_id)
+            INSERT INTO profiles_languages (user_id, language_id)
             VALUES (id, _language_id);
         END LOOP;
 

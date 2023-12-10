@@ -1,6 +1,6 @@
 -- Add down migration script here
 
-DROP FUNCTION insert_user(
+DROP FUNCTION insert_profile(
     p_id UUID,
     p_first_name TEXT,
     p_last_name TEXT,
@@ -8,6 +8,6 @@ DROP FUNCTION insert_user(
     p_nationality TEXT,
     p_languages TEXT[]
 );
-DROP TABLE users_languages;
+DROP TABLE profiles_languages;
 DROP TABLE languages;
-DROP TABLE users;
+DROP TABLE profiles;

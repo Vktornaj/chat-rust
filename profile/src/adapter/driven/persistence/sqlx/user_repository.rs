@@ -25,7 +25,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         let user = sqlx::query_as!(
             UserDB,
             r#"
-                SELECT * FROM users WHERE user_id = $1
+                SELECT * FROM profiles WHERE user_id = $1
             "#,
             id
         ).fetch_one(conn).await;
@@ -57,7 +57,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         offset: i64,
         limit: i64,        
     ) -> Result<Vec<UserDomain>, RepoSelectError> {
-        let mut query = QueryBuilder::new("SELECT users.* FROM users");
+        let mut query = QueryBuilder::new("SELECT users.* FROM profiles");
     
         if find_user.languages.is_some() {
             query.push(" INNER JOIN users_languages ON users.id = users_languages.user_id ");
@@ -133,7 +133,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
     async fn create(&self, conn: &Pool<Postgres>, user: NewUser) -> Result<UserDomain, RepoCreateError> {
         let result = sqlx::query!(
             r#"
-                SELECT * FROM insert_user($1, $2, $3, $4, $5, $6);
+                SELECT * FROM insert_profile($1, $2, $3, $4, $5, $6);
             "#,
             Into::<Uuid>::into(user.user_id),
             Into::<String>::into(user.first_name),
@@ -212,7 +212,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         let result = sqlx::query_as!(
             UserDB,
             r#"
-                DELETE FROM users WHERE user_id = $1 RETURNING 
+                DELETE FROM profiles WHERE user_id = $1 RETURNING 
                 user_id, 
                 first_name, 
                 last_name, 
@@ -246,8 +246,8 @@ async fn get_languages(conn: &Pool<Postgres>, user_id: &Uuid) -> Result<Vec<Stri
     let languages = sqlx::query!(
         r#"
             SELECT l.code
-            FROM users AS u
-            JOIN users_languages AS ul ON ul.user_id = u.user_id
+            FROM profiles AS u
+            JOIN profiles_languages AS ul ON ul.user_id = u.user_id
             JOIN languages AS l ON l.id = ul.language_id
             WHERE u.user_id = $1;
         "#,

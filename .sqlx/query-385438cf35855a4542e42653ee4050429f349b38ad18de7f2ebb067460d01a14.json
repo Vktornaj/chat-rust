@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT l.code\n            FROM profiles AS u\n            JOIN profiles_languages AS ul ON ul.user_id = u.user_id\n            JOIN languages AS l ON l.id = ul.language_id\n            WHERE u.user_id = $1;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "code",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "385438cf35855a4542e42653ee4050429f349b38ad18de7f2ebb067460d01a14"
+}

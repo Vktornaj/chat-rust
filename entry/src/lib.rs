@@ -67,7 +67,7 @@ pub async fn router() -> Router {
                         .route("/identifier", put(auth_handlers::handle_add_identifier_request))
                         .route("/auth", delete(auth_handlers::handle_delete_account))
                         .route(
-                            "/identifier-available/:identifier",
+                            "/identifier-available",
                             get(auth_handlers::handle_identifier_available),
                         )
                         .route("/login", post(auth::handlers::handle_login))

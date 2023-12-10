@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT * FROM insert_user($1, $2, $3, $4, $5, $6);\n            ",
+  "query": "\n                SELECT * FROM insert_profile($1, $2, $3, $4, $5, $6);\n            ",
   "describe": {
     "columns": [
       {
@@ -77,5 +77,5 @@
       null
     ]
   },
-  "hash": "fde3652992fe3ea6115a5f606b72c5d54a3a2a7e758358dca19661a4d522dc82"
+  "hash": "a0043f134f0ebb845357f1cf5a14f6b1db05eb258dfc5d8fccf61811e2152ec4"
 }

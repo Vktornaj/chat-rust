@@ -1,4 +1,4 @@
-use axum::extract::{State, Path};
+use axum::extract::{State, Path, Query};
 use axum::http::StatusCode;
 use axum::Json;
 use axum_extra::TypedHeader;
@@ -70,17 +70,17 @@ pub async fn handle_create_auth_confirmation(
     }
 }
 
+// TODO: improve error handling
 pub async fn handle_identifier_available(
     State(state): State<AppState>,
-    Path(value): Path<String>,
-    Path(id_type): Path<String>,
+    Query(identifier): Query<IdentificationJson>,
 ) -> StatusCode {
     let res = use_cases::is_data_in_use::execute(
         &state.db_sql_pool,
         &AuthRepository {},
         use_cases::is_data_in_use::Payload {
-            identify_type: id_type,
-            identify_value: value,
+            identify_type: identifier.id_type,
+            identify_value: identifier.value,
         }
     ).await;
     match res {
@@ -91,7 +91,10 @@ pub async fn handle_identifier_available(
                 StatusCode::OK
             }
         },
-        Err(_) => StatusCode::BAD_REQUEST,
+        Err(_) => {
+            // StatusCode::BAD_REQUEST
+            StatusCode::OK
+        },
     }
 }
 
