@@ -31,4 +31,4 @@ docker compose -f ${remote_path_app}compose.yml --env-file ${remote_path_app}con
 exit
 EOF
 
-say "deploy done"
+say "container pulled from aws ecr"
