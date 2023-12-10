@@ -30,7 +30,7 @@ RUN --mount=type=bind,source=auth,target=auth \
     --mount=type=bind,source=common,target=common \
     --mount=type=bind,source=entry,target=entry \
     --mount=type=bind,source=message,target=message \
-    --mount=type=bind,source=user,target=user \
+    --mount=type=bind,source=profile,target=profile \
     --mount=type=bind,source=.sqlx,target=.sqlx \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock \

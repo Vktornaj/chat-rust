@@ -2,13 +2,13 @@
 
 set -e
 
-remote_host="3.137.167.229"
+remote_host="18.222.125.0"
 remote_port=22
 remote_user="admin"
 local_path=$(pwd)/
 remote_path="/home/${remote_user}/chat_rust/"
 ssh_key="~/Desktop/Files/aws_keys/key_001.pem"
-tag='0.0.6'
+tag='0.0.7'
 
 
 # Upadte source code
