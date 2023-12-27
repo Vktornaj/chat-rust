@@ -13,6 +13,15 @@ use common::adapter::state::AppState;
 use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 
 
+#[utoipa::path(
+    get,
+    path = "/api/profile/profile",
+    responses(
+        (status = 200, description = "ok"),
+        (status = 401, description = "unauthorized"),
+        (status = 404, description = "not found"),
+    )
+)]
 pub async fn handle_get_user_info(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
@@ -33,6 +42,17 @@ pub async fn handle_get_user_info(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/profile/profile",
+    request_body = UserInfo,
+    responses(
+        (status = 200, description = "ok"),
+        (status = 400, description = "bad request"),
+        (status = 401, description = "unauthorized"),
+        (status = 404, description = "not found"),
+    )
+)]
 pub async fn handle_update_user_info(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,

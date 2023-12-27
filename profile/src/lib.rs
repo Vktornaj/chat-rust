@@ -5,6 +5,6 @@ mod application;
 mod adapter;
 
 pub use domain::types;
-pub use adapter::driving::web::handlers;
+pub use adapter::driving::web::{handlers, schemas};
 
 // pub static MIGRATOR: Migrator = sqlx::migrate!("src/adapter/driven/persistence/sqlx/migrations");

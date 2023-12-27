@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use utoipa::ToSchema;
 
 use crate::domain::user::User;
 
@@ -33,7 +34,7 @@ pub struct NewUserJson {
     pub languages: Vec<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UserInfo {
     pub first_name: Option<String>,

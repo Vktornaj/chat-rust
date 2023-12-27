@@ -172,7 +172,7 @@ pub async fn handle_login(
         (status = 200, description = "account deleted"),
         (status = 401, description = "unauthorized"),
     ),
-    request_body = String,
+    request_body = PasswordJson,
 )]
 pub async fn handle_delete_account(
     State(state): State<AppState>,
@@ -350,7 +350,7 @@ pub async fn handle_password_recovery_request(
 #[utoipa::path(
     post,
     path = "/api/auth/password-recovery-confirmation/{token}",
-    request_body = String,
+    request_body = PasswordJson,
     responses(
         (status = 200, description = "password reset confirmation", body = UuidWrapper),
         (status = 400, description = "invalid data"),
