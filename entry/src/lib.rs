@@ -163,7 +163,7 @@ pub async fn router() -> Router {
     Router::new()
         .route("/", get(handler_get_root))
         .route("/metrics", get(handler_metrics))
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", doc))
+        .merge(SwaggerUi::new("/api-docs").url("/api-docs/openapi.json", doc))
         .nest("/api", api)
         .layer(
             ServiceBuilder::new()
