@@ -14,8 +14,6 @@ common = { path = "../common"}
 #
 toml = "0.8.2"
 sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }
-deadpool = "0.10.0"
-deadpool-redis = "0.13.0"
 prometheus = "0.13.3"
 systemstat = "0.2.3"
 lazy_static = "1.4.0"
@@ -33,3 +31,5 @@ serde = "1.0.188"
 serde_json = "1.0.105"
 uuid = { version = "1.4.1", features = ["v4"] }
 protobuf = "3.3.0"
+utoipa = { version = "4.1.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "5.0.0", features = ["axum"] }

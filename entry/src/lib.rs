@@ -31,12 +31,76 @@ use common::domain::models::{
 mod metrics;
 mod ws;
 use profile::handlers as profile_handlers;
-use auth::{handlers as auth_handlers, TokenData};
+use auth::{handlers as auth_handlers, schemas as auth_schemas, TokenData};
+use utoipa::{OpenApi, Modify, openapi::security::{SecurityScheme, ApiKey, ApiKeyValue, OAuth2, Flow, Implicit, Scopes}};
+use utoipa_swagger_ui::SwaggerUi;
 
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        auth_handlers::handle_create_auth_request,
+        auth_handlers::handle_create_auth_confirmation,
+        auth_handlers::handle_add_identifier_request,
+        auth_handlers::handle_delete_account,
+        auth_handlers::handle_identifier_available,
+        auth_handlers::handle_login,
+        auth_handlers::handle_update_password,
+        auth_handlers::handle_password_recovery_request,
+        auth_handlers::handle_password_reset_confirmation,
+        // profile_handlers::handle_get_user_info,
+        // profile_handlers::handle_update_user_info,
+        // ws_handler,
+    ),
+    components(
+        schemas(
+            auth_schemas::UuidWrapper,
+            auth_schemas::IdentificationJson,
+            auth_schemas::AuthJson,
+            auth_schemas::ValidateTransaction,
+            auth_schemas::JsonToken,
+            auth_schemas::UpdatePassword,
+            auth_schemas::Credentials,
+            auth_schemas::PasswordJson,
+        )
+    ),
+    modifiers(&SecurityAddon),
+    tags(
+        (name = "auth", description = "Auth management API")
+    ),
+)]
+struct ApiDoc;
+
+struct SecurityAddon;
+
+impl Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        // TODO: finish this
+        if let Some(components) = openapi.components.as_mut() {
+            components.add_security_scheme(
+                "token",
+                SecurityScheme::OAuth2(
+                    OAuth2::with_description([Flow::Implicit(
+                        Implicit::new(
+                            "https://localhost/auth/dialog",
+                            Scopes::from_iter([
+                                ("edit:items", "edit my items"),
+                                ("read:items", "read my items")
+                            ]),
+                        ),
+                    )], "my oauth2 flow")
+                ),
+            )
+        }
+    }
+}
 
 pub async fn router() -> Router {
     let sys: System = System::new();
     let app_state = AppState::new().await;
+
+    let mut doc = ApiDoc::openapi();
+    doc.info.title = String::from("Chat API");
 
     // run migrations
     run_migrations(&app_state.db_sql_pool).await;
@@ -47,51 +111,53 @@ pub async fn router() -> Router {
     // new thread to get metrics
     run_geting_metricts(sys);
 
+    let api = Router::new()
+        .nest(
+            "/auth",
+            Router::new()
+            .route(
+                "/create-auth-request",
+                post(auth_handlers::handle_create_auth_request),
+            )
+            .route(
+                "/create-auth-confirmation",
+                post(auth_handlers::handle_create_auth_confirmation),
+            )
+            .route("/identifier-request", post(auth_handlers::handle_add_identifier_request))
+            .route("/identifier-confirmation", post(auth_handlers::handle_add_identifier_confirmation))
+            .route("/auth", delete(auth_handlers::handle_delete_account))
+            .route(
+                "/identifier-available",
+                get(auth_handlers::handle_identifier_available),
+            )
+            .route("/login", post(auth::handlers::handle_login))
+            .route(
+                "/password",
+                put(auth_handlers::handle_update_password),
+            )
+            .route(
+                "/password-recovery-request",
+                post(auth_handlers::handle_password_recovery_request),
+            )
+            .route(
+                "/password-recovery-confirmation/:token",
+                put(auth_handlers::handle_password_reset_confirmation),
+            ),
+        )
+        .nest(
+        "/profile", 
+        Router::new()
+            .route("/profile", get(profile_handlers::handle_get_user_info))
+            .route("/profile", put(profile_handlers::handle_update_user_info))
+        )
+        .nest("/message", Router::new().route("/ws", get(ws_handler)));
+
+    // Return a `Router`
     Router::new()
         .route("/", get(handler_get_root))
         .route("/metrics", get(handler_metrics))
-        .nest(
-            "/api",
-            Router::new()
-                .nest(
-                    "/auth",
-                    Router::new()
-                        .route(
-                            "/create-auth-request",
-                            post(auth_handlers::handle_create_auth_request),
-                        )
-                        .route(
-                            "/create-user-confirmation",
-                            post(auth_handlers::handle_create_auth_confirmation),
-                        )
-                        .route("/identifier", put(auth_handlers::handle_add_identifier_request))
-                        .route("/auth", delete(auth_handlers::handle_delete_account))
-                        .route(
-                            "/identifier-available",
-                            get(auth_handlers::handle_identifier_available),
-                        )
-                        .route("/login", post(auth::handlers::handle_login))
-                        .route(
-                            "/password",
-                            put(auth_handlers::handle_update_password),
-                        )
-                        .route(
-                            "/password-recovery-request",
-                            post(auth_handlers::handle_password_recovery_request),
-                        )
-                        .route(
-                            "/password-reset-confirmation/:token",
-                            put(auth_handlers::handle_password_reset_confirmation),
-                        ),
-                )
-                .nest(
-                    "/profile", 
-                    Router::new()
-                        .route("/profile", get(profile_handlers::handle_get_user_info))
-                        .route("/profile", put(profile_handlers::handle_update_user_info))
-                    )
-                .nest("/message", Router::new().route("/ws", get(ws_handler))),
-        )
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", doc))
+        .nest("/api", api)
         .layer(
             ServiceBuilder::new()
                 .layer(middleware::from_fn(metrics::metrics_middleware))

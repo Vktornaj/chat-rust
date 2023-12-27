@@ -10,10 +10,22 @@ use crate::adapter::driven::cache::redis::user_cache::AuthCache;
 use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailService;
 use crate::adapter::driven::persistence::sqlx::user_repository::AuthRepository;
 use crate::application::use_cases;
+use crate::schemas::{UuidWrapper, PasswordJson};
 use common::adapter::state::AppState;
 use super::schemas::{AuthJson, ValidateTransaction, Credentials, JsonToken, UpdatePassword, IdentificationJson};
 
 
+#[utoipa::path(
+    post,
+    path = "/api/auth/create-auth-request",
+    request_body = AuthJson,
+    responses(
+        (status = 200, description = "create auth request", body = String),
+        (status = 400, description = "invalid data"),
+        (status = 409, description = "conflict"),
+        (status = 500, description = "unknown error"),
+    )
+)]
 pub async fn handle_create_auth_request(
     State(state): State<AppState>,
     Json(payload): Json<AuthJson>,
@@ -47,10 +59,21 @@ pub async fn handle_create_auth_request(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/auth/create-auth-confirmation",
+    request_body = ValidateTransaction,
+    responses(
+        (status = 200, description = "create auth confirmation", body = UuidWrapper),
+        (status = 400, description = "invalid data"),
+        (status = 409, description = "conflict"),
+        (status = 500, description = "unknown error")
+    )
+)]
 pub async fn handle_create_auth_confirmation(
     State(state): State<AppState>,
     Json(payload): Json<ValidateTransaction>,
-) -> Result<Json<Uuid>, (StatusCode, String)>  {
+) -> Result<Json<UuidWrapper>, (StatusCode, String)>  {
     match use_cases::create_auth_confirm::execute(
         &state.db_sql_pool,
         &state.cache_pool,
@@ -61,16 +84,28 @@ pub async fn handle_create_auth_confirmation(
             confirmation_code: payload.confirmation_code
         }
     ).await {
-        Ok(auth) => Ok(Json(auth.user_id.into())),
+        Ok(auth) => Ok(Json(UuidWrapper{ uuid: auth.user_id.into() })),
         Err(error) => match error {
             use_cases::create_auth_confirm::CreateError::InvalidData(err) => Err((StatusCode::BAD_REQUEST, err)),
-            use_cases::create_auth_confirm::CreateError::Unknown(err) => Err((StatusCode::INTERNAL_SERVER_ERROR, err)),
             use_cases::create_auth_confirm::CreateError::Conflict(err) => Err((StatusCode::CONFLICT, err)),
+            use_cases::create_auth_confirm::CreateError::Unknown(err) => Err((StatusCode::INTERNAL_SERVER_ERROR, err)),
         }
     }
 }
 
 // TODO: improve error handling
+#[utoipa::path(
+    get,
+    path = "/api/auth/identifier-available",
+    responses(
+        (status = 200, description = "available"),
+        (status = 409, description = "unavailable"),
+    ),
+    params (
+        ("value" = String, Query, description = "identifier value"),
+        ("id_type" = String, Query, description = "identifier type"),
+    )
+)]
 pub async fn handle_identifier_available(
     State(state): State<AppState>,
     Query(identifier): Query<IdentificationJson>,
@@ -98,6 +133,15 @@ pub async fn handle_identifier_available(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/auth/login",
+    request_body = Credentials,
+    responses(
+        (status = 200, description = "login", body = JsonToken),
+        (status = 401, description = "unauthorized"),
+    )
+)]
 pub async fn handle_login(
     State(state): State<AppState>,
     Json(credentials): Json<Credentials>,
@@ -121,23 +165,43 @@ pub async fn handle_login(
     }
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/auth/auth",
+    responses(
+        (status = 200, description = "account deleted"),
+        (status = 401, description = "unauthorized"),
+    ),
+    request_body = String,
+)]
 pub async fn handle_delete_account(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
-    Json(password): Json<String>,
+    Json(password): Json<PasswordJson>,
 ) -> StatusCode {
     match use_cases::delete_auth::execute(
         &state.db_sql_pool,
         &AuthRepository {},
         &state.config.secret,
         &token.token().to_string(),
-        use_cases::delete_auth::Payload { password },
+        use_cases::delete_auth::Payload { password: password.password },
     ).await {
         Ok(_) => StatusCode::OK,
         Err(_) => StatusCode::UNAUTHORIZED,
     }
 }
 
+#[utoipa::path(
+    put,
+    path = "/api/auth/password",
+    request_body = UpdatePassword,
+    responses(
+        (status = 200, description = "update password"),
+        (status = 400, description = "invalid data"),
+        (status = 401, description = "unauthorized"),
+        (status = 500, description = "unknown error"),
+    )
+)]
 pub async fn handle_update_password(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
@@ -164,6 +228,17 @@ pub async fn handle_update_password(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/auth/identifier-request",
+    request_body = IdentificationJson,
+    responses(
+        (status = 200, description = "create auth confirmation", body = String),
+        (status = 401, description = "unauthorized"),
+        (status = 404, description = "not found"),
+        (status = 500, description = "unknown error"),
+    )
+)]
 pub async fn handle_add_identifier_request(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
@@ -199,11 +274,22 @@ pub async fn handle_add_identifier_request(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/auth/identifier-confirmation",
+    request_body = ValidateTransaction,
+    responses(
+        (status = 200, description = "create auth confirmation", body = UuidWrapper),
+        (status = 400, description = "invalid data"),
+        (status = 401, description = "unauthorized"),
+        (status = 500, description = "unknown error"),
+    )
+)]
 pub async fn handle_add_identifier_confirmation(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(data): Json<ValidateTransaction>,
-) -> Result<Json<Uuid>, StatusCode> {
+) -> Result<Json<UuidWrapper>, StatusCode> {
     match use_cases::add_identy_confirm::execute(
         &state.db_sql_pool,
         &state.cache_pool,
@@ -216,7 +302,7 @@ pub async fn handle_add_identifier_confirmation(
             confirmation_code: data.confirmation_code
         }
     ).await {
-        Ok(auth) => Ok(Json(auth.user_id.into())),
+        Ok(auth) => Ok(Json(UuidWrapper{ uuid: auth.user_id.into() })),
         Err(err) => {
             match err {
                 use_cases::add_identy_confirm::UpdateError::Unknown(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
@@ -229,6 +315,15 @@ pub async fn handle_add_identifier_confirmation(
 
 // TODO: use different secret for password reset
 // TODO: get domain from config
+#[utoipa::path(
+    post,
+    path = "/api/auth/password-recovery-request",
+    request_body = IdentificationJson,
+    responses(
+        (status = 200, description = "password recovery request"),
+        (status = 400, description = "invalid data"),
+    )
+)]
 pub async fn handle_password_recovery_request(
     State(state): State<AppState>,
     Json(identifier): Json<IdentificationJson>,
@@ -252,10 +347,22 @@ pub async fn handle_password_recovery_request(
 
 // TODO: use different secret for password reset
 // TODO: get domain from config
+#[utoipa::path(
+    post,
+    path = "/api/auth/password-recovery-confirmation/{token}",
+    request_body = String,
+    responses(
+        (status = 200, description = "password reset confirmation", body = UuidWrapper),
+        (status = 400, description = "invalid data"),
+    ),
+    params(
+        ("token" = String, Path, description = "recovery password token"),
+    ),
+)]
 pub async fn handle_password_reset_confirmation(
     State(state): State<AppState>,
     Path(token): Path<String>,
-    Json(new_password): Json<String>,
+    Json(new_password): Json<PasswordJson>,
 ) -> Result<Json<Uuid>, StatusCode> {
     match use_cases::reset_password_confirm::execute(
         &state.db_sql_pool,
@@ -263,7 +370,7 @@ pub async fn handle_password_reset_confirmation(
         &state.config.secret,
         use_cases::reset_password_confirm::Payload {
             token,
-            password: new_password,
+            password: new_password.password,
         }
     ).await {
         Ok(auth) => Ok(Json(auth.user_id.into())),

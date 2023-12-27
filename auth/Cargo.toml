@@ -23,10 +23,12 @@ async-trait = "0.1.71"
 serde_with = "3.0.0"
 axum = { version = "0.7.1"}
 deadpool = "0.10.0"
-deadpool-redis = "0.13.0"
+deadpool-redis = "0.14.0"
 serde_json = "1.0.105"
 tokio = { version = "1.32.0", features=["full"] }
 sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }
 futures = "0.3.28"
 rand = "0.8.4"
 axum-extra = { version = "0.9.0", features = ["typed-header"] }
+utoipa = { version = "4.1.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "5.0.0", features = ["axum"] }

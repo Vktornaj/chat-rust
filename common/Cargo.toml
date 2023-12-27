@@ -18,7 +18,7 @@ dotenvy = "0.15"
 sqlx = { version = "0.7", features = [ "postgres" ] }
 async-std = "1.10"
 deadpool = "0.10.0"
-deadpool-redis = "0.13.0"
+deadpool-redis = "0.14.0"
 redis-async = "0.16.1"
 lazy_static = "1.4.0"
 prometheus = "0.13.3"
