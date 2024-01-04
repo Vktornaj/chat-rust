@@ -5,6 +5,7 @@ use crate::domain::types::identification::{Identification, IdentificationValue};
 
 
 #[derive(Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct IdentificationJson {
     pub value: String,
     pub id_type: String,
