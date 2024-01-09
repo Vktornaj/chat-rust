@@ -47,7 +47,7 @@ impl IdentificationValue {
         match identifier_type.as_str() {
             "email" => Ok(Self::Email(Email::try_from(value)
                 .map_err(|err| err.to_string())?)),
-            "phpne_number" => Ok(Self::PhoneNumber(PhoneNumber::try_from(value)
+            "phone_number" => Ok(Self::PhoneNumber(PhoneNumber::try_from(value)
                 .map_err(|err| err.to_string())?)),
             _ => Err("Invalid identification value type".to_string()),
         }

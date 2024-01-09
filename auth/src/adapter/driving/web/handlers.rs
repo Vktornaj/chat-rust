@@ -103,7 +103,7 @@ pub async fn handle_create_auth_confirmation(
     ),
     params (
         ("value" = String, Query, description = "identifier value"),
-        ("id_type" = String, Query, description = "identifier type"),
+        ("idType" = String, Query, description = "identifier type"),
     )
 )]
 pub async fn handle_identifier_available(
