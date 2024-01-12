@@ -29,6 +29,8 @@ mod tests {
         let expected = json!({
             "message": Some("message"),
             "data": Some("data"),
+            "error": None::<String>,
+            "details": None::<String>,
         });
         assert_eq!(serde_json::to_value(json_response).unwrap(), expected);
     }
