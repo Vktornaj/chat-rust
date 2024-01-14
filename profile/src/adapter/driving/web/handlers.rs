@@ -4,8 +4,8 @@ use axum::Json;
 use axum_extra::{TypedHeader, headers::{Authorization, authorization::Bearer}};
 
 use super::schemas::UserJson;
-use crate::application::use_cases;
-use common::adapter::state::AppState;
+use crate::application::use_cases::{get_user_info, update_user_info};
+use common::adapter::{state::AppState, response_schemas::JsonResponse};
 
 // Adapters
 use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
@@ -14,8 +14,8 @@ use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
 pub async fn handle_get_user_info(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
-) -> Result<Json<UserJson>, StatusCode> {
-    match use_cases::get_user_info::execute(
+) -> JsonResponse<UserJson> {
+    match get_user_info::execute(
         &state.db_sql_pool,
         &UserRepository {},
         &state.config.secret,
@@ -23,10 +23,14 @@ pub async fn handle_get_user_info(
     )
     .await
     {
-        Ok(user) => Ok(Json(UserJson::from_user(user))),
+        Ok(user) => JsonResponse::new_ok(UserJson::from_user(user)),
         Err(err) => match err {
-            use_cases::get_user_info::FindError::Unknown(_) => Err(StatusCode::NOT_FOUND),
-            use_cases::get_user_info::FindError::Unautorized(_) => Err(StatusCode::UNAUTHORIZED),
+            get_user_info::FindError::Unknown(err) => {
+                JsonResponse::new_int_ser_err(0, "Unknown error", err)
+            },
+            get_user_info::FindError::Unautorized(err) => {
+                JsonResponse::new_err(StatusCode::UNAUTHORIZED, 1, "Unautorized", err)
+            }
         },
     }
 }
@@ -35,13 +39,13 @@ pub async fn handle_update_user_info(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(user_info): Json<UserJson>,
-) -> Result<Json<UserJson>, StatusCode> {
-    match use_cases::update_user_info::execute(
+) -> JsonResponse<UserJson> {
+    match update_user_info::execute(
         &state.db_sql_pool, 
         &UserRepository {}, 
         &state.config.secret, 
         &token.token().to_string(), 
-        use_cases::update_user_info::Payload {
+        update_user_info::Payload {
             first_name: user_info.first_name,
             last_name: user_info.last_name,
             birthday: user_info.birthday,
@@ -49,12 +53,18 @@ pub async fn handle_update_user_info(
             languages: user_info.languages,
         }
     ).await {
-        Ok(user) => Ok(Json(UserJson::from_user(user))),
+        Ok(user) => JsonResponse::new_ok(UserJson::from_user(user)),
         Err(err) => {
             match err {
-                use_cases::update_user_info::UpdateError::Unknown(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
-                use_cases::update_user_info::UpdateError::Unautorized => Err(StatusCode::UNAUTHORIZED),
-                _ => Err(StatusCode::BAD_REQUEST),
+                update_user_info::UpdateError::Unautorized => JsonResponse::new_err(
+                    StatusCode::UNAUTHORIZED, 
+                    1, 
+                    "Unautorized", 
+                    "Invalid token".to_string()
+                ),
+                _ => {
+                    JsonResponse::new_int_ser_err(0, "Unknown error", err.to_string())
+                },
             }
         },
     }

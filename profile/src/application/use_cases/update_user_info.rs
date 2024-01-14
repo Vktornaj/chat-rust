@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use auth::TokenData;
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
@@ -21,6 +23,17 @@ pub enum UpdateError {
     Unautorized,
     Unknown(String),
     Conflict(String),
+}
+
+impl Display for UpdateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            UpdateError::NotFound => write!(f, "User not found"),
+            UpdateError::Unautorized => write!(f, "Unautorized"),
+            UpdateError::Unknown(msg) => write!(f, "Unknown error: {}", msg),
+            UpdateError::Conflict(msg) => write!(f, "Conflict: {}", msg),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

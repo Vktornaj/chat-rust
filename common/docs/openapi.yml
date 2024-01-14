@@ -19,10 +19,10 @@ paths:
                     example: Common Module
 components:
   schemas:
-    nationality:
+    Nationality:
       type: string
       enum: [AR, BR, CL, CO, CR, CU, EC, SV, GT, HN, MX, NI, PA, PY, PE, PR, DO, UY, VE]
-    language:
+    Language:
       type: string
       enum: [en, es]
   securitySchemes:

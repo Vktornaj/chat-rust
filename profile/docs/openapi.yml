@@ -54,14 +54,14 @@ components:
         lastname:
           type: string
         nationality:
-          $ref: '../../common/docs/openapi.yml#/components/schemas/nationality'
+          $ref: '../../common/docs/openapi.yml#/components/schemas/Nationality'
         birthday:
           type: string
           format: date
         languages:
           type: array
           items:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/language'
+            $ref: '../../common/docs/openapi.yml#/components/schemas/Language'
   securitySchemes:
     bearerAuth:
       type: http

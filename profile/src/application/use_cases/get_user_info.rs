@@ -9,6 +9,15 @@ pub enum FindError {
     Unautorized(String)
 }
 
+impl std::fmt::Display for FindError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            FindError::Unknown(msg) => write!(f, "Unknown error: {}", msg),
+            FindError::Unautorized(msg) => write!(f, "Unautorized: {}", msg),
+        }
+    }
+}
+
 pub async fn execute<T>(
     conn: &T,
     repo: &impl UserRepositoryTrait<T>,

@@ -41,6 +41,18 @@ impl<T> JsonResponse<T> {
             }),
         }
     }
+
+    pub fn new_err(status: StatusCode, code: u32, message: &str, details: String) -> Self {
+        JsonResponse {
+            status,
+            data: None,
+            error: Some(JsonError {
+                code,
+                message: message.to_string(),
+                details,
+            }),
+        }
+    }
 }
 
 mod status_code {
