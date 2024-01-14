@@ -4,13 +4,14 @@ use axum::Json;
 use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Bearer;
+use common::adapter::response_schemas::JsonResponse;
 use uuid::Uuid;
 
 use crate::adapter::driven::cache::redis::user_cache::AuthCache;
 use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailService;
 use crate::adapter::driven::persistence::sqlx::user_repository::AuthRepository;
 use crate::application::use_cases;
-use crate::schemas::{UuidWrapper, PasswordJson};
+use crate::schemas::{UuidWrapper, PasswordJson, JsonBool};
 use common::adapter::state::AppState;
 use super::schemas::{AuthJson, ValidateTransaction, Credentials, JsonToken, UpdatePassword, IdentificationJson};
 
@@ -98,8 +99,8 @@ pub async fn handle_create_auth_confirmation(
     get,
     path = "/api/auth/identifier-available",
     responses(
-        (status = 200, description = "available"),
-        (status = 409, description = "unavailable"),
+        (status = 200, description = "identifier available", body = JsonBool),
+        (status = 500),
     ),
     params (
         ("value" = String, Query, description = "identifier value"),
@@ -109,7 +110,7 @@ pub async fn handle_create_auth_confirmation(
 pub async fn handle_identifier_available(
     State(state): State<AppState>,
     Query(identifier): Query<IdentificationJson>,
-) -> StatusCode {
+) -> JsonResponse<JsonBool> {
     let res = use_cases::is_data_in_use::execute(
         &state.db_sql_pool,
         &AuthRepository {},
@@ -119,17 +120,8 @@ pub async fn handle_identifier_available(
         }
     ).await;
     match res {
-        Ok(is_in_use) => {
-            if is_in_use {
-                StatusCode::CONFLICT
-            } else {
-                StatusCode::OK
-            }
-        },
-        Err(_) => {
-            // StatusCode::BAD_REQUEST
-            StatusCode::OK
-        },
+        Ok(is_in_use) => JsonResponse::new_ok(JsonBool { value: !is_in_use }),
+        Err(err) => JsonResponse::new_int_ser_err(0, "unknown", err)
     }
 }
 

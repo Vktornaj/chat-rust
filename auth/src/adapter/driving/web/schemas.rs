@@ -74,3 +74,9 @@ pub struct UuidWrapper {
 pub struct PasswordJson {
     pub password: String,
 }
+
+#[derive(Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct JsonBool {
+    pub value: bool,
+}

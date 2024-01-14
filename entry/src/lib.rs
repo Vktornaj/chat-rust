@@ -24,20 +24,21 @@ use tower_http::{
     trace::{DefaultMakeSpan, TraceLayer},
 };
 
-use common::adapter::state::AppState;
+use common::adapter::{state::AppState, response_schemas::{JsonError, JsonResponse}};
 use common::domain::models::{
     client::Clients, event::EventQueue, message::Message as MessageDomain,
 };
 
 mod metrics;
 mod ws;
-use auth::{handlers as auth_handlers, schemas as auth_schemas, TokenData};
+use auth::{handlers as auth_handlers, schemas::{self as auth_schemas, JsonBool}, TokenData};
 use profile::{handlers as profile_handlers, schemas as profile_schemas};
 use utoipa::{
     openapi::security::{Flow, Implicit, OAuth2, Scopes, SecurityScheme},
     Modify, OpenApi,
 };
 use utoipa_swagger_ui::SwaggerUi;
+
 
 #[derive(OpenApi)]
 #[openapi(
@@ -56,6 +57,8 @@ use utoipa_swagger_ui::SwaggerUi;
     ),
     components(
         schemas(
+            JsonError,
+            JsonResponse<JsonBool>,
             auth_schemas::UuidWrapper,
             auth_schemas::IdentificationJson,
             auth_schemas::AuthJson,
@@ -163,7 +166,7 @@ pub async fn router() -> Router {
     Router::new()
         .route("/", get(handler_get_root))
         .route("/metrics", get(handler_metrics))
-        .merge(SwaggerUi::new("/api-docs").url("/api-docs/openapi.json", doc))
+        .merge(SwaggerUi::new("/api-docs").url("/docs/openapi.json", doc))
         .nest("/api", api)
         .layer(
             ServiceBuilder::new()

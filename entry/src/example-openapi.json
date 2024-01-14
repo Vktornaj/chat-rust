@@ -1,0 +1,599 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Chat API",
+        "description": "",
+        "license": {
+            "name": ""
+        },
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/api/auth/auth": {
+            "delete": {
+                "tags": [
+                    "auth_handlers"
+                ],
+                "operationId": "handle_delete_account",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordJson"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "account deleted"
+                    },
+                    "401": {
+                        "description": "unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/auth/create-auth-confirmation": {
+            "post": {
+                "tags": [
+                    "auth_handlers"
+                ],
+                "operationId": "handle_create_auth_confirmation",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ValidateTransaction"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "create auth confirmation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UuidWrapper"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "invalid data"
+                    },
+                    "409": {
+                        "description": "conflict"
+                    },
+                    "500": {
+                        "description": "unknown error"
+                    }
+                }
+            }
+        },
+        "/api/auth/create-auth-request": {
+            "post": {
+                "tags": [
+                    "auth_handlers"
+                ],
+                "operationId": "handle_create_auth_request",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AuthJson"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "create auth request",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "invalid data"
+                    },
+                    "409": {
+                        "description": "conflict"
+                    },
+                    "500": {
+                        "description": "unknown error"
+                    }
+                }
+            }
+        },
+        "/api/auth/identifier-available": {
+            "get": {
+                "tags": [
+                    "auth_handlers"
+                ],
+                "operationId": "handle_identifier_available",
+                "parameters": [
+                    {
+                        "name": "value",
+                        "in": "query",
+                        "description": "identifier value",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "idType",
+                        "in": "query",
+                        "description": "identifier type",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "identifier available",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JsonResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/auth/identifier-request": {
+            "post": {
+                "tags": [
+                    "auth_handlers"
+                ],
+                "operationId": "handle_add_identifier_request",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IdentificationJson"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "create auth confirmation",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized"
+                    },
+                    "404": {
+                        "description": "not found"
+                    },
+                    "500": {
+                        "description": "unknown error"
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "auth_handlers"
+                ],
+                "operationId": "handle_login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Credentials"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JsonToken"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/auth/password": {
+            "put": {
+                "tags": [
+                    "auth_handlers"
+                ],
+                "operationId": "handle_update_password",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePassword"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "update password"
+                    },
+                    "400": {
+                        "description": "invalid data"
+                    },
+                    "401": {
+                        "description": "unauthorized"
+                    },
+                    "500": {
+                        "description": "unknown error"
+                    }
+                }
+            }
+        },
+        "/api/auth/password-recovery-confirmation/{token}": {
+            "post": {
+                "tags": [
+                    "auth_handlers"
+                ],
+                "operationId": "handle_password_reset_confirmation",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "recovery password token",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordJson"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "password reset confirmation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UuidWrapper"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "invalid data"
+                    }
+                }
+            }
+        },
+        "/api/auth/password-recovery-request": {
+            "post": {
+                "tags": [
+                    "auth_handlers"
+                ],
+                "operationId": "handle_password_recovery_request",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IdentificationJson"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "password recovery request"
+                    },
+                    "400": {
+                        "description": "invalid data"
+                    }
+                }
+            }
+        },
+        "/api/profile/profile": {
+            "get": {
+                "tags": [
+                    "profile_handlers"
+                ],
+                "operationId": "handle_get_user_info",
+                "responses": {
+                    "200": {
+                        "description": "ok"
+                    },
+                    "401": {
+                        "description": "unauthorized"
+                    },
+                    "404": {
+                        "description": "not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "profile_handlers"
+                ],
+                "operationId": "handle_update_user_info",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserInfo"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "ok"
+                    },
+                    "400": {
+                        "description": "bad request"
+                    },
+                    "401": {
+                        "description": "unauthorized"
+                    },
+                    "404": {
+                        "description": "not found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AuthJson": {
+                "type": "object",
+                "required": [
+                    "identifications",
+                    "password"
+                ],
+                "properties": {
+                    "identifications": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/IdentificationJson"
+                        }
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Credentials": {
+                "type": "object",
+                "required": [
+                    "identifier",
+                    "password"
+                ],
+                "properties": {
+                    "identifier": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "IdentificationJson": {
+                "type": "object",
+                "required": [
+                    "value",
+                    "idType"
+                ],
+                "properties": {
+                    "idType": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                }
+            },
+            "JsonError": {
+                "type": "object",
+                "required": [
+                    "message",
+                    "details",
+                    "code"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 0
+                    },
+                    "details": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            },
+            "JsonResponse": {
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "properties": {
+                    "data": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/T"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "error": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/JsonError"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/StatusCode"
+                    }
+                }
+            },
+            "JsonToken": {
+                "type": "object",
+                "required": [
+                    "authorizationToken",
+                    "tokenType"
+                ],
+                "properties": {
+                    "authorizationToken": {
+                        "type": "string"
+                    },
+                    "tokenType": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PasswordJson": {
+                "type": "object",
+                "required": [
+                    "password"
+                ],
+                "properties": {
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "UpdatePassword": {
+                "type": "object",
+                "required": [
+                    "password",
+                    "newPassword"
+                ],
+                "properties": {
+                    "newPassword": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "UserInfo": {
+                "type": "object",
+                "properties": {
+                    "birthday": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "languages": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "nationality": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "UuidWrapper": {
+                "type": "object",
+                "required": [
+                    "uuid"
+                ],
+                "properties": {
+                    "uuid": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ValidateTransaction": {
+                "type": "object",
+                "required": [
+                    "transactionId",
+                    "confirmationCode"
+                ],
+                "properties": {
+                    "confirmationCode": {
+                        "type": "string"
+                    },
+                    "transactionId": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "token": {
+                "type": "oauth2",
+                "flows": {
+                    "implicit": {
+                        "authorizationUrl": "https://localhost/auth/dialog",
+                        "scopes": {
+                            "edit:items": "edit my items",
+                            "read:items": "read my items"
+                        }
+                    }
+                },
+                "description": "my oauth2 flow"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "auth",
+            "description": "Auth management API"
+        }
+    ]
+}
