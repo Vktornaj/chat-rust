@@ -32,6 +32,12 @@ impl From<Birthday> for DateTime<Utc> {
     }
 }
 
+impl From<Birthday> for String {
+    fn from(birthday: Birthday) -> Self {
+        birthday.0.format("%Y-%m-%d").to_string()
+    }
+}   
+
 #[cfg(test)]
 mod tests_birthday {
     use chrono::NaiveDate;

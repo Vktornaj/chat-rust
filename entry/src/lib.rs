@@ -33,79 +33,11 @@ mod metrics;
 mod ws;
 use auth::{handlers as auth_handlers, schemas::{self as auth_schemas, JsonBool}, TokenData};
 use profile::{handlers as profile_handlers, schemas as profile_schemas};
-use utoipa::{
-    openapi::security::{Flow, Implicit, OAuth2, Scopes, SecurityScheme},
-    Modify, OpenApi,
-};
-use utoipa_swagger_ui::SwaggerUi;
 
-
-#[derive(OpenApi)]
-#[openapi(
-    paths(
-        auth_handlers::handle_create_auth_request,
-        auth_handlers::handle_create_auth_confirmation,
-        auth_handlers::handle_add_identifier_request,
-        auth_handlers::handle_delete_account,
-        auth_handlers::handle_identifier_available,
-        auth_handlers::handle_login,
-        auth_handlers::handle_update_password,
-        auth_handlers::handle_password_recovery_request,
-        auth_handlers::handle_password_reset_confirmation,
-        profile_handlers::handle_get_user_info,
-        profile_handlers::handle_update_user_info,
-    ),
-    components(
-        schemas(
-            JsonError,
-            JsonResponse<JsonBool>,
-            auth_schemas::UuidWrapper,
-            auth_schemas::IdentificationJson,
-            auth_schemas::AuthJson,
-            auth_schemas::ValidateTransaction,
-            auth_schemas::JsonToken,
-            auth_schemas::UpdatePassword,
-            auth_schemas::Credentials,
-            auth_schemas::PasswordJson,
-            profile_schemas::UserInfo,
-        )
-    ),
-    modifiers(&SecurityAddon),
-    tags(
-        (name = "auth", description = "Auth management API")
-    ),
-)]
-struct ApiDoc;
-
-struct SecurityAddon;
-
-impl Modify for SecurityAddon {
-    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
-        // TODO: finish this
-        if let Some(components) = openapi.components.as_mut() {
-            components.add_security_scheme(
-                "token",
-                SecurityScheme::OAuth2(OAuth2::with_description(
-                    [Flow::Implicit(Implicit::new(
-                        "https://localhost/auth/dialog",
-                        Scopes::from_iter([
-                            ("edit:items", "edit my items"),
-                            ("read:items", "read my items"),
-                        ]),
-                    ))],
-                    "my oauth2 flow",
-                )),
-            )
-        }
-    }
-}
 
 pub async fn router() -> Router {
     let sys: System = System::new();
     let app_state = AppState::new().await;
-
-    let mut doc = ApiDoc::openapi();
-    doc.info.title = String::from("Chat API");
 
     // run migrations
     run_migrations(&app_state.db_sql_pool).await;
@@ -117,6 +49,7 @@ pub async fn router() -> Router {
     run_geting_metricts(sys);
 
     let api = Router::new()
+        // auth
         .nest(
             "/auth",
             Router::new()
@@ -152,6 +85,7 @@ pub async fn router() -> Router {
                     put(auth_handlers::handle_password_reset_confirmation),
                 ),
         )
+        // profile
         .nest(
             "/profile",
             Router::new().route(
@@ -160,13 +94,14 @@ pub async fn router() -> Router {
                     .put(profile_handlers::handle_update_user_info),
             ),
         )
+        // message
         .nest("/message", Router::new().route("/ws", get(ws_handler)));
 
     // Return a `Router`
     Router::new()
         .route("/", get(handler_get_root))
         .route("/metrics", get(handler_metrics))
-        .merge(SwaggerUi::new("/api-docs").url("/docs/openapi.json", doc))
+        // .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", docs))
         .nest("/api", api)
         .layer(
             ServiceBuilder::new()

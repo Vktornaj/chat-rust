@@ -3,4 +3,7 @@
         120
     ],
     "editor.guides.bracketPairs": true,
+    "yaml.schemas": {
+        "openapi:v3": "file:///Users/vktornaj/projects/chat-rust/profile/docs/openapi.yml"
+    },
 }

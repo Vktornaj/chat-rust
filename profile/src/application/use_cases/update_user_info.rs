@@ -1,6 +1,4 @@
 use auth::TokenData;
-use chrono::{DateTime, Utc};
-use common::domain::types::error::ErrorMsg;
 
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
@@ -21,17 +19,17 @@ use crate::{
 pub enum UpdateError {
     NotFound,
     Unautorized,
-    InvalidData(String),
     Unknown(String),
     Conflict(String),
 }
 
+#[derive(Debug, Clone)]
 pub struct Payload {
-    pub first_name: Option<String>,
-    pub last_name: Option<String>,
-    pub birthday: Option<DateTime<Utc>>,
-    pub nationality: Option<String>,
-    pub languages: Option<Vec<String>>,
+    pub first_name: Option<FirstName>,
+    pub last_name: Option<LastName>,
+    pub birthday: Option<Birthday>,
+    pub nationality: Option<Nationality>,
+    pub languages: Option<Vec<Language>>,
 }
 
 pub async fn execute<T>(
@@ -41,49 +39,6 @@ pub async fn execute<T>(
     token: &String,
     payload: Payload,
 ) -> Result<User, UpdateError> {
-    // validate data
-    let first_name = if let Some(first_name) = payload.first_name {
-        match FirstName::try_from(first_name) {
-            Ok(first_name) => Some(first_name),
-            Err(e) => return Err(UpdateError::InvalidData(e.to_string())),
-        }
-    } else {
-        None
-    };
-    let last_name = if let Some(last_name) = payload.last_name {
-        match LastName::try_from(last_name) {
-            Ok(last_name) => Some(last_name),
-            Err(e) => return Err(UpdateError::InvalidData(e.to_string())),
-        }
-    } else {
-        None
-    };
-    let birthday = if let Some(birthday) = payload.birthday {
-        match Birthday::try_from(birthday) {
-            Ok(birthday) => Some(birthday),
-            Err(e) => return Err(UpdateError::InvalidData(e.to_string())),
-        }
-    } else {
-        None
-    };
-    let nationality = if let Some(nationality) = payload.nationality {
-        match Nationality::try_from(nationality) {
-            Ok(nationality) => Some(nationality),
-            Err(e) => return Err(UpdateError::InvalidData(e.to_string())),
-        }
-    } else {
-        None
-    };
-    let languages = if let Some(languages) = payload.languages {
-        let languages: Result<Vec<Language>, ErrorMsg> = languages.into_iter()
-            .map(|x| Language::try_from(x)).collect();
-        match languages {
-            Ok(languages) => Some(languages),
-            Err(e) => return Err(UpdateError::InvalidData(e.to_string())),
-        }
-    } else {
-        None
-    };
     // verify user exist and token is valid
     let id = if let Ok(auth) = TokenData::from_token(token, &secret) {
         auth.id
@@ -92,20 +47,8 @@ pub async fn execute<T>(
     };
     // verify user exists and data is not the same
     if let Ok(user) = repo.find_by_id(conn, id.into()).await {
-        if Some(user.first_name) == first_name {
-            return Err(UpdateError::Conflict("first_name is the same".into()));
-        }
-        if Some(user.last_name) == last_name {
-            return Err(UpdateError::Conflict("last_name is the same".into()));
-        }
-        if Some(user.birthday) == birthday {
-            return Err(UpdateError::Conflict("birthday is the same".into()));
-        }
-        if Some(user.nationality) == nationality {
-            return Err(UpdateError::Conflict("nationality is the same".into()));
-        }
-        if Some(user.languages) == languages {
-            return Err(UpdateError::Conflict("languages is the same".into()));
+        if any_equal(&payload, user.clone()) {
+            return Err(UpdateError::Conflict("At least one of the fields is the same".to_string()));
         }
     } else {
         return Err(UpdateError::NotFound);
@@ -113,17 +56,35 @@ pub async fn execute<T>(
     // update only user not sensitive info
     let user_update = UpdateUser {
         id: id.into(),
-        first_name,
-        last_name,
-        birthday,
-        nationality,
-        languages,
-        ..Default::default()
+        first_name: payload.first_name,
+        last_name: payload.last_name,
+        birthday: payload.birthday,
+        nationality: payload.nationality,
+        languages: payload.languages,
     };
     match repo.update(conn, user_update).await {
         Ok(user) => Ok(user),
         Err(e) => Err(UpdateError::Unknown(format!("{:?}", e))),
     }
+}
+
+fn any_equal(payload: &Payload, user: User) -> bool {
+    if Some(user.first_name) == payload.first_name {
+        return true;
+    }
+    if Some(user.last_name) == payload.last_name {
+        return true;
+    }
+    if Some(user.birthday) == payload.birthday {
+        return true;
+    }
+    if Some(user.nationality) == payload.nationality {
+        return true;
+    }
+    if Some(user.languages) == payload.languages {
+        return true;
+    }
+    false
 }
 
 // #[cfg(test)]

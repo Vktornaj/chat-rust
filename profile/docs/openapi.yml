@@ -1,0 +1,72 @@
+openapi: 3.0.3
+info:
+  title: Profile
+  version: 0.0.1
+paths:
+  /api/profile:
+    get:
+      summary: Get user information
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserJson'
+        '404':
+          description: User not found
+        '401':
+          description: Unauthorized
+    put:
+      summary: Update user information
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserJson'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserJson'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+components:
+  schemas:
+    UserJson:
+      type: object
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        nationality:
+          $ref: '../../common/docs/openapi.yml#/components/schemas/nationality'
+        birthday:
+          type: string
+          format: date
+        languages:
+          type: array
+          items:
+            $ref: '../../common/docs/openapi.yml#/components/schemas/language'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+  - name: Profile
+    description: User profile API

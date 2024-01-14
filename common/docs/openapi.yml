@@ -1,0 +1,35 @@
+openapi: 3.0.3
+info:
+  title: Common
+  version: 0.0.1
+paths:
+  /common:
+    get:
+      summary: Common Module
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Common Module
+components:
+  schemas:
+    nationality:
+      type: string
+      enum: [AR, BR, CL, CO, CR, CU, EC, SV, GT, HN, MX, NI, PA, PY, PE, PR, DO, UY, VE]
+    language:
+      type: string
+      enum: [en, es]
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+  - name: Profile
+    description: User profile API

@@ -16,17 +16,6 @@ use common::adapter::state::AppState;
 use super::schemas::{AuthJson, ValidateTransaction, Credentials, JsonToken, UpdatePassword, IdentificationJson};
 
 
-#[utoipa::path(
-    post,
-    path = "/api/auth/create-auth-request",
-    request_body = AuthJson,
-    responses(
-        (status = 200, description = "create auth request", body = String),
-        (status = 400, description = "invalid data"),
-        (status = 409, description = "conflict"),
-        (status = 500, description = "unknown error"),
-    )
-)]
 pub async fn handle_create_auth_request(
     State(state): State<AppState>,
     Json(payload): Json<AuthJson>,
@@ -60,17 +49,6 @@ pub async fn handle_create_auth_request(
     }
 }
 
-#[utoipa::path(
-    post,
-    path = "/api/auth/create-auth-confirmation",
-    request_body = ValidateTransaction,
-    responses(
-        (status = 200, description = "create auth confirmation", body = UuidWrapper),
-        (status = 400, description = "invalid data"),
-        (status = 409, description = "conflict"),
-        (status = 500, description = "unknown error")
-    )
-)]
 pub async fn handle_create_auth_confirmation(
     State(state): State<AppState>,
     Json(payload): Json<ValidateTransaction>,
@@ -95,18 +73,6 @@ pub async fn handle_create_auth_confirmation(
 }
 
 // TODO: improve error handling
-#[utoipa::path(
-    get,
-    path = "/api/auth/identifier-available",
-    responses(
-        (status = 200, description = "identifier available", body = JsonBool),
-        (status = 500),
-    ),
-    params (
-        ("value" = String, Query, description = "identifier value"),
-        ("idType" = String, Query, description = "identifier type"),
-    )
-)]
 pub async fn handle_identifier_available(
     State(state): State<AppState>,
     Query(identifier): Query<IdentificationJson>,
@@ -125,15 +91,6 @@ pub async fn handle_identifier_available(
     }
 }
 
-#[utoipa::path(
-    post,
-    path = "/api/auth/login",
-    request_body = Credentials,
-    responses(
-        (status = 200, description = "login", body = JsonToken),
-        (status = 401, description = "unauthorized"),
-    )
-)]
 pub async fn handle_login(
     State(state): State<AppState>,
     Json(credentials): Json<Credentials>,
@@ -157,15 +114,6 @@ pub async fn handle_login(
     }
 }
 
-#[utoipa::path(
-    delete,
-    path = "/api/auth/auth",
-    responses(
-        (status = 200, description = "account deleted"),
-        (status = 401, description = "unauthorized"),
-    ),
-    request_body = PasswordJson,
-)]
 pub async fn handle_delete_account(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
@@ -183,17 +131,6 @@ pub async fn handle_delete_account(
     }
 }
 
-#[utoipa::path(
-    put,
-    path = "/api/auth/password",
-    request_body = UpdatePassword,
-    responses(
-        (status = 200, description = "update password"),
-        (status = 400, description = "invalid data"),
-        (status = 401, description = "unauthorized"),
-        (status = 500, description = "unknown error"),
-    )
-)]
 pub async fn handle_update_password(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
@@ -220,17 +157,6 @@ pub async fn handle_update_password(
     }
 }
 
-#[utoipa::path(
-    post,
-    path = "/api/auth/identifier-request",
-    request_body = IdentificationJson,
-    responses(
-        (status = 200, description = "create auth confirmation", body = String),
-        (status = 401, description = "unauthorized"),
-        (status = 404, description = "not found"),
-        (status = 500, description = "unknown error"),
-    )
-)]
 pub async fn handle_add_identifier_request(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
@@ -266,17 +192,6 @@ pub async fn handle_add_identifier_request(
     }
 }
 
-#[utoipa::path(
-    post,
-    path = "/api/auth/identifier-confirmation",
-    request_body = ValidateTransaction,
-    responses(
-        (status = 200, description = "create auth confirmation", body = UuidWrapper),
-        (status = 400, description = "invalid data"),
-        (status = 401, description = "unauthorized"),
-        (status = 500, description = "unknown error"),
-    )
-)]
 pub async fn handle_add_identifier_confirmation(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
@@ -307,15 +222,6 @@ pub async fn handle_add_identifier_confirmation(
 
 // TODO: use different secret for password reset
 // TODO: get domain from config
-#[utoipa::path(
-    post,
-    path = "/api/auth/password-recovery-request",
-    request_body = IdentificationJson,
-    responses(
-        (status = 200, description = "password recovery request"),
-        (status = 400, description = "invalid data"),
-    )
-)]
 pub async fn handle_password_recovery_request(
     State(state): State<AppState>,
     Json(identifier): Json<IdentificationJson>,
@@ -339,18 +245,6 @@ pub async fn handle_password_recovery_request(
 
 // TODO: use different secret for password reset
 // TODO: get domain from config
-#[utoipa::path(
-    post,
-    path = "/api/auth/password-recovery-confirmation/{token}",
-    request_body = PasswordJson,
-    responses(
-        (status = 200, description = "password reset confirmation", body = UuidWrapper),
-        (status = 400, description = "invalid data"),
-    ),
-    params(
-        ("token" = String, Path, description = "recovery password token"),
-    ),
-)]
 pub async fn handle_password_reset_confirmation(
     State(state): State<AppState>,
     Path(token): Path<String>,

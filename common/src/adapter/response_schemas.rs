@@ -1,13 +1,11 @@
 use serde::Serialize;
-use utoipa::{ToSchema, openapi::ToArray};
 use axum::{
     http::{StatusCode, header, HeaderValue},
     response::{IntoResponse, Response}, body::Body,
 };
-use utoipa::openapi::{ObjectBuilder, SchemaType, SchemaFormat, KnownFormat, RefOr, schema};
 
 
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize)]
 pub struct JsonError {
     pub message: String,
     pub details: String,
@@ -42,34 +40,6 @@ impl<T> JsonResponse<T> {
                 details,
             }),
         }
-    }
-}
-
-impl<'__s, T> ToSchema<'__s> for JsonResponse<T>
-where
-    T: ToSchema<'__s>, 
-{
-    fn schema() -> (&'__s str, RefOr<schema::Schema>) {
-        (
-            "JsonResponse",
-            ObjectBuilder::new()
-                .property(
-                    "status", 
-                    ObjectBuilder::new()
-                        .schema_type(SchemaType::Integer)
-                        .format(Some(SchemaFormat::KnownFormat(KnownFormat::Int32)))
-                )
-                .property("data",T::schema().1)
-                .property("error",JsonError::schema().1)
-                .into()
-        )   
-    }
-
-    fn aliases() -> Vec<(&'__s str, schema::Schema)> {
-        let name = T::schema().0;
-        let schema = Self::schema().1.to_array().into();
-
-        vec![ (name, schema) ]
     }
 }
 
