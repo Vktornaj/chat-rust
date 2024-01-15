@@ -19,15 +19,11 @@ paths:
         - bearerAuth: []
       responses:
         '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResponseUserJson'
+          $ref: '#/components/responses/ResponseUserJson'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '../../common/docs/openapi.yml#/components/responses/NotFound'
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
     put:
       summary: Update user information
       tags:
@@ -42,40 +38,28 @@ paths:
               $ref: '#/components/schemas/UserJson'
       responses:
         '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResponseUserJson'
+          $ref: '#/components/responses/ResponseUserJson'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
           
 components:
   responses:
+    ResponseUserJson:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/UserJson'
+              error:
+                type: object
+                nullable: true
+                example: null
 
-    NotFound:
-      description: Not found
-      content:
-        application/json:
-          schema:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
-
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
-    
-    BadRequest:
-      description: Bad request
-      content:
-        application/json:
-          schema:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
-  
   schemas:
 
     UserJson:
@@ -88,14 +72,16 @@ components:
           type: string
           pattern: '^[a-zA-Z\s]{1,50}$'
         nationality:
-          $ref: '../../common/docs/openapi.yml#/components/schemas/Nationality'
+          type: string
+          enum: [AR, BR, CL, CO, CR, CU, EC, SV, GT, HN, MX, NI, PA, PY, PE, PR, DO, UY, VE]
         birthday:
           type: string
           format: date
         languages:
           type: array
           items:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/Language'
+            type: string
+            enum: [en, es]
 
     ResponseUserJson:
       type: object

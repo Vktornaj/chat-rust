@@ -18,16 +18,43 @@ paths:
                     type: string
                     example: Common Module
 components:
-  schemas:
-  
-    Nationality:
-      type: string
-      enum: [AR, BR, CL, CO, CR, CU, EC, SV, GT, HN, MX, NI, PA, PY, PE, PR, DO, UY, VE]
-    
-    Language:
-      type: string
-      enum: [en, es]
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
 
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+    
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+  
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+
+  schemas:
     ResponseErrorJson:
       type: object
       properties:
