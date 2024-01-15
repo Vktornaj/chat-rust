@@ -2,6 +2,13 @@ openapi: 3.0.3
 info:
   title: Profile
   version: 0.0.1
+tags:
+  - name: Profile
+    description: User profile API
+servers:
+  - url: http://localhost:3000
+  - url: http://localhost:80
+  - url: https://api.geduardo.com
 paths:
   /api/profile:
     get:
@@ -105,6 +112,3 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-tags:
-  - name: Profile
-    description: User profile API
