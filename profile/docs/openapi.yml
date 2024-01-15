@@ -16,11 +16,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserJson'
+                $ref: '#/components/schemas/ResponseUserJson'
         '404':
-          description: User not found
+          $ref: '#/components/responses/NotFound'
         '401':
-          description: Unauthorized
+          $ref: '#/components/responses/Unauthorized'
     put:
       summary: Update user information
       tags:
@@ -39,20 +39,47 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserJson'
+                $ref: '#/components/schemas/ResponseUserJson'
         '400':
-          description: Bad request
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Unauthorized
+          $ref: '#/components/responses/Unauthorized'
+          
 components:
+  responses:
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+    
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+  
   schemas:
+
     UserJson:
       type: object
       properties:
         firstname:
           type: string
+          pattern: '^[a-zA-Z\s]{1,50}$'
         lastname:
           type: string
+          pattern: '^[a-zA-Z\s]{1,50}$'
         nationality:
           $ref: '../../common/docs/openapi.yml#/components/schemas/Nationality'
         birthday:
@@ -62,6 +89,17 @@ components:
           type: array
           items:
             $ref: '../../common/docs/openapi.yml#/components/schemas/Language'
+
+    ResponseUserJson:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UserJson'
+        error:
+          type: object
+          nullable: true
+          example: null
+
   securitySchemes:
     bearerAuth:
       type: http

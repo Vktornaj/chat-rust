@@ -14,7 +14,7 @@ pub struct JsonError {
 
 #[derive(Serialize)]
 pub struct JsonResponse<T> {
-    #[serde(with = "status_code")]
+    #[serde(skip)]
     pub status: StatusCode,
     pub data: Option<T>,
     pub error: Option<JsonError>,
@@ -52,18 +52,6 @@ impl<T> JsonResponse<T> {
                 details,
             }),
         }
-    }
-}
-
-mod status_code {
-    use serde::{self, Serializer};
-    use axum::http::StatusCode;
-
-    pub fn serialize<S>(status: &StatusCode, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_u16(status.as_u16())
     }
 }
 

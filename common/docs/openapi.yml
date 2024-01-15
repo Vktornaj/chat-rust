@@ -19,12 +19,32 @@ paths:
                     example: Common Module
 components:
   schemas:
+  
     Nationality:
       type: string
       enum: [AR, BR, CL, CO, CR, CU, EC, SV, GT, HN, MX, NI, PA, PY, PE, PR, DO, UY, VE]
+    
     Language:
       type: string
       enum: [en, es]
+
+    ResponseErrorJson:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+          example: null
+        error:
+          type: object
+          properties:
+            code:
+              type: number
+            message:
+              type: string
+            details:
+              type: string
+  
   securitySchemes:
     bearerAuth:
       type: http
