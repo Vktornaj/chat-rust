@@ -14,6 +14,7 @@ paths:
   /api/auth/auth:
     delete:
       summary: Delete account
+      operationId: handle_delete_account
       tags:
         - Auth
       security:

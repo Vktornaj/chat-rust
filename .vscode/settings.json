@@ -1,4 +1,19 @@
 {
+    "workbench.colorCustomizations": {
+        "editor.background": "#01052c",
+        "tab.activeBackground": "#080f52",
+        "tab.inactiveBackground": "#011324",
+        "tab.hoverBackground": "#00000e",
+        "tab.unfocusedHoverBackground": "#09034c",
+        "activityBar.background": "#020737",
+        "sideBar.background": "#000316",
+        "sideBarSectionHeader.background": "#020737",
+        "editorGroupHeader.tabsBackground": "#000810",
+        "titleBar.activeBackground": "#06192e",
+        "titleBar.inactiveBackground": "#1b324e",
+        "statusBar.background": "#06192e",
+        "panel.background": "#01041f"
+    },
     "editor.rulers": [
         120
     ],
