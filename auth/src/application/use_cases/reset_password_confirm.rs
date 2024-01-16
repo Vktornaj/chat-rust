@@ -8,6 +8,7 @@ use crate::{
 pub enum ResetError {
     InvalidData(String),
     Unknown(String),
+    Unauthorized(String),
     NotFound(String),
 }
 
@@ -30,14 +31,14 @@ pub async fn execute<T>(
     let user_id = if let Ok(auth) = TokenData::from_token(&payload.token, secret) {
         auth.id
     } else {
-        return Err(ResetError::InvalidData("Invalid token".to_string()));
+        return Err(ResetError::Unauthorized("Invalid token".to_string()));
     };
     // update password
     let new_hash_password = password.hash_password().map_err(|_| {
         ResetError::InvalidData("Invalid password".to_string())
     })?;
     match repo.update_password(conn, user_id, new_hash_password).await {
-        Ok(user) => Ok(user),
+        Ok(auth) => Ok(auth),
         Err(_) => return Err(ResetError::NotFound("Unknown error".to_string())),
     }
 }

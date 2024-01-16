@@ -25,12 +25,8 @@ pub async fn handle_get_user_info(
     {
         Ok(user) => JsonResponse::new_ok(UserJson::from_user(user)),
         Err(err) => match err {
-            get_user_info::FindError::Unknown(err) => {
-                JsonResponse::new_int_ser_err(0, "Unknown error", err)
-            },
-            get_user_info::FindError::Unautorized(err) => {
-                JsonResponse::new_err(StatusCode::UNAUTHORIZED, 1, "Unautorized", err)
-            }
+            get_user_info::FindError::Unknown(err) => JsonResponse::new_int_ser_err(0, err),
+            get_user_info::FindError::Unauthorized(err) => JsonResponse::new_unauthorized_err(0, err)
         },
     }
 }
@@ -56,15 +52,11 @@ pub async fn handle_update_user_info(
         Ok(user) => JsonResponse::new_ok(UserJson::from_user(user)),
         Err(err) => {
             match err {
-                update_user_info::UpdateError::Unautorized => JsonResponse::new_err(
-                    StatusCode::UNAUTHORIZED, 
+                update_user_info::UpdateError::Unauthorized => JsonResponse::new_unauthorized_err(
                     1, 
-                    "Unautorized", 
-                    "Invalid token".to_string()
+                    err.to_string()
                 ),
-                _ => {
-                    JsonResponse::new_int_ser_err(0, "Unknown error", err.to_string())
-                },
+                _ => JsonResponse::new_int_ser_err(0, err.to_string()),
             }
         },
     }

@@ -79,3 +79,9 @@ pub struct PasswordJson {
 pub struct JsonBool {
     pub value: bool,
 }
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResOk {
+    pub ok: bool,
+}

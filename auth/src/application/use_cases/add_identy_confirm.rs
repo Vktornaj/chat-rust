@@ -9,10 +9,8 @@ use crate::{
 
 #[derive(Debug)]
 pub enum UpdateError {
-    NotFound,
-    Unautorized,
+    Unauthorized(String),
     Unknown(String),
-    Conflict(String),
     InvalidData(String),
 }
 
@@ -32,7 +30,7 @@ pub async fn execute<T, U>(
 ) -> Result<Auth, UpdateError> {
     // verify token is valid
     if TokenData::from_token(token, &secret).is_err() {
-        return Err(UpdateError::Unautorized);
+        return Err(UpdateError::Unauthorized("Invalid token".to_string()));
     };
     // validate confirmation code
     let add_identify: AddIdentificationRequest = match repo_cache

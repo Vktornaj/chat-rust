@@ -30,9 +30,9 @@ impl<T> JsonResponse<T> {
         }
     }
 
-    pub fn new_int_ser_err(code: u32, message: &str, details: String) -> Self {
+    pub fn new_err(status: StatusCode, code: u32, message: &str, details: String) -> Self {
         JsonResponse {
-            status: StatusCode::INTERNAL_SERVER_ERROR,
+            status,
             data: None,
             error: Some(JsonError {
                 code,
@@ -42,13 +42,73 @@ impl<T> JsonResponse<T> {
         }
     }
 
-    pub fn new_err(status: StatusCode, code: u32, message: &str, details: String) -> Self {
+    pub fn new_int_ser_err(code: u32, details: String) -> Self {
         JsonResponse {
-            status,
+            status: StatusCode::INTERNAL_SERVER_ERROR,
             data: None,
             error: Some(JsonError {
                 code,
-                message: message.to_string(),
+                message: "Internal Server Error".to_string(),
+                details,
+            }),
+        }
+    }
+
+    pub fn new_bad_req_err(code: u32, details: String) -> Self {
+        JsonResponse {
+            status: StatusCode::BAD_REQUEST,
+            data: None,
+            error: Some(JsonError {
+                code,
+                message: "Bad request".to_string(),
+                details,
+            }),
+        }
+    }
+
+    pub fn new_conflict_err(code: u32, details: String) -> Self {
+        JsonResponse {
+            status: StatusCode::CONFLICT,
+            data: None,
+            error: Some(JsonError {
+                code,
+                message: "Conflict".to_string(),
+                details,
+            }),
+        }
+    }
+
+    pub fn new_unauthorized_err(code: u32, details: String) -> Self {
+        JsonResponse {
+            status: StatusCode::UNAUTHORIZED,
+            data: None,
+            error: Some(JsonError {
+                code,
+                message: "Unauthorized".to_string(),
+                details,
+            }),
+        }
+    }
+
+    pub fn new_not_found_err(code: u32, details: String) -> Self {
+        JsonResponse {
+            status: StatusCode::NOT_FOUND,
+            data: None,
+            error: Some(JsonError {
+                code,
+                message: "Not found".to_string(),
+                details,
+            }),
+        }
+    }
+
+    pub fn new_forbidden_err(code: u32, details: String) -> Self {
+        JsonResponse {
+            status: StatusCode::FORBIDDEN,
+            data: None,
+            error: Some(JsonError {
+                code,
+                message: "Forbidden".to_string(),
                 details,
             }),
         }

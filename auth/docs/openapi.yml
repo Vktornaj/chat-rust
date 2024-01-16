@@ -34,6 +34,7 @@ paths:
   /api/auth/create-auth-confirmation:
     post:
       summary: Confirm account creation
+      operationId: handle_create_auth_confirmation
       tags:
         - Auth
       requestBody:
@@ -47,8 +48,6 @@ paths:
           $ref: '#/components/responses/ResponseUuidWrapper'
         '400':
           $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
-        '401':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
         '409':
           $ref: '../../common/docs/openapi.yml#/components/responses/Conflict'
         '500':
@@ -57,10 +56,9 @@ paths:
   /api/auth/create-auth-request:
     post:
       summary: Create account
+      operationId: handle_create_auth_request
       tags:
         - Auth
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -80,6 +78,7 @@ paths:
   /api/auth/identifier-available:
     get:
       summary: Check if identifier is available
+      operationId: handle_identifier_available
       tags:
         - Auth
       parameters:
@@ -95,18 +94,17 @@ paths:
             type: string
             enum:
               - email
-              - phone
+              - phone_number
       responses:
         '200':
           $ref: '#/components/responses/ResponseBoolean'
-        '400':
-          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
         '500':
           $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/identifier-request:
     post:
       summary: Request add an identifier to account
+      operationId: handle_add_identifier_request
       tags:
         - Auth
       security:
@@ -120,6 +118,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/ResponseOk'
+        '400':
+          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
         '401':
           $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
         '404':
@@ -129,9 +129,34 @@ paths:
         '500':
           $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
 
+  /api/auth/identifier-confirmation/:
+    post:
+      summary: Confirm add an identifier to account
+      operationId: handle_add_identifier_confirmation
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateTransaction'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseOk'
+        '400':
+          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+        '401':
+          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+        '500':
+          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
+
   /api/auth/login:
     post:
       summary: Login
+      operationId: handle_login
       tags:
         - Auth
       requestBody:
@@ -151,6 +176,7 @@ paths:
   /api/auth/password:
     put:
       summary: Update password
+      operationId: handle_update_password
       tags:
         - Auth
       security:
@@ -168,12 +194,17 @@ paths:
           $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
         '401':
           $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../../common/docs/openapi.yml#/components/responses/NotFound'
+        '409':
+          $ref: '../../common/docs/openapi.yml#/components/responses/Conflict'
         '500':
           $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/password-recovery-confirmation/{token}:
     post:
       summary: Confirm password recovery
+      operationId: handle_password_reset_confirmation
       tags:
         - Auth
       parameters:
@@ -193,10 +224,17 @@ paths:
           $ref: '#/components/responses/ResponseUuidWrapper'
         '400':
           $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
-  
+        '401':
+          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../../common/docs/openapi.yml#/components/responses/NotFound'
+        '500':
+          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'  
+
   /api/auth/password-recovery-request:
     post:
       summary: Request password recovery
+      operationId: handle_password_recovery_request
       tags:
         - Auth
       requestBody:
@@ -210,6 +248,10 @@ paths:
           $ref: '#/components/responses/ResponseOk'
         '400':
           $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+        '404':
+          $ref: '../../common/docs/openapi.yml#/components/responses/NotFound'
+        '500':
+          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
       
 # Components
 components:

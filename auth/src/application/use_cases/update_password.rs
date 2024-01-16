@@ -6,8 +6,8 @@ use crate::{
 
 #[derive(Debug)]
 pub enum UpdateError {
-    NotFound,
-    Unautorized,
+    NotFound(String),
+    Unauthorized(String),
     Unknown(String),
     Conflict(String),
     InvalidData(String),
@@ -32,7 +32,7 @@ pub async fn execute<T>(
     let password = if let Ok(password) = Password::try_from(payload.password) {
         password
     } else {
-        return Err(UpdateError::Unautorized);
+        return Err(UpdateError::InvalidData("Invalid password".to_string()));
     };
     let new_password = if let Ok(new_password) = Password::try_from(payload.new_password) {
         new_password
@@ -43,15 +43,15 @@ pub async fn execute<T>(
     let user_id = if let Ok(auth) = TokenData::from_token(token, &secret) {
         auth.id
     } else {
-        return Err(UpdateError::Unautorized);
+        return Err(UpdateError::Unauthorized("Invalid token".to_string()));
     };
     // verify user exists and password match
     if let Ok(auth) = repo.find_by_id(conn, user_id.into()).await {
         if password.verify_password(&auth.hashed_password).is_err() {
-            return Err(UpdateError::Unautorized);
+            return Err(UpdateError::Unauthorized("Invalid password".to_string()));
         }
     } else {
-        return Err(UpdateError::NotFound);
+        return Err(UpdateError::NotFound("User not found".to_string()));
     };
     // hash new password
     let new_hashed_password = if let Ok(hashed_password) = new_password.hash_password() {

@@ -20,7 +20,7 @@ use crate::{
 #[derive(Debug)]
 pub enum UpdateError {
     NotFound,
-    Unautorized,
+    Unauthorized,
     Unknown(String),
     Conflict(String),
 }
@@ -29,7 +29,7 @@ impl Display for UpdateError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             UpdateError::NotFound => write!(f, "User not found"),
-            UpdateError::Unautorized => write!(f, "Unautorized"),
+            UpdateError::Unauthorized => write!(f, "Unauthorized"),
             UpdateError::Unknown(msg) => write!(f, "Unknown error: {}", msg),
             UpdateError::Conflict(msg) => write!(f, "Conflict: {}", msg),
         }
@@ -56,7 +56,7 @@ pub async fn execute<T>(
     let id = if let Ok(auth) = TokenData::from_token(token, &secret) {
         auth.id
     } else {
-        return Err(UpdateError::Unautorized);
+        return Err(UpdateError::Unauthorized);
     };
     // verify user exists and data is not the same
     if let Ok(user) = repo.find_by_id(conn, id.into()).await {

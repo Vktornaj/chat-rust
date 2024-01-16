@@ -9,7 +9,7 @@ pub enum SendError {
     InvalidData(String),
     Unknown(String),
     Conflict(String),
-    Unautorized(String),
+    Unauthorized(String),
 }
 
 pub async fn execute<T, U>(event: Event<MessageDomain>, clients: Clients<T>) -> Result<Vec<Id>, SendError>
