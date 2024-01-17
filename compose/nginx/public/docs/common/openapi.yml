@@ -24,35 +24,35 @@ components:
       content:
         application/json:
           schema:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+            $ref: '#/components/schemas/ResponseErrorJson'
 
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
           schema:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+            $ref: '#/components/schemas/ResponseErrorJson'
     
     BadRequest:
       description: Bad request
       content:
         application/json:
           schema:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+            $ref: '#/components/schemas/ResponseErrorJson'
   
     Conflict:
       description: Conflict
       content:
         application/json:
           schema:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+            $ref: '#/components/schemas/ResponseErrorJson'
 
     InternalServerError:
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: '../../common/docs/openapi.yml#/components/schemas/ResponseErrorJson'
+            $ref: '#/components/schemas/ResponseErrorJson'
 
   schemas:
     ResponseErrorJson:

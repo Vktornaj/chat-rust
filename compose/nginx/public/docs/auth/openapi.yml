@@ -29,7 +29,7 @@ paths:
         '200':
           description: Successful operation
         '401':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
   
   /api/auth/create-auth-confirmation:
     post:
@@ -47,11 +47,11 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseUuidWrapper'
         '400':
-          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
         '409':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Conflict'
+          $ref: '../common/openapi.yml#/components/responses/Conflict'
         '500':
-          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/create-auth-request:
     post:
@@ -69,11 +69,11 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseIdentificationJson'
         '400':
-          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
         '409':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Conflict'
+          $ref: '../common/openapi.yml#/components/responses/Conflict'
         '500':
-          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/identifier-available:
     get:
@@ -99,7 +99,7 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseBoolean'
         '500':
-          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/identifier-request:
     post:
@@ -119,15 +119,15 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseOk'
         '400':
-          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
         '401':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
         '404':
-          $ref: '../../common/docs/openapi.yml#/components/responses/NotFound'
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
         '409':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Conflict'
+          $ref: '../common/openapi.yml#/components/responses/Conflict'
         '500':
-          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/identifier-confirmation/:
     post:
@@ -147,11 +147,11 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseOk'
         '400':
-          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
         '401':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
         '500':
-          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/login:
     post:
@@ -169,9 +169,9 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseJsonToken'
         '401':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
         '500':
-          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/password:
     put:
@@ -191,15 +191,15 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseOk'
         '400':
-          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
         '401':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
         '404':
-          $ref: '../../common/docs/openapi.yml#/components/responses/NotFound'
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
         '409':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Conflict'
+          $ref: '../common/openapi.yml#/components/responses/Conflict'
         '500':
-          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/password-recovery-confirmation/{token}:
     post:
@@ -223,13 +223,13 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseUuidWrapper'
         '400':
-          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
         '401':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
         '404':
-          $ref: '../../common/docs/openapi.yml#/components/responses/NotFound'
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
         '500':
-          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'  
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'  
 
   /api/auth/password-recovery-request:
     post:
@@ -247,11 +247,11 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseOk'
         '400':
-          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
         '404':
-          $ref: '../../common/docs/openapi.yml#/components/responses/NotFound'
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
         '500':
-          $ref: '../../common/docs/openapi.yml#/components/responses/InternalServerError'
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
       
 # Components
 components:

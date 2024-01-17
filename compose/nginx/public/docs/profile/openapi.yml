@@ -21,9 +21,9 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseUserJson'
         '404':
-          $ref: '../../common/docs/openapi.yml#/components/responses/NotFound'
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
         '401':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
     put:
       summary: Update user information
       tags:
@@ -40,9 +40,9 @@ paths:
         '200':
           $ref: '#/components/responses/ResponseUserJson'
         '400':
-          $ref: '../../common/docs/openapi.yml#/components/responses/BadRequest'
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
         '401':
-          $ref: '../../common/docs/openapi.yml#/components/responses/Unauthorized'
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
           
 components:
   responses:

@@ -23,6 +23,7 @@ services:
     volumes:
       - config:/config
       - ./nginx/site-confs:/config/nginx/site-confs
+      - ./nginx/public/:/var/www/public/
     restart: unless-stopped
     depends_on:
       web:
