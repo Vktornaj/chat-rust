@@ -5,7 +5,6 @@ use crate::domain::types::{
 };
 
 use super::super::port::driven::auth_repository::AuthRepositoryTrait;
-use common::domain::types::{email::Email, phone_number::PhoneNumber};
 
 
 #[derive(Debug)]

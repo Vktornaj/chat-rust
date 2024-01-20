@@ -24,15 +24,15 @@ use tower_http::{
     trace::{DefaultMakeSpan, TraceLayer},
 };
 
-use common::adapter::{state::AppState, response_schemas::{JsonError, JsonResponse}};
+use common::adapter::state::AppState;
 use common::domain::models::{
     client::Clients, event::EventQueue, message::Message as MessageDomain,
 };
 
 mod metrics;
 mod ws;
-use auth::{handlers as auth_handlers, schemas::{self as auth_schemas, JsonBool}, TokenData};
-use profile::{handlers as profile_handlers, schemas as profile_schemas};
+use auth::{handlers as auth_handlers, TokenData};
+use profile::handlers as profile_handlers;
 
 
 pub async fn router() -> Router {

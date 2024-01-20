@@ -64,6 +64,7 @@ pub async fn execute<T>(
             return Err(UpdateError::Conflict("At least one of the fields is the same".to_string()));
         }
     } else {
+        // TODO: Create profile if not exist
         return Err(UpdateError::NotFound);
     };
     // update only user not sensitive info

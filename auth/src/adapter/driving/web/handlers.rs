@@ -5,7 +5,6 @@ use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Bearer;
 use common::adapter::response_schemas::JsonResponse;
-use uuid::Uuid;
 
 use crate::adapter::driven::cache::redis::user_cache::AuthCache;
 use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailService;
@@ -108,8 +107,7 @@ pub async fn handle_login(
             token_type: "Bearer".to_string(),
         }),
         Err(err) => match err {
-            login_auth::LoginError::NotFound => JsonResponse::new_not_found_err(0, "user not found".to_string()),
-            login_auth::LoginError::Unauthorized => JsonResponse::new_unauthorized_err(0, "invalid credentials".to_string()),
+            _ => JsonResponse::new_unauthorized_err(0, "invalid credentials".to_string()),
         },
     }
 }

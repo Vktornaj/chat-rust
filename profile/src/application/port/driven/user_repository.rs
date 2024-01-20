@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::NaiveDate;
 use uuid::Uuid;
 
 use super::errors::{
@@ -20,7 +20,7 @@ use crate::domain::{
     }
 };
 
-pub struct DateRange(pub Option<DateTime<Utc>>, pub Option<DateTime<Utc>>);
+pub struct DateRange(pub Option<NaiveDate>, pub Option<NaiveDate>);
 
 #[derive(Default)]
 pub struct FindUser {

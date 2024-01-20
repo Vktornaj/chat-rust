@@ -1,5 +1,4 @@
 use axum::extract::State;
-use axum::http::StatusCode;
 use axum::Json;
 use axum_extra::{TypedHeader, headers::{Authorization, authorization::Bearer}};
 
@@ -21,8 +20,7 @@ pub async fn handle_get_user_info(
         &state.config.secret,
         &token.token().to_string(),
     )
-    .await
-    {
+    .await {
         Ok(user) => JsonResponse::new_ok(UserJson::from_user(user)),
         Err(err) => match err {
             get_user_info::FindError::Unknown(err) => JsonResponse::new_int_ser_err(0, err),
@@ -42,8 +40,8 @@ pub async fn handle_update_user_info(
         &state.config.secret, 
         &token.token().to_string(), 
         update_user_info::Payload {
-            first_name: user_info.first_name,
-            last_name: user_info.last_name,
+            first_name: user_info.firstname,
+            last_name: user_info.lastname,
             birthday: user_info.birthday,
             nationality: user_info.nationality,
             languages: user_info.languages,

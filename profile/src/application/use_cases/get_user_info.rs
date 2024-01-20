@@ -31,6 +31,6 @@ pub async fn execute<T>(
     };
     match repo.find_by_id(conn, id).await {
         Ok(user) => Ok(user),
-        Err(_) => Err(FindError::Unknown("user not found".to_string())),
+        Err(_) => Err(FindError::Unknown("user not found: ".to_string() + &id.to_string())),
     }
 }

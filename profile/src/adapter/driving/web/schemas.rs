@@ -6,8 +6,8 @@ use crate::{domain::user::User, types::{birthday::Birthday, language::Language, 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserJson {
-    pub first_name: Option<FirstName>,
-    pub last_name: Option<LastName>,
+    pub firstname: Option<FirstName>,
+    pub lastname: Option<LastName>,
     pub nationality: Option<Nationality>,
     pub birthday: Option<Birthday>,
     pub languages: Option<Vec<Language>>,
@@ -16,8 +16,8 @@ pub struct UserJson {
 impl UserJson {
     pub fn from_user(user: User) -> Self {
         UserJson { 
-            first_name: Some(user.first_name.into()), 
-            last_name: Some(user.last_name.into()),
+            firstname: Some(user.first_name.into()), 
+            lastname: Some(user.last_name.into()),
             nationality: Some(user.nationality.into()),
             birthday: Some(user.birthday.into()),
             languages: Some(user.languages.into()),

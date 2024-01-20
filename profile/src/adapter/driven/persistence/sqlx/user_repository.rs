@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, NaiveDate};
 use common::domain::types::error::ErrorMsg;
 use sqlx::query_builder::QueryBuilder;
 use sqlx::{Postgres, Pool};
@@ -138,7 +138,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
             Into::<Uuid>::into(user.user_id),
             Into::<String>::into(user.first_name),
             Into::<String>::into(user.last_name),
-            Into::<DateTime<Utc>>::into(user.birthday),
+            Into::<NaiveDate>::into(user.birthday),
             Into::<String>::into(user.nationality),
             &user.languages.into_iter().map(|x| x.into()).collect::<Vec<String>>()
         ).fetch_one(conn).await;
@@ -181,7 +181,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         }
         if let Some(birthday) = user.birthday {
             separated.push("birthday = ");
-            separated.push_bind_unseparated(Into::<DateTime<Utc>>::into(birthday));
+            separated.push_bind_unseparated(Into::<NaiveDate>::into(birthday));
         }
         if let Some(nationality) = user.nationality {
             separated.push("nationality = ");
