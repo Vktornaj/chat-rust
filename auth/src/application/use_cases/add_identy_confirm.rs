@@ -3,7 +3,7 @@ use crate::{
         auth_cache::{AuthCacheTrait, AddIdentificationRequest}, 
         auth_repository::{AuthRepositoryTrait, UpdateIdentify},
     }, 
-    domain::{types::{token_data::TokenData, identification::NewIdentification}, auth::Auth},
+    domain::{types::{token_data::TokenData, identification::NewIdentification, code::Code}, auth::Auth},
 };
 
 
@@ -16,7 +16,7 @@ pub enum UpdateError {
 
 pub struct Payload {
     pub transaction_id: String,
-    pub confirmation_code: String,
+    pub confirmation_code: Code,
 }
 
 pub async fn execute<T, U>(

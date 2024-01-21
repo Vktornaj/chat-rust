@@ -2,7 +2,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 
-#[derive(PartialEq, Clone, PartialOrd, Deserialize, Serialize)]
+#[derive(PartialEq, Clone, PartialOrd, Serialize)]
 pub struct Code(String);
 
 impl Code {
@@ -16,12 +16,27 @@ impl Code {
     }
     
     pub fn new_0s(digits: u8) -> Self {
-        let mut rng = rand::thread_rng();
         let mut code = "".to_owned();
         for _ in 0..digits {
             code.push_str("0");
         }
         Self(code)
+    }
+}
+
+impl From<String> for Code {
+    fn from(s: String) -> Code {
+        Code(s)
+    }
+}
+
+impl<'de> Deserialize<'de> for Code {
+    fn deserialize<D>(deserializer: D) -> Result<Code, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(Code(s))
     }
 }
 

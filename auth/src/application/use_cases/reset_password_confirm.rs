@@ -14,7 +14,7 @@ pub enum ResetError {
 
 pub struct Payload {
     pub token: String,
-    pub password: String,
+    pub password: Password,
 }
 
 pub async fn execute<T>(
@@ -23,10 +23,6 @@ pub async fn execute<T>(
     secret: &[u8],
     payload: Payload
 ) -> Result<Auth, ResetError> {
-    // validate password
-    let password = Password::try_from(payload.password).map_err(|_| {
-        ResetError::InvalidData("Invalid password".to_string())
-    })?;
     // Get user id
     let user_id = if let Ok(auth) = TokenData::from_token(&payload.token, secret) {
         auth.id
@@ -34,7 +30,7 @@ pub async fn execute<T>(
         return Err(ResetError::Unauthorized("Invalid token".to_string()));
     };
     // update password
-    let new_hash_password = password.hash_password().map_err(|_| {
+    let new_hash_password = payload.password.hash_password().map_err(|_| {
         ResetError::InvalidData("Invalid password".to_string())
     })?;
     match repo.update_password(conn, user_id, new_hash_password).await {

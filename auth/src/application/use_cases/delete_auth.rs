@@ -25,7 +25,7 @@ impl Display for DeleteError {
 }
 
 pub struct Payload {
-    pub password: String,
+    pub password: Password,
 }
 
 pub async fn execute<T>(
@@ -41,12 +41,6 @@ pub async fn execute<T>(
     } else {
         return Err(DeleteError::Unauthorized);
     };
-    // verify password is a valid password
-    let password = if let Ok(password) = Password::try_from(payload.password) {
-        password
-    } else {
-        return Err(DeleteError::Unauthorized);
-    };
     // get auth
     let auth = if let Ok(auth) = repo.find_by_id(conn, user_id.into()).await {
         auth
@@ -54,7 +48,7 @@ pub async fn execute<T>(
         return Err(DeleteError::NotFound);
     };
     // verify password
-    if password.verify_password(&auth.hashed_password).is_err() {
+    if payload.password.verify_password(&auth.hashed_password).is_err() {
         return Err(DeleteError::Unauthorized);
     }
     // TODO: delete user articles
