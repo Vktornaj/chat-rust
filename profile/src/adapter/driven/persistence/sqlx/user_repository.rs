@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::{DateTime, Utc, NaiveDate};
+use chrono::NaiveDate;
 use common::domain::types::error::ErrorMsg;
 use sqlx::query_builder::QueryBuilder;
 use sqlx::{Postgres, Pool};
@@ -130,17 +130,17 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         }
     }
 
-    async fn create(&self, conn: &Pool<Postgres>, user: NewUser) -> Result<UserDomain, RepoCreateError> {
+    async fn create(&self, conn: &Pool<Postgres>, new_user: NewUser) -> Result<UserDomain, RepoCreateError> {
         let result = sqlx::query!(
             r#"
                 SELECT * FROM insert_profile($1, $2, $3, $4, $5, $6);
             "#,
-            Into::<Uuid>::into(user.user_id),
-            Into::<String>::into(user.first_name),
-            Into::<String>::into(user.last_name),
-            Into::<NaiveDate>::into(user.birthday),
-            Into::<String>::into(user.nationality),
-            &user.languages.into_iter().map(|x| x.into()).collect::<Vec<String>>()
+            Into::<Uuid>::into(new_user.user_id),
+            Into::<String>::into(new_user.first_name),
+            Into::<String>::into(new_user.last_name),
+            Into::<NaiveDate>::into(new_user.birthday),
+            Into::<String>::into(new_user.nationality),
+            &new_user.languages.into_iter().map(|x| x.into()).collect::<Vec<String>>()
         ).fetch_one(conn).await;
         match result {
             Ok(result) => {

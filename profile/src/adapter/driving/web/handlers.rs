@@ -3,7 +3,7 @@ use axum::Json;
 use axum_extra::{TypedHeader, headers::{Authorization, authorization::Bearer}};
 
 use super::schemas::UserJson;
-use crate::application::use_cases::{get_user_info, update_user_info};
+use crate::application::use_cases::{get_user_info, update_profile_info};
 use common::adapter::{state::AppState, response_schemas::JsonResponse};
 
 // Adapters
@@ -34,12 +34,12 @@ pub async fn handle_update_user_info(
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Json(user_info): Json<UserJson>,
 ) -> JsonResponse<UserJson> {
-    match update_user_info::execute(
+    match update_profile_info::execute(
         &state.db_sql_pool, 
         &UserRepository {}, 
         &state.config.secret, 
         &token.token().to_string(), 
-        update_user_info::Payload {
+        update_profile_info::Payload {
             first_name: user_info.firstname,
             last_name: user_info.lastname,
             birthday: user_info.birthday,
@@ -50,7 +50,7 @@ pub async fn handle_update_user_info(
         Ok(user) => JsonResponse::new_ok(UserJson::from_user(user)),
         Err(err) => {
             match err {
-                update_user_info::UpdateError::Unauthorized => JsonResponse::new_unauthorized_err(
+                update_profile_info::UpdateError::Unauthorized => JsonResponse::new_unauthorized_err(
                     1, 
                     err.to_string()
                 ),

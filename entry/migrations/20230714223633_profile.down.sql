@@ -4,7 +4,7 @@ DROP FUNCTION insert_profile(
     p_id UUID,
     p_first_name TEXT,
     p_last_name TEXT,
-    p_birthday TIMESTAMPTZ,
+    p_birthday DATE,
     p_nationality TEXT,
     p_languages TEXT[]
 );

@@ -53,9 +53,9 @@ RETURNS TABLE (
         _language_code TEXT;
         id UUID;
     BEGIN
-        INSERT INTO profiles (id, first_name, last_name, birthday, nationality)
+        INSERT INTO profiles (user_id, first_name, last_name, birthday, nationality)
         VALUES (p_id, p_first_name, p_last_name, p_birthday, p_nationality)
-        RETURNING profiles.id, profiles.first_name, profiles.last_name, profiles.birthday, profiles.nationality, profiles.created_at, profiles.updated_at
+        RETURNING profiles.user_id, profiles.first_name, profiles.last_name, profiles.birthday, profiles.nationality, profiles.created_at, profiles.updated_at
         INTO id, first_name, last_name, birthday, nationality, created_at, updated_at;
 
         FOR _language_code IN SELECT unnest(p_languages) LOOP
