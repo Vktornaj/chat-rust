@@ -77,15 +77,18 @@ components:
           pattern: '^[a-zA-Z\s]{1,50}$'
         nationality:
           type: string
-          enum: [AR, BR, CL, CO, CR, CU, EC, SV, GT, HN, MX, NI, PA, PY, PE, PR, DO, UY, VE]
+          description: 'Nationality should be alpha-3 code (ISO 3166)'
+          pattern: '^[A-Z]{3}$'
         birthday:
           type: string
           format: date
+          description: 'You must be at least 13 years old'
         languages:
           type: array
           items:
             type: string
-            enum: [en, es]
+            description: 'Language should be alpha-2 code (ISO 639-1)'
+            pattern: '^[A-Z]{2}$'
 
     ResponseUserJson:
       type: object

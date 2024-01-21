@@ -3,7 +3,7 @@ use common::domain::types::error::ErrorMsg;
 use serde::{Deserialize, Serialize};
 
 
-#[derive(PartialEq, Debug, Clone, Deserialize, Serialize)]
+#[derive(PartialEq, Debug, Clone, Serialize)]
 pub struct LastName(String);
 
 impl TryFrom<String> for LastName {
@@ -25,6 +25,16 @@ impl TryFrom<String> for LastName {
             return Err(ErrorMsg("Last name should contain only letters and spaces".to_string()))
         }
         Ok(Self(value))
+    }
+}
+
+impl<'de> Deserialize<'de> for LastName {
+    fn deserialize<D>(deserializer: D) -> Result<LastName, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        LastName::try_from(s).map_err(serde::de::Error::custom)
     }
 }
 

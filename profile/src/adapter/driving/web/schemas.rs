@@ -1,6 +1,14 @@
 use serde::{Serialize, Deserialize};
 
-use crate::{domain::user::User, types::{birthday::Birthday, language::Language, first_name::FirstName, last_name::LastName, nationality::Nationality}};
+use crate::{
+    domain::user::User, types::{
+        birthday::Birthday, 
+        language::Language, 
+        first_name::FirstName, 
+        last_name::LastName, 
+        nationality::Nationality,
+    }
+};
 
 
 #[derive(Serialize, Deserialize)]
