@@ -89,7 +89,7 @@ pub async fn execute<T>(
         match repo.create(conn, new_user).await {
             Ok(user) => return Ok(user),
             Err(err) => {
-                let msg = "User not found and could not be created".to_string() + err.to_string().as_str();
+                let msg = "User not found and could not be created".to_string() + &err.to_string();
                 return Err(UpdateError::Unknown(msg))
             }
         }
