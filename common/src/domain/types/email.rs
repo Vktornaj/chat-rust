@@ -23,6 +23,8 @@ impl TryFrom<String> for Email {
     }
 }
 
+// TODO: implement Display trait
+
 impl From<Email> for String {
     fn from(email: Email) -> Self {
         email.0

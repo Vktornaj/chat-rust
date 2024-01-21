@@ -349,6 +349,7 @@ components:
         password:
           type: string
           pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
+          example: 'Password1!'
 
     Credentials:
       type: object
@@ -361,7 +362,8 @@ components:
         password:
           type: string
           pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
-    
+          example: 'Password1!'
+
     IdentificationJson:
       type: object
       required:
@@ -397,6 +399,7 @@ components:
         password:
           type: string
           pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
+          example: 'Password1!'
 
     UpdatePassword:
       type: object
@@ -407,9 +410,11 @@ components:
         password:
           type: string
           pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
+          example: 'Password1!'
         newPassword:
           type: string
           pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
+          example: 'Password2!'
 
     UuidWrapper:
       type: object
@@ -431,6 +436,7 @@ components:
         confirmationCode:
           type: string
           pattern: '^[0-9]{6}$'
+          example: '000000'
     
   securitySchemes:
     bearerAuth:
