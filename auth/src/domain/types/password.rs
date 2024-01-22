@@ -9,6 +9,7 @@ use argon2::{
     },
     Argon2, PasswordHasher
 };
+use serde::Deserialize;
 
 use common::domain::types::error::ErrorMsg;
 
@@ -52,6 +53,16 @@ impl TryFrom<String> for Password {
             return Err(ErrorMsg("Password should not contain unicode".to_string()))
         }
         Ok(Self(value))
+    }
+}
+
+impl<'de> Deserialize<'de> for Password {
+    fn deserialize<D>(deserializer: D) -> Result<Password, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(Password(s))
     }
 }
 

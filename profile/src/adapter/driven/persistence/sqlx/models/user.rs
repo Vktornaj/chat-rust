@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, NaiveDate};
 use common::domain::types::{error::ErrorMsg, id::Id};
 use sqlx::{postgres::PgRow, Row};
 use uuid::Uuid;
@@ -18,7 +18,7 @@ pub struct User {
     pub user_id: Uuid,
     pub first_name: String,
     pub last_name: String,
-    pub birthday: DateTime<Utc>,
+    pub birthday: NaiveDate,
     pub nationality: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>

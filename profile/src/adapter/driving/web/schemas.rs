@@ -1,44 +1,34 @@
 use serde::{Serialize, Deserialize};
 
-use crate::domain::user::User;
+use crate::{
+    domain::user::User, types::{
+        birthday::Birthday, 
+        language::Language, 
+        first_name::FirstName, 
+        last_name::LastName, 
+        nationality::Nationality,
+    }
+};
 
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserJson {
-    pub first_name: String,
-    pub last_name: String,
-    pub nationality: String,
-    pub languages: Vec<String>,
+    pub firstname: Option<FirstName>,
+    pub lastname: Option<LastName>,
+    pub nationality: Option<Nationality>,
+    pub birthday: Option<Birthday>,
+    pub languages: Option<Vec<Language>>,
 }
 
 impl UserJson {
     pub fn from_user(user: User) -> Self {
         UserJson { 
-            first_name: user.first_name.into(), 
-            last_name: user.last_name.into(),
-            nationality: user.nationality.into(),
-            languages: user.languages.into_iter().map(|x| x.into()).collect(),
+            firstname: Some(user.first_name.into()), 
+            lastname: Some(user.last_name.into()),
+            nationality: Some(user.nationality.into()),
+            birthday: Some(user.birthday.into()),
+            languages: Some(user.languages.into()),
         }
     }
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NewUserJson {
-    pub first_name: String,
-    pub last_name: String,
-    pub birthday: String,
-    pub nationality: String,
-    pub languages: Vec<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UserInfo {
-    pub first_name: Option<String>,
-    pub last_name: Option<String>,
-    pub birthday: Option<String>,
-    pub nationality: Option<String>,
-    pub languages: Option<Vec<String>>
 }

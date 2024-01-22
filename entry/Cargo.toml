@@ -14,8 +14,6 @@ common = { path = "../common"}
 #
 toml = "0.8.2"
 sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }
-deadpool = "0.10.0"
-deadpool-redis = "0.13.0"
 prometheus = "0.13.3"
 systemstat = "0.2.3"
 lazy_static = "1.4.0"

@@ -1,0 +1,445 @@
+openapi: 3.0.3
+info:
+  title: Auth
+  version: 0.0.1
+tags:
+  - name: Auth
+    description: Auth API
+servers:
+  - url: http://localhost:3000
+  - url: http://localhost
+  - url: https://geduardo.com
+paths:
+
+  /api/auth/auth:
+    delete:
+      summary: Delete account
+      operationId: handle_delete_account
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordJson'
+      responses:
+        '200':
+          description: Successful operation
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+  
+  /api/auth/create-auth-confirmation:
+    post:
+      summary: Confirm account creation
+      operationId: handle_create_auth_confirmation
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateTransaction'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseUuidWrapper'
+        '400':
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
+        '409':
+          $ref: '../common/openapi.yml#/components/responses/Conflict'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+  /api/auth/create-auth-request:
+    post:
+      summary: Create account
+      operationId: handle_create_auth_request
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthJson'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseIdentificationJson'
+        '400':
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
+        '409':
+          $ref: '../common/openapi.yml#/components/responses/Conflict'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+  /api/auth/identifier-available:
+    get:
+      summary: Check if identifier is available
+      operationId: handle_identifier_available
+      tags:
+        - Auth
+      parameters:
+        - name: value
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: idType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - email
+              - phone_number
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseBoolean'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+  /api/auth/identifier-request:
+    post:
+      summary: Request add an identifier to account
+      operationId: handle_add_identifier_request
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentificationJson'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseOk'
+        '400':
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
+        '409':
+          $ref: '../common/openapi.yml#/components/responses/Conflict'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+  /api/auth/identifier-confirmation/:
+    post:
+      summary: Confirm add an identifier to account
+      operationId: handle_add_identifier_confirmation
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateTransaction'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseOk'
+        '400':
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+  /api/auth/login:
+    post:
+      summary: Login
+      operationId: handle_login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credentials'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseJsonToken'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+  /api/auth/password:
+    put:
+      summary: Update password
+      operationId: handle_update_password
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePassword'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseOk'
+        '400':
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
+        '409':
+          $ref: '../common/openapi.yml#/components/responses/Conflict'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+  /api/auth/password-recovery-confirmation/{token}:
+    post:
+      summary: Confirm password recovery
+      operationId: handle_password_reset_confirmation
+      tags:
+        - Auth
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordJson'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseUuidWrapper'
+        '400':
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'  
+
+  /api/auth/password-recovery-request:
+    post:
+      summary: Request password recovery
+      operationId: handle_password_recovery_request
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentificationJson'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseOk'
+        '400':
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+      
+# Components
+components:
+  responses:
+
+    ResponseJsonToken:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/JsonToken'
+              error:
+                type: object
+                nullable: true
+                example: null
+
+    ResponseUuidWrapper:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/UuidWrapper'
+              error:
+                type: object
+                nullable: true
+                example: null
+
+    ResponseIdentificationJson:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/IdentificationJson'
+              error:
+                type: object
+                nullable: true
+                example: null
+
+    ResponseBoolean:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  value:
+                    type: boolean
+              error:
+                type: object
+                nullable: true
+                example: null
+
+    ResponseOk:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    example: Ok
+              error:
+                type: object
+                nullable: true
+                example: null
+  
+  schemas:
+
+    AuthJson:
+      type: object
+      required:
+        - identifications
+        - password
+      properties:
+        identifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentificationJson'
+        password:
+          type: string
+          pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
+          example: 'Password1!'
+
+    Credentials:
+      type: object
+      required:
+        - identifier
+        - password
+      properties:
+        identifier:
+          type: string
+        password:
+          type: string
+          pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
+          example: 'Password1!'
+
+    IdentificationJson:
+      type: object
+      required:
+        - value
+        - idType
+      properties:
+        value:
+          type: string
+        idType:
+          type: string
+          enum:
+            - email
+            - phone
+
+    JsonToken:
+      type: object
+      required:
+        - authorizationToken
+        - tokenType
+      properties:
+        authorizationToken:
+          type: string
+        tokenType:
+          type: string
+          enum:
+            - Bearer
+  
+    PasswordJson:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
+          example: 'Password1!'
+
+    UpdatePassword:
+      type: object
+      required:
+        - password
+        - newPassword
+      properties:
+        password:
+          type: string
+          pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
+          example: 'Password1!'
+        newPassword:
+          type: string
+          pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>])(?!.*\s)(?!.*[^\x00-\x7F]).{8,64}$'
+          example: 'Password2!'
+
+    UuidWrapper:
+      type: object
+      required:
+        - uuid
+      properties:
+        uuid:
+          type: string
+          format: uuid
+
+    ValidateTransaction:
+      type: object
+      required:
+        - transactionId
+        - confirmationCode
+      properties:
+        transactionId:
+          type: string
+        confirmationCode:
+          type: string
+          pattern: '^[0-9]{6}$'
+          example: '000000'
+    
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

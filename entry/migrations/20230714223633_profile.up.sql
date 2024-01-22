@@ -6,7 +6,7 @@ CREATE TABLE profiles (
     user_id UUID NOT NULL PRIMARY KEY,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
-    birthday TIMESTAMPTZ NOT NULL,
+    birthday DATE NOT NULL,
     nationality TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -32,7 +32,7 @@ CREATE FUNCTION insert_profile(
     p_id UUID,
     p_first_name TEXT,
     p_last_name TEXT,
-    p_birthday TIMESTAMPTZ,
+    p_birthday DATE,
     p_nationality TEXT,
     p_languages TEXT[]
 )
@@ -43,7 +43,7 @@ RETURNS TABLE (
     hashed_password TEXT,
     first_name TEXT,
     last_name TEXT,
-    birthday TIMESTAMPTZ,
+    birthday DATE,
     nationality TEXT,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ
@@ -53,9 +53,9 @@ RETURNS TABLE (
         _language_code TEXT;
         id UUID;
     BEGIN
-        INSERT INTO profiles (id, first_name, last_name, birthday, nationality)
+        INSERT INTO profiles (user_id, first_name, last_name, birthday, nationality)
         VALUES (p_id, p_first_name, p_last_name, p_birthday, p_nationality)
-        RETURNING profiles.id, profiles.first_name, profiles.last_name, profiles.birthday, profiles.nationality, profiles.created_at, profiles.updated_at
+        RETURNING profiles.user_id, profiles.first_name, profiles.last_name, profiles.birthday, profiles.nationality, profiles.created_at, profiles.updated_at
         INTO id, first_name, last_name, birthday, nationality, created_at, updated_at;
 
         FOR _language_code IN SELECT unnest(p_languages) LOOP

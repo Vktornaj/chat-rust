@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     application::port::driven::auth_repository::AuthRepositoryTrait, 
     domain::{types::{token_data::TokenData, password::Password}, auth::Auth}
@@ -8,12 +10,22 @@ use crate::{
 #[derive(Debug)]
 pub enum DeleteError {
     NotFound,
-    Unautorized,
+    Unauthorized,
     Unknown(String),
 }
 
+impl Display for DeleteError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DeleteError::NotFound => write!(f, "Not found"),
+            DeleteError::Unauthorized => write!(f, "Unauthorized"),
+            DeleteError::Unknown(e) => write!(f, "Unknown error: {}", e),
+        }
+    }
+}
+
 pub struct Payload {
-    pub password: String,
+    pub password: Password,
 }
 
 pub async fn execute<T>(
@@ -27,13 +39,7 @@ pub async fn execute<T>(
     let user_id = if let Ok(token) = TokenData::from_token(token, &secret) {
         token.id
     } else {
-        return Err(DeleteError::Unautorized);
-    };
-    // verify password is a valid password
-    let password = if let Ok(password) = Password::try_from(payload.password) {
-        password
-    } else {
-        return Err(DeleteError::Unautorized);
+        return Err(DeleteError::Unauthorized);
     };
     // get auth
     let auth = if let Ok(auth) = repo.find_by_id(conn, user_id.into()).await {
@@ -42,8 +48,8 @@ pub async fn execute<T>(
         return Err(DeleteError::NotFound);
     };
     // verify password
-    if password.verify_password(&auth.hashed_password).is_err() {
-        return Err(DeleteError::Unautorized);
+    if payload.password.verify_password(&auth.hashed_password).is_err() {
+        return Err(DeleteError::Unauthorized);
     }
     // TODO: delete user articles
     // delete auth
@@ -164,7 +170,7 @@ mod tests {
 
     //     assert!(match res {
     //         Ok(_) => false,
-    //         Err(DeleteError::Unautorized) => true,
+    //         Err(DeleteError::Unauthorized) => true,
     //         _ => false,
     //     });
     // }

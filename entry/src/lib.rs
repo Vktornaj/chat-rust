@@ -3,35 +3,36 @@ use axum::{
         ws::{Message, WebSocket},
         State, WebSocketUpgrade,
     },
-    http::{StatusCode, Uri, Method},
+    http::HeaderValue,
+    http::{Method, StatusCode, Uri},
     middleware,
     response::{IntoResponse, Response},
     routing::{delete, get, post, put},
-    Router, 
-    http::HeaderValue,
+    Router,
 };
-use axum_extra::{TypedHeader, headers::{Authorization, authorization::Bearer}};
+use axum_extra::{
+    headers::{authorization::Bearer, Authorization},
+    TypedHeader,
+};
 use futures_util::stream::SplitSink;
 use prometheus::Encoder;
 use sqlx::{migrate::Migrator, PgPool};
 use systemstat::{Platform, System};
 use tower::ServiceBuilder;
 use tower_http::{
-    trace::{DefaultMakeSpan, TraceLayer}, 
-    cors::{CorsLayer, Any},
+    cors::{Any, CorsLayer},
+    trace::{DefaultMakeSpan, TraceLayer},
 };
 
 use common::adapter::state::AppState;
 use common::domain::models::{
-    client::Clients,
-    event::EventQueue,
-    message::Message as MessageDomain,
+    client::Clients, event::EventQueue, message::Message as MessageDomain,
 };
 
 mod metrics;
 mod ws;
-use profile::handlers as profile_handlers;
 use auth::{handlers as auth_handlers, TokenData};
+use profile::handlers as profile_handlers;
 
 
 pub async fn router() -> Router {
@@ -47,51 +48,61 @@ pub async fn router() -> Router {
     // new thread to get metrics
     run_geting_metricts(sys);
 
+    let api = Router::new()
+        // auth
+        .nest(
+            "/auth",
+            Router::new()
+                .route(
+                    "/create-auth-request",
+                    post(auth_handlers::handle_create_auth_request),
+                )
+                .route(
+                    "/create-auth-confirmation",
+                    post(auth_handlers::handle_create_auth_confirmation),
+                )
+                .route(
+                    "/identifier-request",
+                    post(auth_handlers::handle_add_identifier_request),
+                )
+                .route(
+                    "/identifier-confirmation",
+                    post(auth_handlers::handle_add_identifier_confirmation),
+                )
+                .route("/auth", delete(auth_handlers::handle_delete_account))
+                .route(
+                    "/identifier-available",
+                    get(auth_handlers::handle_identifier_available),
+                )
+                .route("/login", post(auth::handlers::handle_login))
+                .route("/password", put(auth_handlers::handle_update_password))
+                .route(
+                    "/password-recovery-request",
+                    post(auth_handlers::handle_password_recovery_request),
+                )
+                .route(
+                    "/password-recovery-confirmation/:token",
+                    put(auth_handlers::handle_password_reset_confirmation),
+                ),
+        )
+        // profile
+        .nest(
+            "/profile",
+            Router::new().route(
+                "/profile",
+                get(profile_handlers::handle_get_user_info)
+                    .put(profile_handlers::handle_update_user_info),
+            ),
+        )
+        // message
+        .nest("/message", Router::new().route("/ws", get(ws_handler)));
+
+    // Return a `Router`
     Router::new()
         .route("/", get(handler_get_root))
         .route("/metrics", get(handler_metrics))
-        .nest(
-            "/api",
-            Router::new()
-                .nest(
-                    "/auth",
-                    Router::new()
-                        .route(
-                            "/create-auth-request",
-                            post(auth_handlers::handle_create_auth_request),
-                        )
-                        .route(
-                            "/create-user-confirmation",
-                            post(auth_handlers::handle_create_auth_confirmation),
-                        )
-                        .route("/identifier", put(auth_handlers::handle_add_identifier_request))
-                        .route("/auth", delete(auth_handlers::handle_delete_account))
-                        .route(
-                            "/identifier-available",
-                            get(auth_handlers::handle_identifier_available),
-                        )
-                        .route("/login", post(auth::handlers::handle_login))
-                        .route(
-                            "/password",
-                            put(auth_handlers::handle_update_password),
-                        )
-                        .route(
-                            "/password-recovery-request",
-                            post(auth_handlers::handle_password_recovery_request),
-                        )
-                        .route(
-                            "/password-reset-confirmation/:token",
-                            put(auth_handlers::handle_password_reset_confirmation),
-                        ),
-                )
-                .nest(
-                    "/profile", 
-                    Router::new()
-                        .route("/profile", get(profile_handlers::handle_get_user_info))
-                        .route("/profile", put(profile_handlers::handle_update_user_info))
-                    )
-                .nest("/message", Router::new().route("/ws", get(ws_handler))),
-        )
+        // .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", docs))
+        .nest("/api", api)
         .layer(
             ServiceBuilder::new()
                 .layer(middleware::from_fn(metrics::metrics_middleware))
@@ -101,14 +112,14 @@ pub async fn router() -> Router {
                 )
                 .layer(
                     CorsLayer::new()
-                        .allow_methods([ Method::GET, Method::POST, Method::PUT, Method::DELETE])
+                        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
                         .allow_headers(Any)
                         .allow_origin([
                             "http://localhost:5173".parse::<HeaderValue>().unwrap(),
                             "http://192.168.1.120:5173".parse::<HeaderValue>().unwrap(),
                             "http://192.168.1.120".parse::<HeaderValue>().unwrap(),
-                        ])
-                    )
+                        ]),
+                ),
         )
         .fallback(handler_404)
         .with_state(app_state)
@@ -146,21 +157,14 @@ pub async fn ws_handler(
     State(state): State<AppState>,
     TypedHeader(token): TypedHeader<Authorization<Bearer>>,
 ) -> Response {
-    let user_id = if let Ok(auth) = TokenData::from_token(
-        &token.token().to_string(), 
-        &state.config.secret
-    ) {
-        auth.id
-    } else {
-        return StatusCode::UNAUTHORIZED.into_response();
-    };
+    let user_id =
+        if let Ok(auth) = TokenData::from_token(&token.token().to_string(), &state.config.secret) {
+            auth.id
+        } else {
+            return StatusCode::UNAUTHORIZED.into_response();
+        };
     ws.on_upgrade(move |socket| {
-        ws::client_connect::execute(
-            state.clients,
-            state.event_queue,
-            user_id,
-            socket,
-        )
+        ws::client_connect::execute(state.clients, state.event_queue, user_id, socket)
     })
 }
 
@@ -192,7 +196,7 @@ fn run_geting_metricts(sys: System) {
 }
 
 async fn run_consumer_event_queue(
-    event_queue: EventQueue<MessageDomain>, 
+    event_queue: EventQueue<MessageDomain>,
     clients: Clients<SplitSink<WebSocket, Message>>,
 ) {
     ws::consume_event::execute(clients, event_queue).await;

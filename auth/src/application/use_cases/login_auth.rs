@@ -5,7 +5,6 @@ use crate::domain::types::{
 };
 
 use super::super::port::driven::auth_repository::AuthRepositoryTrait;
-use common::domain::types::{email::Email, phone_number::PhoneNumber};
 
 
 #[derive(Debug)]
@@ -16,7 +15,7 @@ pub enum LoginError {
 
 pub struct Payload {
     pub identifier: String,
-    pub password: String
+    pub password: Password,
 }
 
 // TODO: improve when criteria will implemented onto the traid
@@ -31,12 +30,8 @@ pub async fn execute<T>(
         Ok(identifier) => identifier,
         Err(_) => return Err(LoginError::NotFound)
     };
-    let password = match Password::try_from(payload.password) {
-        Ok(password) => password,
-        Err(_) => return Err(LoginError::NotFound)
-    };
     if let Ok(user) = repo.find_by_identification(conn, identifier).await {
-        if password.verify_password(&user.hashed_password).is_ok() {
+        if payload.password.verify_password(&user.hashed_password).is_ok() {
             Ok(TokenData::new(&user.user_id.into()).token(secret))
         } else  {
             Err(LoginError::Unauthorized)

@@ -23,13 +23,14 @@ services:
     volumes:
       - config:/config
       - ./nginx/site-confs:/config/nginx/site-confs
+      - ./nginx/public/:/var/www/public/
     restart: unless-stopped
     depends_on:
       web:
         condition: service_healthy
 
   web:
-    image: 569233066229.dkr.ecr.us-east-2.amazonaws.com/chat-rust:0.0.9
+    image: 569233066229.dkr.ecr.us-east-2.amazonaws.com/chat-rust:0.0.11
     env_file:
       - ./config/.env
     depends_on:

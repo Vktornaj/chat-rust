@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::domain::{types::identification::{Identification, IdentificationValue}, auth::Auth};
+use crate::domain::types::{identification::{Identification, IdentificationValue}, code::Code, password::Password};
 
 
 #[derive(Serialize, Deserialize)]
@@ -44,20 +44,44 @@ pub struct JsonToken {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdatePassword {
-    pub password: String,
-    pub new_password: String,
+    pub password: Password,
+    pub new_password: Password,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ValidateTransaction {
     pub transaction_id: String,
-    pub confirmation_code: String,
+    pub confirmation_code: Code,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Credentials {
     pub identifier: String,
-    pub password: String,
+    pub password: Password,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UuidWrapper {
+    pub uuid: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PasswordJson {
+    pub password: Password,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JsonBool {
+    pub value: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResOk {
+    pub ok: bool,
 }

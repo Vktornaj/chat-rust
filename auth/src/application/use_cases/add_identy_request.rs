@@ -9,8 +9,8 @@ use crate::{application::port::driven::{
 
 #[derive(Debug)]
 pub enum UpdateError {
-    NotFound,
-    Unautorized,
+    NotFound(String),
+    Unauthorized(String),
     Unknown(String),
     Conflict(String),
     InvalidData(String),
@@ -31,7 +31,7 @@ pub async fn execute<T, U, ES>(
     secret: &[u8],
     token: &String,
     payload: Payload,
-) -> Result<Option<String>, UpdateError> {
+) -> Result<String, UpdateError> {
     // validate payload
     let identity = IdentificationValue::from_string(
         payload.identify_value.clone(), 
@@ -41,7 +41,7 @@ pub async fn execute<T, U, ES>(
     let user_id = if let Ok(token) = TokenData::from_token(token, &secret) {
         token.id
     } else {
-        return Err(UpdateError::Unautorized);
+        return Err(UpdateError::Unauthorized("invalid token".to_string()));
     };
     // verify no update request with same email or phone number in cache
     let transaction_id: String = identity.get_value();
@@ -62,7 +62,7 @@ pub async fn execute<T, U, ES>(
             return Err(UpdateError::Conflict("Phone number is the same".to_string()));
         }
     } else {
-        return Err(UpdateError::NotFound);
+        return Err(UpdateError::NotFound("User not found".to_string()));
     };
     // verify email is not in use
     if repo.find_by_identification(conn, identity.clone()).await.is_ok() {
@@ -82,7 +82,7 @@ pub async fn execute<T, U, ES>(
             update_aurh_request, 
             60
         ).await {
-        Ok(transaction_id) => Ok(Some(transaction_id)),
+        Ok(transaction_id) => Ok(transaction_id),
         Err(e) => Err(UpdateError::Unknown(format!("{:?}", e)))
     };
     // Send confirmation email

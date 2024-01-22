@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 
 // alpha-2 code (ISO 639-1)
-#[derive(PartialEq, Debug, Clone, Deserialize, Serialize)]
+#[derive(PartialEq, Debug, Clone, Serialize)]
 pub struct Language(String);
 
 impl TryFrom<String> for Language {
@@ -19,6 +19,16 @@ impl TryFrom<String> for Language {
             return Err(ErrorMsg("Language should be alpha-2 code (ISO 639-1)".to_string()))
         }
         Ok(Self(value))
+    }
+}
+
+impl<'de> Deserialize<'de> for Language {
+    fn deserialize<D>(deserializer: D) -> Result<Language, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Language::try_from(s).map_err(serde::de::Error::custom)
     }
 }
 

@@ -3,7 +3,7 @@
 set -e
 
 local_path=$(pwd)/
-tag='0.0.9'
+tag='0.0.11'
 
 # Build, tag and push docker image to aws ecr
 echo "Pushing docker image"
@@ -14,4 +14,4 @@ docker tag chat-rust:${tag} 569233066229.dkr.ecr.us-east-2.amazonaws.com/chat-ru
 docker push 569233066229.dkr.ecr.us-east-2.amazonaws.com/chat-rust:${tag}
 
 ## only for Mac OS:
-say "image created"
+say "container pushed to aws ecr"

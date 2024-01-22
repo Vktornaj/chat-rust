@@ -1,6 +1,6 @@
 use crate::{application::port::driven::{
     auth_repository::AuthRepositoryTrait, auth_cache::{AuthCacheTrait, CreateAuthRequest}}, 
-    domain::auth::Auth
+    domain::{auth::Auth, types::code::Code}
 };
 
 
@@ -14,7 +14,7 @@ pub enum CreateError {
 
 pub struct Payload {
     pub transaction_id: String,
-    pub confirmation_code: String,
+    pub confirmation_code: Code,
 }
 
 // TODO: add attempt limit
@@ -31,7 +31,7 @@ pub async fn execute<T, U>(
     {
         Ok(auth) => match auth {
             Some(auth) => {
-                if Into::<String>::into(auth.confirmation_code.clone()) == payload.confirmation_code {
+                if auth.confirmation_code == payload.confirmation_code {
                     auth.to_new_auth()
                 } else {
                     return Err(CreateError::InvalidData("invalid confirmation code".to_string()));

@@ -31,7 +31,7 @@ pub async fn execute<T, U, ES>(
     email_service: &impl EmailServiceTrait<ES>,
     environment: &Environment,
     payload: Payload,
-) -> Result<String, CreateError> {
+) -> Result<IdentificationValue, CreateError> {
     // TODO: improve environment handling
     let confirmation_code = match environment {
         Environment::Development => Code::new_0s(6),
@@ -68,7 +68,7 @@ pub async fn execute<T, U, ES>(
         return Err(CreateError::Conflict("identification value is already in use".to_string()));
     }
     // create auth request
-    let res = match repo_cache
+    if let Err(err) = repo_cache
         .add_request::<CreateAuthRequest>(
             cache_conn,
             identity.get_value().clone(),
@@ -77,9 +77,8 @@ pub async fn execute<T, U, ES>(
         )
         .await
     {
-        Ok(transaction_id) => Ok(transaction_id),
-        Err(error) => Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
-    };
+        return Err(CreateError::Unknown(format!("Unknown error: {:?}", err)));
+    }
     // Send confirmation email
     if let IdentificationValue::Email(email) = auth_request.identity {
         if email_service
@@ -95,7 +94,7 @@ pub async fn execute<T, U, ES>(
         }
     }
     // TODO: send sms
-    res
+    Ok(identity)
 }
 
 // #[cfg(test)]

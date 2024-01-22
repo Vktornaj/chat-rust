@@ -1,0 +1,112 @@
+openapi: 3.0.3
+info:
+  title: Profile
+  version: 0.0.1
+tags:
+  - name: Profile
+    description: User profile API
+servers:
+  - url: http://localhost:3000
+  - url: http://localhost
+  - url: https://geduardo.com
+paths:
+  /api/profile/profile:
+    get:
+      summary: Get user information
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseUserJson'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+    put:
+      summary: Update user information
+      tags:
+        - Profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserJson'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseUserJson'
+        '400':
+          $ref: '../common/openapi.yml#/components/responses/BadRequest'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+          
+components:
+  responses:
+    ResponseUserJson:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/UserJson'
+              error:
+                type: object
+                nullable: true
+                example: null
+
+  schemas:
+
+    UserJson:
+      type: object
+      properties:
+        firstname:
+          type: string
+          pattern: '^[a-zA-Z\s]{1,50}$'
+          example: 'Pepe'
+        lastname:
+          type: string
+          pattern: '^[a-zA-Z\s]{1,50}$'
+          example: 'Garcia'
+        nationality:
+          type: string
+          description: 'Nationality should be alpha-3 code (ISO 3166)'
+          pattern: '^[A-Z]{3}$'
+          example: 'MEX'
+        birthday:
+          type: string
+          format: date
+          description: 'You must be at least 13 years old'
+          example: '2000-01-01'
+        languages:
+          type: array
+          items:
+            type: string
+            description: 'Language should be alpha-2 code (ISO 639-1)'
+            pattern: '^[A-Z]{2}$'
+            example: 'ES'
+
+    ResponseUserJson:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UserJson'
+        error:
+          type: object
+          nullable: true
+          example: null
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

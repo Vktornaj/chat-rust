@@ -16,7 +16,7 @@
 //     InvalidData(String),
 //     Unknown(String),
 //     Conflict(String),
-//     Unautorized(String),
+//     Unauthorized(String),
 // }
 
 // pub enum MessageContent {
@@ -56,7 +56,7 @@
 //     let id = if let Ok(auth) = Auth::from_token(token, secret) {
 //         auth.id
 //     } else {
-//         return Err(SendError::Unautorized("Invalid token".to_string()));
+//         return Err(SendError::Unauthorized("Invalid token".to_string()));
 //     };
 //     // create message
 //     let sender_contact_data = Id::try_from(id)

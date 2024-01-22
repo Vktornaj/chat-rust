@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, NaiveDate};
 
 use common::domain::types::{
     error::ErrorMsg,  
@@ -41,7 +41,7 @@ impl NewUser {
         password: String,
         first_name: String,
         last_name: String,
-        birthday: DateTime<Utc>,
+        birthday: NaiveDate,
         nationality: String,
         languages: Vec<String>,
     ) -> Result<Self, ErrorMsg> {
