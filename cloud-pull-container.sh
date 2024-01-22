@@ -13,13 +13,13 @@ ssh_key="~/Desktop/Files/aws_keys/key_001.pem"
 
 # docker down
 ssh -tt -i ${ssh_key} ${remote_user}@${remote_host} << EOF 
-docker compose -f ${remote_path_app}/compose/compose.yml down || true
+docker compose -f ${remote_path_app}/compose.yml down || true
 exit
 EOF
 
 # upadte source code
 echo "Cleaning"
-ssh -i ${ssh_key} ${remote_user}@${remote_host} rm -rf chat_rust/
+ssh -i ${ssh_key} ${remote_user}@${remote_host} rm -rf ${remote_path_app}
 echo "Sending data"
 rsync -avzr --exclude='.git/' --exclude='target/' --delete -e "ssh -p ${remote_port} -i ${ssh_key} -o StrictHostKeyChecking=no" ${local_path_app} ${remote_user}@${remote_host}:${remote_path_app}
 
