@@ -31,7 +31,8 @@ services:
 
   web:
     build:
-      context: ../
+      context: ../../
+      dockerfile: ./compose/dev/Dockerfile
       target: final
     env_file:
       - ./config/.env
