@@ -13,6 +13,7 @@ paths:
   /api/profile/profile:
     get:
       summary: Get user information
+      operationId: handle_get_user_info
       tags:
         - Profile
       security:
@@ -28,6 +29,7 @@ paths:
           $ref: '../common/openapi.yml#/components/responses/InternalServerError'
     put:
       summary: Update user information
+      operationId: handle_update_user_info
       tags:
         - Profile
       security:

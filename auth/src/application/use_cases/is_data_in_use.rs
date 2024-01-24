@@ -1,4 +1,4 @@
-use crate::{application::port::driven::auth_repository::AuthRepositoryTrait, domain::types::identification::IdentificationValue};
+use crate::{application::port::driven::auth_repository::{AuthRepositoryTrait, RepoSelectError}, domain::types::identification::IdentificationValue};
 
 
 pub struct Payload {
@@ -16,7 +16,11 @@ pub async fn execute<T>(
         payload.identify_type
     )?;
 
-    let _ = repo.find_by_identification(conn, identification).await?;
-
-    Ok(true)
+    match repo.find_by_identification(conn, identification).await{
+        Ok(res) => return Ok(false),
+        Err(err) => match err {
+            RepoSelectError::NotFound(_) => return Ok(true),
+            RepoSelectError::Unknown(err) => return Err(err)
+        } 
+    }
 }

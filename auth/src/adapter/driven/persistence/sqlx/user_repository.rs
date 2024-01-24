@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::{Postgres, Pool};
 use uuid::Uuid;
 
-use crate::application::port::driven::auth_repository::{AuthRepositoryTrait, UpdateIdentify};
+use crate::application::port::driven::auth_repository::{AuthRepositoryTrait, RepoSelectError, UpdateIdentify};
 use crate::domain::auth::{Auth, NewAuth};
 use crate::domain::types::identification::{IdentificationValue, NewIdentification};
 use super::models::auth::{AuthSQL, IdentificationSQL, TokenMetadataSQL};
@@ -56,7 +56,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         &self, 
         conn: &Pool<Postgres>,
         identification_value: IdentificationValue,
-    ) -> Result<Auth, String> {
+    ) -> Result<Auth, RepoSelectError> {
         let identification_value: String = match identification_value {
             IdentificationValue::Email(email) => email.into(),
             IdentificationValue::PhoneNumber(phone_number) => phone_number.into(),
@@ -79,11 +79,11 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             ).await {
                 identifications
             } else {
-                return Err("Error getting identifications".to_string());
+                return Err(RepoSelectError::Unknown("Error getting identifications".to_string()));
             },
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err("User not found".to_string()),
-                _ => return Err(err.to_string()),
+                sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
+                _ => return Err(RepoSelectError::Unknown(err.to_string())),
             }
         };
 
@@ -94,19 +94,20 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             ).await {
                 tokens_metadata
             } else {
-                return Err("Error getting tokens metadata".to_string());
+                return Err(RepoSelectError::Unknown("Error getting tokens metadata".to_string()));
             },
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err("User not found".to_string()),
-                _ => return Err(err.to_string()),
+                sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
+                _ => return Err(RepoSelectError::Unknown(err.to_string())),
             }
         };
 
         match auth_sql {
-            Ok(auth) => auth.to_auth_domain(identifications, tokens_metadata).map_err(|err| err.to_string()),
+            Ok(auth) => auth.to_auth_domain(identifications, tokens_metadata)
+                .map_err(|err| RepoSelectError::Unknown(err.to_string())),
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err("User not found".to_string()),
-                _ => return Err(err.to_string()),
+                sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
+                _ => return Err(RepoSelectError::Unknown(err.to_string())),
             }
         }
     }

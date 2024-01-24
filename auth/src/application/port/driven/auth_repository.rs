@@ -6,8 +6,8 @@ use crate::domain::types::identification::{IdentificationValue, NewIdentificatio
 
 
 pub enum RepoSelectError {
-    NotFound,
-    Unknown,
+    NotFound(String),
+    Unknown(String),
 }
 
 pub enum RepoCreateError {
@@ -47,7 +47,7 @@ pub trait AuthRepositoryTrait<T> {
     /// Find and return one single record from the persistence system by id
     async fn find_by_id(&self, conn: &T, user_id: Uuid) -> Result<Auth, String>;
 
-    async fn find_by_identification(&self, conn: &T, identification: IdentificationValue) -> Result<Auth, String>;
+    async fn find_by_identification(&self, conn: &T, identification: IdentificationValue) -> Result<Auth, RepoSelectError>;
 
     /// Insert the received entity in the persistence system
     async fn create(&self, conn: &T, auth: NewAuth) -> Result<Auth, String>;
