@@ -3,7 +3,7 @@
 set -e
 
 local_path=$(pwd)/
-tag='0.0.11'
+tag='0.0.12'
 
 # Build, tag and push docker image to aws ecr
 echo "Pushing docker image"

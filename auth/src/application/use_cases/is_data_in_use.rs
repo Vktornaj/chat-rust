@@ -17,10 +17,10 @@ pub async fn execute<T>(
     )?;
 
     match repo.find_by_identification(conn, identification).await{
-        Ok(res) => return Ok(false),
+        Ok(res) => Ok(false),
         Err(err) => match err {
-            RepoSelectError::NotFound(_) => return Ok(true),
-            RepoSelectError::Unknown(err) => return Err(err)
+            RepoSelectError::NotFound(_) => Ok(true),
+            RepoSelectError::Unknown(err) => Err(err)
         } 
     }
 }

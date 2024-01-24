@@ -30,7 +30,7 @@ services:
         condition: service_healthy
 
   web:
-    image: 569233066229.dkr.ecr.us-east-2.amazonaws.com/chat-rust:0.0.11
+    image: 569233066229.dkr.ecr.us-east-2.amazonaws.com/chat-rust:0.0.12
     env_file:
       - ./config/.env
     depends_on:
