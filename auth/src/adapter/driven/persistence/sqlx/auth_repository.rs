@@ -325,3 +325,28 @@ async fn get_tokens_metadata(conn: &Pool<Postgres>, user_id: &Uuid) -> Result<Ve
         user_id
     ).fetch_all(conn).await
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        application::port::driven::auth_repository::AuthRepositoryTrait, 
+        domain::types::identification::IdentificationValue,
+    };
+    use common::adapter::db;
+    use super::AuthRepository;
+
+    #[tokio::test]
+    async fn it_works() {
+        let auth_repo = AuthRepository();
+        let db_sql_pool = db::create_pool().await;
+
+        let identify = IdentificationValue::from_string(
+            "none@none.none".to_string(),
+            "email".to_string()
+        ).unwrap();
+
+        let res = auth_repo.find_by_identification(&db_sql_pool, identify).await;
+
+        assert!(res.is_err());
+    }
+}

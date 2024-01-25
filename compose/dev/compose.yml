@@ -39,8 +39,8 @@ services:
       cache:
         condition: service_healthy
     command: /bin/sh -c "while sleep 1000; do :; done"
-    cap_add:
-      - SYS_PTRACE
+    # cap_add:
+    #   - SYS_PTRACE
     security_opt:
       - seccomp:unconfined
     # healthcheck:

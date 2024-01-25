@@ -5,7 +5,7 @@
 	"dockerComposeFile": "../compose/dev/compose.yml",
 	"service": "web",
 	"workspaceFolder": "/home/app",
-	// "remoteUser": "root",
+	"remoteUser": "root",
 	// "containerUser": "vscode",
 
 	"remoteEnv": {

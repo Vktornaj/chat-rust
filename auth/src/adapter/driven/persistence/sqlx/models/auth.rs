@@ -3,7 +3,7 @@ use common::domain::types::{error::ErrorMsg, id::Id, email::Email, phone_number:
 use sqlx::{postgres::PgRow, Row};
 use uuid::Uuid;
 
-use crate::domain::{auth::Auth, types::{identification::{Identification, IdentificationValue, self}, token_metadata::TokenMetadata}};
+use crate::domain::{auth::Auth, types::{identification::{Identification, IdentificationValue}, token_metadata::TokenMetadata}};
 
 
 pub struct AuthSQL {
