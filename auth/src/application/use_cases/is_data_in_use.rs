@@ -48,7 +48,6 @@ mod tests {
                 identify_type: "email".to_string(),
             },
         );
-
         assert_eq!(res.await.unwrap(), true);
     }
 
@@ -88,7 +87,6 @@ mod tests {
         {
             panic!("Failed to delete auth");
         }
-
         assert_eq!(res, false);
     }
 }
