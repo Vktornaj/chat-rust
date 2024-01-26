@@ -5,8 +5,8 @@
 	"dockerComposeFile": "../compose/dev/compose.yml",
 	"service": "web",
 	"workspaceFolder": "/home/app",
-	"remoteUser": "root",
-	// "containerUser": "vscode",
+	// "remoteUser": "root",
+	// "containerUser": "root",
 
 	"remoteEnv": {
 		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
@@ -36,6 +36,8 @@
 		"target=/home/app/target/,type=cache",
 		"target=/usr/local/cargo/registry/,type=cache"
 	],
+
+	"postCreateCommand": "sudo chown -R vscode:vscode /home/app/target /usr/local/cargo/registry",
 
 	"forwardPorts": [80]
 }
