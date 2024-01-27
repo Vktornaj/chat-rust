@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::{Postgres, Pool};
 use uuid::Uuid;
 
-use crate::application::port::driven::auth_repository::{AuthRepositoryTrait, UpdateIdentify};
+use crate::application::port::driven::auth_repository::{AuthRepositoryTrait, RepoSelectError, UpdateIdentify};
 use crate::domain::auth::{Auth, NewAuth};
 use crate::domain::types::identification::{IdentificationValue, NewIdentification};
 use super::models::auth::{AuthSQL, IdentificationSQL, TokenMetadataSQL};
@@ -56,7 +56,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         &self, 
         conn: &Pool<Postgres>,
         identification_value: IdentificationValue,
-    ) -> Result<Auth, String> {
+    ) -> Result<Option<Auth>, RepoSelectError> {
         let identification_value: String = match identification_value {
             IdentificationValue::Email(email) => email.into(),
             IdentificationValue::PhoneNumber(phone_number) => phone_number.into(),
@@ -79,11 +79,11 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             ).await {
                 identifications
             } else {
-                return Err("Error getting identifications".to_string());
+                return Err(RepoSelectError::Unknown("Error getting identifications".to_string()));
             },
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err("User not found".to_string()),
-                _ => return Err(err.to_string()),
+                sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
+                _ => return Err(RepoSelectError::Unknown(err.to_string())),
             }
         };
 
@@ -94,19 +94,20 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             ).await {
                 tokens_metadata
             } else {
-                return Err("Error getting tokens metadata".to_string());
+                return Err(RepoSelectError::Unknown("Error getting tokens metadata".to_string()));
             },
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err("User not found".to_string()),
-                _ => return Err(err.to_string()),
+                sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
+                _ => return Err(RepoSelectError::Unknown(err.to_string())),
             }
         };
 
         match auth_sql {
-            Ok(auth) => auth.to_auth_domain(identifications, tokens_metadata).map_err(|err| err.to_string()),
+            Ok(auth) => Some(auth.to_auth_domain(identifications, tokens_metadata)
+                .map_err(|err| RepoSelectError::Unknown(err.to_string()))).transpose(),
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err("User not found".to_string()),
-                _ => return Err(err.to_string()),
+                sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
+                _ => return Err(RepoSelectError::Unknown(err.to_string())),
             }
         }
     }
@@ -323,4 +324,29 @@ async fn get_tokens_metadata(conn: &Pool<Postgres>, user_id: &Uuid) -> Result<Ve
         "#,
         user_id
     ).fetch_all(conn).await
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        application::port::driven::auth_repository::AuthRepositoryTrait, 
+        domain::types::identification::IdentificationValue,
+    };
+    use common::adapter::db;
+    use super::AuthRepository;
+
+    #[tokio::test]
+    async fn it_works() {
+        let auth_repo = AuthRepository();
+        let db_sql_pool = db::create_pool().await;
+
+        let identify = IdentificationValue::from_string(
+            "none@none.none".to_string(),
+            "email".to_string()
+        ).unwrap();
+
+        let res = auth_repo.find_by_identification(&db_sql_pool, identify).await;
+
+        assert!(res.is_err());
+    }
 }

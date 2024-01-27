@@ -30,9 +30,9 @@ pub async fn execute<T>(
         Ok(identifier) => identifier,
         Err(_) => return Err(LoginError::NotFound)
     };
-    if let Ok(user) = repo.find_by_identification(conn, identifier).await {
-        if payload.password.verify_password(&user.hashed_password).is_ok() {
-            Ok(TokenData::new(&user.user_id.into()).token(secret))
+    if let Ok(Some(auth)) = repo.find_by_identification(conn, identifier).await {
+        if payload.password.verify_password(&auth.hashed_password).is_ok() {
+            Ok(TokenData::new(&auth.user_id.into()).token(secret))
         } else  {
             Err(LoginError::Unauthorized)
         }

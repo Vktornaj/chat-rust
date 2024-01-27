@@ -8,7 +8,7 @@ use common::domain::types::{
 use serde::{Serialize, Deserialize};
 
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum IdentificationValue {
     Email(Email),
     PhoneNumber(PhoneNumber),

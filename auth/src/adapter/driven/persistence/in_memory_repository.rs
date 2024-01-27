@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::{
-    application::port::driven::auth_repository::{AuthRepositoryTrait, UpdateIdentify}, 
+    application::port::driven::auth_repository::{AuthRepositoryTrait, RepoSelectError, UpdateIdentify}, 
     domain::{auth::{Auth, NewAuth}, types::identification::{IdentificationValue, NewIdentification}}
 };
 
@@ -21,7 +21,7 @@ impl AuthRepositoryTrait<Mutex<Vec<Auth>>> for InMemoryRepository {
         &self, 
         conn: &Mutex<Vec<Auth>>, 
         identification: IdentificationValue,
-    ) -> Result<Auth, String> {
+    ) -> Result<Option<Auth>, RepoSelectError> {
         // TODO: Implement this method
         todo!()
     }

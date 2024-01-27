@@ -6,13 +6,14 @@ tags:
   - name: Profile
     description: User profile API
 servers:
-  - url: http://localhost:3000
   - url: http://localhost
+  - url: http://192.168.1.116
   - url: https://geduardo.com
 paths:
   /api/profile/profile:
     get:
       summary: Get user information
+      operationId: handle_get_user_info
       tags:
         - Profile
       security:
@@ -28,6 +29,7 @@ paths:
           $ref: '../common/openapi.yml#/components/responses/InternalServerError'
     put:
       summary: Update user information
+      operationId: handle_update_user_info
       tags:
         - Profile
       security:
