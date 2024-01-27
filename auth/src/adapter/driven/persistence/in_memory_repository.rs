@@ -21,7 +21,7 @@ impl AuthRepositoryTrait<Mutex<Vec<Auth>>> for InMemoryRepository {
         &self, 
         conn: &Mutex<Vec<Auth>>, 
         identification: IdentificationValue,
-    ) -> Result<Auth, RepoSelectError> {
+    ) -> Result<Option<Auth>, RepoSelectError> {
         // TODO: Implement this method
         todo!()
     }

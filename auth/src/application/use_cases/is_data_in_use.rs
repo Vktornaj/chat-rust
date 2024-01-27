@@ -16,10 +16,12 @@ pub async fn execute<T>(
     let identification =
         IdentificationValue::from_string(payload.identify_value, payload.identify_type)?;
 
+    println!("identification: {:?}", identification);
+
     match repo.find_by_identification(conn, identification).await {
-        Ok(_) => Ok(false),
+        Ok(_) => Ok(true),
         Err(err) => match err {
-            RepoSelectError::NotFound(_) => Ok(true),
+            RepoSelectError::NotFound(_) => Ok(false),
             RepoSelectError::Unknown(err) => Err(err),
         },
     }
@@ -48,7 +50,7 @@ mod tests {
                 identify_type: "email".to_string(),
             },
         );
-        assert_eq!(res.await.unwrap(), true);
+        assert_eq!(res.await.unwrap(), false);
     }
 
     #[tokio::test]
@@ -87,6 +89,6 @@ mod tests {
         {
             panic!("Failed to delete auth");
         }
-        assert_eq!(res, false);
+        assert_eq!(res, true);
     }
 }

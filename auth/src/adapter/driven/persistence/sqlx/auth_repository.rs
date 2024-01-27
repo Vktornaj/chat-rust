@@ -56,7 +56,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         &self, 
         conn: &Pool<Postgres>,
         identification_value: IdentificationValue,
-    ) -> Result<Auth, RepoSelectError> {
+    ) -> Result<Option<Auth>, RepoSelectError> {
         let identification_value: String = match identification_value {
             IdentificationValue::Email(email) => email.into(),
             IdentificationValue::PhoneNumber(phone_number) => phone_number.into(),
@@ -103,8 +103,8 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         };
 
         match auth_sql {
-            Ok(auth) => auth.to_auth_domain(identifications, tokens_metadata)
-                .map_err(|err| RepoSelectError::Unknown(err.to_string())),
+            Ok(auth) => Some(auth.to_auth_domain(identifications, tokens_metadata)
+                .map_err(|err| RepoSelectError::Unknown(err.to_string()))).transpose(),
             Err(err) => match err {
                 sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
                 _ => return Err(RepoSelectError::Unknown(err.to_string())),

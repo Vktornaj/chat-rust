@@ -4,12 +4,11 @@ set -e
 
 local_path=$(pwd)
 
-# Build, tag and push docker image to aws ecr
 echo "Pushing docker image"
 
+# Login to AWS ECR
 password=$(aws ecr get-login-password --region us-east-2)
 echo $password | docker login --username AWS --password-stdin 569233066229.dkr.ecr.us-east-2.amazonaws.com
-# aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 569233066229.dkr.ecr.us-east-2.amazonaws.com
 
 # Delete latest tag
 aws ecr batch-delete-image --region us-east-2 --repository-name chat-rust --image-ids imageTag=latest > /dev/null 2>&1
