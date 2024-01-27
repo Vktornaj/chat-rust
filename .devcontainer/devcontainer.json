@@ -24,6 +24,8 @@
 		}
 	},
 
+	
+
 	"mounts": [
 		"source=${localWorkspaceFolder}/auth,target=/home/app/auth,type=bind",
 		"source=${localWorkspaceFolder}/common,target=/home/app/common,type=bind",

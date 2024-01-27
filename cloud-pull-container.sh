@@ -5,10 +5,9 @@ set -e
 remote_host="3.138.154.229"
 remote_port=22
 remote_user="admin"
-local_path_app=$(pwd)/compose/
-local_path_compose=$(pwd)/compose/
+local_path_app=$(pwd)/compose/qa/
 remote_path_app="/home/${remote_user}/compose/"
-ssh_key="~/Desktop/Files/aws_keys/key_001.pem"
+ssh_key="~/projects/aws/key_001.pem"
 
 
 # docker down
@@ -31,4 +30,4 @@ docker compose -f ${remote_path_app}compose.yml --env-file ${remote_path_app}con
 exit
 EOF
 
-say "container pulled from aws ecr"
+# say "container pulled from aws ecr"
