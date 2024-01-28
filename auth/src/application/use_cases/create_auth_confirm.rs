@@ -1,6 +1,5 @@
 use crate::{application::port::driven::{
-    auth_repository::AuthRepositoryTrait, auth_cache::{AuthCacheTrait, CreateAuthRequest}}, 
-    domain::{auth::Auth, types::code::Code}
+    auth_repository::AuthRepositoryTrait, auth_cache::{AuthCacheTrait, CreateAuthRequest}}, domain::{auth::Auth, types::code::Code}, TokenData
 };
 
 
@@ -23,8 +22,9 @@ pub async fn execute<T, U>(
     cache_conn: &U,
     repo: &impl AuthRepositoryTrait<T>, 
     repo_cache: &impl AuthCacheTrait<U>,
+    secret: &[u8],
     payload: Payload,
-) -> Result<Auth, CreateError> {
+) -> Result<String, CreateError> {
     // validate confirmation code
     let new_auth = match repo_cache
         .find_by_id::<CreateAuthRequest>(cache_conn, payload.transaction_id.clone()).await 
@@ -47,10 +47,12 @@ pub async fn execute<T, U>(
         Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     };
     // create auth
-    match repo.create(conn, new_auth).await {
-        Ok(user) => Ok(user),
-        Err(error) => Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
-    }
+    let auth = match repo.create(conn, new_auth).await {
+        Ok(auth) => auth,
+        Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
+    };
+
+    Ok(TokenData::new(&auth.user_id.into()).token(secret))
 }
 
 #[cfg(test)]

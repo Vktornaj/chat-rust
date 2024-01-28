@@ -48,18 +48,22 @@ pub async fn handle_create_auth_request(
 pub async fn handle_create_auth_confirmation(
     State(state): State<AppState>,
     Json(payload): Json<ValidateTransaction>,
-) -> JsonResponse<UuidWrapper> {
+) -> JsonResponse<JsonToken> {
     match create_auth_confirm::execute(
         &state.db_sql_pool,
         &state.cache_pool,
         &AuthRepository {},
         &AuthCache {},
+        &state.config.secret,
         create_auth_confirm::Payload {
             transaction_id: payload.transaction_id,
             confirmation_code: payload.confirmation_code
         }
     ).await {
-        Ok(auth) => JsonResponse::new_ok(UuidWrapper { uuid: auth.user_id.into() }),
+        Ok(auth) => JsonResponse::new_ok(JsonToken {
+            authorization_token: auth,
+            token_type: "Bearer".to_string(),
+        }),
         Err(error) => match error {
             create_auth_confirm::CreateError::InvalidData(err) => JsonResponse::new_bad_req_err(0, err),
             create_auth_confirm::CreateError::Conflict(err) => JsonResponse::new_conflict_err(0, err),

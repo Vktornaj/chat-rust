@@ -45,7 +45,7 @@ paths:
               $ref: '#/components/schemas/ValidateTransaction'
       responses:
         '200':
-          $ref: '#/components/responses/ResponseUuidWrapper'
+          $ref: '#/components/responses/ResponseJsonToken'
         '400':
           $ref: '../common/openapi.yml#/components/responses/BadRequest'
         '409':

@@ -29,6 +29,7 @@ use common::domain::models::{
     client::Clients, event::EventQueue, message::Message as MessageDomain,
 };
 
+mod logs;
 mod metrics;
 mod ws;
 use auth::{handlers as auth_handlers, TokenData};
@@ -105,6 +106,9 @@ pub async fn router() -> Router {
         .nest("/api", api)
         .layer(
             ServiceBuilder::new()
+                // Loggs
+                .layer(middleware::from_fn(logs::log_request_response))
+                // Metrics
                 .layer(middleware::from_fn(metrics::metrics_middleware))
                 .layer(
                     TraceLayer::new_for_http()

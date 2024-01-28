@@ -16,8 +16,6 @@ pub async fn execute<T>(
     let identification =
         IdentificationValue::from_string(payload.identify_value, payload.identify_type)?;
 
-    println!("identification: {:?}", identification);
-
     match repo.find_by_identification(conn, identification).await {
         Ok(_) => Ok(true),
         Err(err) => match err {
