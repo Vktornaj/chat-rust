@@ -24,8 +24,6 @@
 		}
 	},
 
-	
-
 	"mounts": [
 		"source=${localWorkspaceFolder}/auth,target=/home/app/auth,type=bind",
 		"source=${localWorkspaceFolder}/common,target=/home/app/common,type=bind",
@@ -39,7 +37,7 @@
 		"target=/usr/local/cargo/registry/,type=cache"
 	],
 
-	"postCreateCommand": "sudo chown -R vscode:vscode /home/app/target /usr/local/cargo/registry",
+	"postCreateCommand": "sudo chown -R vscode:vscode /home/app /usr/local/cargo",
 
 	"forwardPorts": [80]
 }
