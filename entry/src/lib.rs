@@ -1,7 +1,7 @@
 use axum::{
     extract::{
         ws::{Message, WebSocket},
-        State, WebSocketUpgrade,
+        Query, State, WebSocketUpgrade,
     },
     http::HeaderValue,
     http::{Method, StatusCode, Uri},
@@ -10,12 +10,9 @@ use axum::{
     routing::{delete, get, post, put},
     Router,
 };
-use axum_extra::{
-    headers::{authorization::Bearer, Authorization},
-    TypedHeader,
-};
 use futures_util::stream::SplitSink;
 use prometheus::Encoder;
+use schemas::AuthWebSocket;
 use sqlx::{migrate::Migrator, PgPool};
 use systemstat::{Platform, System};
 use tower::ServiceBuilder;
@@ -31,10 +28,13 @@ use common::domain::models::{
 
 mod logs;
 mod metrics;
+mod schemas;
 mod ws;
-use auth::{handlers as auth_handlers, TokenData};
+use auth::{
+    handlers as auth_handlers,
+    verify_single_use_token::{self, Payload}, TokenCache,
+};
 use profile::handlers as profile_handlers;
-
 
 pub async fn router() -> Router {
     let sys: System = System::new();
@@ -159,19 +159,26 @@ async fn handler_metrics() -> std::string::String {
 pub async fn ws_handler(
     ws: WebSocketUpgrade,
     State(state): State<AppState>,
-    TypedHeader(token): TypedHeader<Authorization<Bearer>>,
+    Query(auth_websocket): Query<AuthWebSocket>,
 ) -> Response {
-    let user_id =
-        if let Ok(auth) = TokenData::from_token(&token.token().to_string(), &state.config.secret) {
-            auth.id
-        } else {
-            return StatusCode::UNAUTHORIZED.into_response();
-        };
+    let user_id = if let Ok(token) = verify_single_use_token::execute(
+        &state.config.secret,
+        &state.cache_pool,
+        &TokenCache(),
+        verify_single_use_token::Payload {
+            token: auth_websocket.single_use_token,
+        },
+    ).await {
+        token.user_id
+    } else {
+        return StatusCode::UNAUTHORIZED.into_response();
+    };
     ws.on_upgrade(move |socket| {
         ws::client_connect::execute(state.clients, state.event_queue, user_id, socket)
     })
 }
 
+// Metrics
 fn run_geting_metricts(sys: System) {
     tokio::spawn(async move {
         loop {
@@ -199,6 +206,7 @@ fn run_geting_metricts(sys: System) {
     });
 }
 
+// Event queue
 async fn run_consumer_event_queue(
     event_queue: EventQueue<MessageDomain>,
     clients: Clients<SplitSink<WebSocket, Message>>,

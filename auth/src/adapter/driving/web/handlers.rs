@@ -6,7 +6,7 @@ use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Bearer;
 use common::adapter::response_schemas::JsonResponse;
 
-use crate::adapter::driven::cache::redis::user_cache::AuthCache;
+use crate::adapter::driven::cache::redis::auth_cache::AuthCache;
 use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailService;
 use crate::adapter::driven::persistence::sqlx::auth_repository::AuthRepository;
 use crate::application::use_cases::{create_auth_request, create_auth_confirm, is_data_in_use, login_auth, delete_auth, update_password, add_identy_request, add_identy_confirm, reset_password_request, reset_password_confirm};

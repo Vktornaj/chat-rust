@@ -2,5 +2,15 @@ mod domain;
 mod application;
 mod adapter;
 
-pub use domain::types::token_data::TokenData;
+
+// Adapter layer
 pub use adapter::driving::web::{handlers, schemas};
+pub use adapter::driven::cache::redis::token_cache::TokenCache;
+// Application layer
+pub use application::port::driven::token_cache::TokenCacheTrait;
+pub use application::use_cases::{
+    create_single_use_token,
+    verify_single_use_token,
+};
+// TODO: remove instaces from domain layer
+pub use domain::types::token_data::TokenData;
