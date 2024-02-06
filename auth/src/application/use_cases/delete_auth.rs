@@ -2,9 +2,9 @@ use std::fmt::Display;
 
 use crate::{
     application::port::driven::auth_repository::AuthRepositoryTrait, 
-    domain::{types::{token_data::TokenData, password::Password}, auth::Auth}
+    domain::{types::{token_data::TokenData, password::Password}, 
+    auth::Auth}
 };
-
 
 
 #[derive(Debug)]

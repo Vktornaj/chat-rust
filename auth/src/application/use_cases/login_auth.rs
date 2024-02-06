@@ -40,3 +40,39 @@ pub async fn execute<T>(
         Err(LoginError::NotFound)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::execute;
+    use common::adapter::db::create_pool;
+    use crate::{
+        adapter::driven::persistence::sqlx::auth_repository::AuthRepository, 
+        application::use_cases::login_auth::Payload,
+    };
+    use common::adapter::config::Config;
+
+    #[tokio::test]
+    pub async fn test_login_auth() {
+
+        let pool = create_pool().await;
+        let config = Config::new();
+
+        let identifier = "vktornajpro@gmail.com";
+        let password = "Password123!";
+
+        let res = execute(
+            &pool, 
+            &AuthRepository {}, 
+            &config.secret, 
+            Payload {
+                identifier: identifier.to_string(),
+                password: password.to_string().try_into().unwrap(),
+            }
+        ).await;
+
+        println!("{:?}", res);
+
+        assert!(res.is_ok());
+    }
+        
+}

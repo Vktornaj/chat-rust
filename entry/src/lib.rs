@@ -31,10 +31,10 @@ mod metrics;
 mod schemas;
 mod ws;
 use auth::{
-    handlers as auth_handlers,
-    verify_single_use_token::{self, Payload}, TokenCache,
+    authenticate_single_use_token, handlers as auth_handlers, TokenCache
 };
 use profile::handlers as profile_handlers;
+
 
 pub async fn router() -> Router {
     let sys: System = System::new();
@@ -161,13 +161,11 @@ pub async fn ws_handler(
     State(state): State<AppState>,
     Query(auth_websocket): Query<AuthWebSocket>,
 ) -> Response {
-    let user_id = if let Ok(token) = verify_single_use_token::execute(
+    let user_id = if let Ok(token) = authenticate_single_use_token::execute(
         &state.config.secret,
         &state.cache_pool,
         &TokenCache(),
-        verify_single_use_token::Payload {
-            token: auth_websocket.single_use_token,
-        },
+        auth_websocket.single_use_token,
     ).await {
         token.user_id
     } else {

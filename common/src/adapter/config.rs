@@ -22,7 +22,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         let secret = env::var("SECRET_KEY").unwrap_or_else(|err| {
             if cfg!(debug_assertions) {
                 SECRET.to_string()

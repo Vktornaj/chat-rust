@@ -10,7 +10,7 @@ pub use adapter::driven::cache::redis::token_cache::TokenCache;
 pub use application::port::driven::token_cache::TokenCacheTrait;
 pub use application::use_cases::{
     create_single_use_token,
-    verify_single_use_token,
+    authenticate_single_use_token,
 };
 // TODO: remove instaces from domain layer
 pub use domain::types::token_data::TokenData;
