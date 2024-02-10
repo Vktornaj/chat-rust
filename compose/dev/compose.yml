@@ -30,7 +30,7 @@ services:
     #     condition: service_healthy
 
   web:
-    image: mcr.microsoft.com/devcontainers/rust:1-1-bullseye
+    image: mcr.microsoft.com/devcontainers/rust:latest
     env_file:
       - ./config/.env
     depends_on:
