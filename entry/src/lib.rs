@@ -84,6 +84,10 @@ pub async fn router() -> Router {
                 .route(
                     "/password-recovery-confirmation/:token",
                     put(auth_handlers::handle_password_reset_confirmation),
+                )
+                .route(
+                    "/single-use-token",
+                    get(auth_handlers::handle_single_use_token)
                 ),
         )
         // profile
@@ -161,13 +165,13 @@ pub async fn ws_handler(
     State(state): State<AppState>,
     Query(auth_websocket): Query<AuthWebSocket>,
 ) -> Response {
-    let user_id = if let Ok(token) = authenticate_single_use_token::execute(
+    let user_id = if let Ok(token_data) = authenticate_single_use_token::execute(
         &state.config.secret,
         &state.cache_pool,
         &TokenCache(),
-        auth_websocket.single_use_token,
+        auth_websocket.auth_token,
     ).await {
-        token.user_id
+        token_data.user_id
     } else {
         return StatusCode::UNAUTHORIZED.into_response();
     };

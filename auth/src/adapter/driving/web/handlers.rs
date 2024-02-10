@@ -10,6 +10,7 @@ use crate::adapter::driven::cache::redis::auth_cache::AuthCache;
 use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailService;
 use crate::adapter::driven::persistence::sqlx::auth_repository::AuthRepository;
 use crate::application::use_cases::{create_auth_request, create_auth_confirm, is_data_in_use, login_auth, delete_auth, update_password, add_identy_request, add_identy_confirm, reset_password_request, reset_password_confirm};
+use crate::{create_single_use_token, TokenCache};
 use crate::schemas::{UuidWrapper, PasswordJson, JsonBool, ResOk};
 use common::adapter::state::AppState;
 use super::schemas::{AuthJson, ValidateTransaction, Credentials, JsonToken, UpdatePassword, IdentificationJson};
@@ -113,6 +114,32 @@ pub async fn handle_login(
         Err(err) => match err {
             _ => JsonResponse::new_unauthorized_err(0, "invalid credentials".to_string()),
         },
+    }
+}
+
+pub async fn handle_single_use_token(
+    State(state): State<AppState>,
+    TypedHeader(token): TypedHeader<Authorization<Bearer>>,
+) -> JsonResponse<JsonToken> {
+    match create_single_use_token::execute(
+        &state.config.secret,
+        &state.cache_pool,
+        &TokenCache {},
+        token.token().to_string(),
+        create_single_use_token::Payload { ..Default::default() },
+    ).await {
+        Ok(token) => JsonResponse::new_ok(JsonToken {
+            authorization_token: token,
+            token_type: "Bearer".to_string(),
+        }),
+        Err(err) => match err {
+            create_single_use_token::Error::Unauthorized => {
+                JsonResponse::new_unauthorized_err(0, "unauthorized".to_string())
+            },
+            create_single_use_token::Error::Unknown(err) => {
+                JsonResponse::new_int_ser_err(0, err.to_string())
+            },
+        }
     }
 }
 

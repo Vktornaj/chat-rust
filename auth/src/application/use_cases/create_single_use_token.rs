@@ -3,6 +3,9 @@ use crate::{
     domain::types::single_use_token::SingleUseTokenData, TokenData,
 };
 
+
+const DURATION: i64 = 600;
+
 #[derive(Debug)]
 pub enum Error {
     Unauthorized,
@@ -13,6 +16,12 @@ pub struct Payload {
     pub duration: i64,
 }
 
+impl Default for Payload {
+    fn default() -> Self {
+        Payload { duration: DURATION }
+    }
+}
+
 pub async fn execute<T>(
     secret: &[u8], 
     cache_conn: &T,
@@ -20,6 +29,7 @@ pub async fn execute<T>(
     token: String,
     payload: Payload,
 ) -> Result<String, Error> {
+
     let user_token_data = TokenData::from_token(&token, secret)
         .map_err(|_| Error::Unauthorized)?;
 
