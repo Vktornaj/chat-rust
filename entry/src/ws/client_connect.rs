@@ -32,6 +32,7 @@ pub async fn execute(
     
     let task = async move {
         while let Some(message) = receiver.next().await {
+            println!("Message: {:?}", message);
             let message = if let Ok(message) = message {
                 message
             } else {

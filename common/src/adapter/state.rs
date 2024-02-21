@@ -33,7 +33,7 @@ impl AppState {
         AppState {
             db_sql_pool: db::create_pool().await,
             cache_pool: cache::create_pool().await,
-            config: Config::new().await,
+            config: Config::new(),
             clients: Arc::new(RwLock::new(HashMap::new())),
             event_queue: Arc::new(RwLock::new(VecDeque::new())),
             email_conn: Client::new(&shared_config),
