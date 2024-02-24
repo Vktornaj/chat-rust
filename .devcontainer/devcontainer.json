@@ -44,5 +44,14 @@
 	// "postCreateCommand": "sudo chown -R vscode:vscode /home/app /usr/local/cargo",
 	
 	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
-	"forwardPorts": [80]
+	"forwardPorts": [
+		80
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"Gruntfuggly.todo-tree"
+			]
+		}
+	}
 }

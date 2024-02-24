@@ -10,13 +10,12 @@ use aws_sdk_sesv2::Client;
 use crate::domain::models::client::Clients;
 use crate::domain::models::event::EventQueue;
 use super::{config::Config, db, cache};
-use crate::domain::models::message::Message as DomainMessage;
 
 
 #[derive(Clone)]
 pub struct AppState {
     pub clients: Clients<SplitSink<WebSocket, Message>>,
-    pub event_queue: EventQueue<DomainMessage>,
+    pub event_queue: EventQueue,
     pub db_sql_pool: PgPool,
     pub cache_pool: Pool,
     pub email_conn: Client,

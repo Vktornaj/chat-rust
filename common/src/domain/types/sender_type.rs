@@ -5,15 +5,13 @@ use uuid::Uuid;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum Sender {
-    User(Id),
-    Group(Id),
+    User(Id)
 }
 
 impl From<Sender> for Uuid {
     fn from(value: Sender) -> Self {
         match value {
             Sender::User(id) => Into::<Uuid>::into(id),
-            Sender::Group(id) => Into::<Uuid>::into(id),
         }
     }
 }
@@ -39,7 +37,6 @@ impl From<Sender> for Id {
     fn from(value: Sender) -> Self {
         match value {
             Sender::User(id) => id,
-            Sender::Group(id) => id,
         }
     }
 }

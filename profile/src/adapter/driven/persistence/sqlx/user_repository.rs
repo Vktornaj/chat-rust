@@ -13,7 +13,7 @@ use crate::application::port::driven::errors::{
     RepoSelectError, 
     RepoUpdateError,
 };
-use crate::domain::user::{User as UserDomain, NewUser};
+use crate::domain::profile::{Profile as UserDomain, NewProfile};
 use super::models::user::User as UserDB;
 
 
@@ -130,7 +130,7 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
         }
     }
 
-    async fn create(&self, conn: &Pool<Postgres>, new_user: NewUser) -> Result<UserDomain, RepoCreateError> {
+    async fn create(&self, conn: &Pool<Postgres>, new_user: NewProfile) -> Result<UserDomain, RepoCreateError> {
         let result = sqlx::query!(
             r#"
                 SELECT * FROM insert_profile($1, $2, $3, $4, $5, $6);

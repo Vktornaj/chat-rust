@@ -22,9 +22,7 @@ use tower_http::{
 };
 
 use common::adapter::state::AppState;
-use common::domain::models::{
-    client::Clients, event::EventQueue, message::Message as MessageDomain,
-};
+use common::domain::models::{client::Clients, event::EventQueue};
 
 mod logs;
 mod metrics;
@@ -44,7 +42,7 @@ pub async fn router() -> Router {
     run_migrations(&app_state.db_sql_pool).await;
 
     // new thread to listen to event queue
-    run_consumer_event_queue(app_state.event_queue.clone(), app_state.clients.clone()).await;
+    // run_consumer_event_queue(app_state.event_queue.clone(), app_state.clients.clone()).await;
 
     // new thread to get metrics
     run_geting_metricts(sys);
@@ -209,9 +207,9 @@ fn run_geting_metricts(sys: System) {
 }
 
 // Event queue
-async fn run_consumer_event_queue(
-    event_queue: EventQueue<MessageDomain>,
-    clients: Clients<SplitSink<WebSocket, Message>>,
-) {
-    ws::consume_event::execute(clients, event_queue).await;
-}
+// async fn run_consumer_event_queue(
+//     event_queue: EventQueue<MessageDomain>,
+//     clients: Clients<SplitSink<WebSocket, Message>>,
+// ) {
+//     ws::consume_event::execute(clients, event_queue).await;
+// }

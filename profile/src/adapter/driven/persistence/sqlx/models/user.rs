@@ -4,7 +4,7 @@ use sqlx::{postgres::PgRow, Row};
 use uuid::Uuid;
 
 use crate::domain::{
-    user::User as UserDomain, types::{
+    profile::Profile as UserDomain, types::{
         first_name::FirstName, 
         last_name::LastName, 
         birthday::Birthday, 

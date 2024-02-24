@@ -6,7 +6,6 @@ use uuid::Uuid;
 use common::domain::{models::{
         client::{Client, Clients},
         event::{Event, EventQueue}, 
-        message::Message as MessageDomain,
     }, 
     types::id::Id
 };
@@ -15,7 +14,7 @@ use common::adapter::protos_schemas::proto_message::ProtoMessage;
 
 pub async fn execute(
     clients: Clients<SplitSink<WebSocket, Message>>,
-    event_queue: EventQueue<MessageDomain>,
+    event_queue: EventQueue,
     sender_id: Uuid,
     socket: WebSocket,
 ) {
@@ -55,26 +54,26 @@ pub async fn execute(
                 }
             };
 
-            let message_domain = MessageDomain::new(
-                user_id.clone().into(),
-                if let Some(recipient) = proto_message.recipient.recipient.clone() {
-                    if let Ok(recipient) = recipient.try_into() {
-                        recipient
-                    } else {
-                        eprintln!("Error converting recipient");
-                        continue;
-                    }
-                } else {
-                    eprintln!("Error getting recipient");
-                    continue;
-                },
-                proto_message.content,
-            );
+            // let message_domain = MessageDomain::new(
+            //     user_id.clone().into(),
+            //     if let Some(recipient) = proto_message.recipient.recipient.clone() {
+            //         if let Ok(recipient) = recipient.try_into() {
+            //             recipient
+            //         } else {
+            //             eprintln!("Error converting recipient");
+            //             continue;
+            //         }
+            //     } else {
+            //         eprintln!("Error getting recipient");
+            //         continue;
+            //     },
+            //     proto_message.content,
+            // );
 
-            event_queue.write().await.push_back(Event {
-                recipient_id: message_domain.recipient.clone(), 
-                content: message_domain 
-            });
+            // event_queue.write().await.push_back(Event {
+            //     recipient_id: message_domain.recipient.clone(), 
+            //     content: message_domain 
+            // });
         }
     };
 

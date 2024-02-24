@@ -4,14 +4,14 @@ use tokio::time::sleep;
 use std::time::Duration;
 
 use common::domain::{
-    models::{client::Clients, event::EventQueue, message::Message as MessageDomain},
+    models::{client::Clients, event::EventQueue},
     types::recipient::Recipient,
 };
 use message::handlers;
 
 pub async fn execute(
     clients: Clients<SplitSink<WebSocket, Message>>,
-    event_queue: EventQueue<MessageDomain>,
+    event_queue: EventQueue,
 ) {
     // Spawn a task to listen for updates to the event queue
     tokio::spawn(async move {
@@ -22,25 +22,25 @@ pub async fn execute(
                 queue.pop_front()
             };
 
-            if let Some(mut event) = event {
-                match handlers::send_message(event.clone(), clients.clone()).await {
-                    Ok(unsent_ids) => {
-                        if !unsent_ids.is_empty() {
-                            event.recipient_id = match event.recipient_id {
-                                Recipient::User(_) => Recipient::User(unsent_ids[0]),
-                                Recipient::Group(group) => {
-                                    let mut group_clone = group.clone();
-                                    group_clone.members = unsent_ids;
-                                    return Recipient::Group(group_clone);
-                                }
-                            };
+            // if let Some(mut event) = event {
+            //     match handlers::send_message(event.clone(), clients.clone()).await {
+            //         Ok(unsent_ids) => {
+            //             if !unsent_ids.is_empty() {
+            //                 event.recipient_id = match event.recipient_id {
+            //                     Recipient::User(_) => Recipient::User(unsent_ids[0]),
+            //                     Recipient::Group(group) => {
+            //                         let mut group_clone = group.clone();
+            //                         group_clone.members = unsent_ids;
+            //                         return Recipient::Group(group_clone);
+            //                     }
+            //                 };
 
-                            event_queue.write().await.push_back(event);
-                        }
-                    }
-                    Err(_) => println!("Error sending message: {}", &event.content.id),
-                }
-            }
+            //                 event_queue.write().await.push_back(event);
+            //             }
+            //         }
+            //         Err(_) => println!("Error sending message: {}", &event.content.id),
+            //     }
+            // }
             // Sleep for a bit
             sleep(Duration::from_millis(100)).await;
         }

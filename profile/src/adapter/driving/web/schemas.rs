@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 
 use crate::{
-    domain::user::User, types::{
+    domain::profile::Profile, types::{
         birthday::Birthday, 
         language::Language, 
         first_name::FirstName, 
@@ -22,7 +22,7 @@ pub struct UserJson {
 }
 
 impl UserJson {
-    pub fn from_user(user: User) -> Self {
+    pub fn from_user(user: Profile) -> Self {
         UserJson { 
             firstname: Some(user.first_name.into()), 
             lastname: Some(user.last_name.into()),

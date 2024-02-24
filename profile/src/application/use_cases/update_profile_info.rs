@@ -6,7 +6,7 @@ use common::domain::types::id::Id;
 use super::super::port::driven::user_repository::UserRepositoryTrait;
 use crate::{
     domain::{
-        user::{User, NewUser}, types::{
+        profile::{Profile, NewProfile}, types::{
             first_name::FirstName, 
             last_name::LastName, 
             birthday::Birthday, 
@@ -52,7 +52,7 @@ pub async fn execute<T>(
     secret: &[u8],
     token: &String,
     payload: Payload,
-) -> Result<User, UpdateError> {
+) -> Result<Profile, UpdateError> {
     // verify token is valid
     let id = if let Ok(auth) = TokenData::from_token(token, &secret) {
         auth.id
@@ -78,7 +78,7 @@ pub async fn execute<T>(
         }
     } else {
         // create user
-        let new_user = NewUser {
+        let new_user = NewProfile {
             user_id: Id::try_from(id).map_err(|_| UpdateError::InvalidData("Could not create user".to_string()))?,
             first_name: payload.first_name.ok_or(UpdateError::InvalidData("First name is required".to_string()))?,
             last_name: payload.last_name.ok_or(UpdateError::InvalidData("Last name is required".to_string()))?,
@@ -96,7 +96,7 @@ pub async fn execute<T>(
     };
 }
 
-fn any_equal(payload: &Payload, user: User) -> bool {
+fn any_equal(payload: &Payload, user: Profile) -> bool {
     if Some(user.first_name) == payload.first_name {
         return true;
     }

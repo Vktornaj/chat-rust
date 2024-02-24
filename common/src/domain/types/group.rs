@@ -9,3 +9,9 @@ pub struct Group {
     pub name: String,
     pub members: Vec<Id>,
 }
+
+impl PartialEq for Group {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
