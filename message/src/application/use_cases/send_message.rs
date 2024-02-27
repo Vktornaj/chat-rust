@@ -1,7 +1,7 @@
 use uuid::Uuid;
 
 use crate::{
-    application::port::driven::{media_repository::{Media, MediaRepository}, message_repository::MessageRepository}, 
+    application::port::driven::{media_repository::{Media, MediaRepository}, message_repository::MessageRepositoryTrait}, 
     domain::message::{MessageType, NewMessage}
 };
 
@@ -18,7 +18,7 @@ pub struct Payload {
 
 pub async fn execute<T, U>(
     conn: &T,
-    message_repository: &impl MessageRepository<T>,
+    message_repository: &impl MessageRepositoryTrait<T>,
     conn_media: &U,
     media_repository: &impl MediaRepository<U>,
     payload: Payload,
@@ -51,7 +51,7 @@ pub async fn execute<T, U>(
             }
         }
     };
-    match message_repository.create(conn, &new_message).await {
+    match message_repository.create(conn, new_message).await {
         Ok(message) => Ok(message.id),
         Err(err) => Err(Error::DatabaseError(err.to_string())),
     }

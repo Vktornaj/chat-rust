@@ -1,9 +1,10 @@
 use chrono::{DateTime, Utc};
 use common::domain::types::{recipient::Recipient, sender_type::Sender};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Serialize, Deserialize)]
 pub enum MessageType {
     Text,
     Image,
@@ -12,6 +13,7 @@ pub enum MessageType {
     File,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Message {
     pub id: Uuid,
     pub sender: Sender,
@@ -25,6 +27,7 @@ pub struct Message {
     pub updated_at: DateTime<Utc>,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct NewMessage {
     pub sender: Sender,
     pub recipient: Recipient,

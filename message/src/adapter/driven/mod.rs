@@ -1,1 +1,1 @@
-pub mod persistence;
+pub mod message_repository;

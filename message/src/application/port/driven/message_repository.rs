@@ -28,15 +28,15 @@ pub struct UpdateMessage {
 }
 
 #[async_trait]
-pub trait MessageRepository<T> {
-    async fn create(&self, conn: &T, message: &NewMessage) -> Result<Message, Error>;
+pub trait MessageRepositoryTrait<T> {
+    async fn create(&self, conn: &T, new_message: NewMessage) -> Result<Message, Error>;
     async fn find_list(
         &self, 
         conn: &T, 
         sender: Sender,
         recipient: Recipient,
-        limit: u32, 
-        offset: u32, 
+        limit: i64, 
+        offset: Option<u64>, 
         ascending: bool,
     ) -> Result<Vec<Message>, Error>;
     async fn find_by_id(&self, conn: &T, id: Uuid) -> Result<Message, Error>;

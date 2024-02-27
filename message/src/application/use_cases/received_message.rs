@@ -2,7 +2,7 @@ use chrono::Utc;
 use common::domain::types::id::Id;
 use uuid::Uuid;
 
-use crate::application::port::driven::message_repository::{MessageRepository, UpdateMessage};
+use crate::application::port::driven::message_repository::{MessageRepositoryTrait, UpdateMessage};
 
 
 pub enum Error {
@@ -19,7 +19,7 @@ pub struct Payload {
 
 pub async fn execute<T, U>(
     conn: &T,
-    message_repository: &impl MessageRepository<T>,
+    message_repository: &impl MessageRepositoryTrait<T>,
     payload: Payload,
 ) -> Result<Uuid, Error> {
     let message = match message_repository.find_by_id(conn, payload.message_id).await {

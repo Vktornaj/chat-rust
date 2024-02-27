@@ -39,3 +39,12 @@ impl PartialEq<Id> for Recipient {
         }
     }
 }
+
+impl From<Recipient> for String {
+    fn from(value: Recipient) -> Self {
+        match value {
+            Recipient::User(id) => Into::<String>::into(id),
+            Recipient::Group(group) => Into::<String>::into(group.id),
+        }
+    }
+}

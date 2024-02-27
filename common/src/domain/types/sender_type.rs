@@ -40,3 +40,11 @@ impl From<Sender> for Id {
         }
     }
 }
+
+impl From<Sender> for String {
+    fn from(value: Sender) -> Self {
+        match value {
+            Sender::User(id) => Into::<String>::into(id),
+        }
+    }
+}
