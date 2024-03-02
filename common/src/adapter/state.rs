@@ -7,15 +7,16 @@ use sqlx::PgPool;
 use tokio::sync::RwLock;
 use aws_sdk_sesv2::Client;
 
-use crate::domain::models::client::Clients;
-use crate::domain::models::event::EventQueue;
+use crate::domain::{models::client::Clients, protos_schemas::proto_package::ProtoPackage};
 use super::{config::Config, db, cache};
 
+
+pub type PackageQueue = Arc<RwLock<VecDeque<ProtoPackage>>>;
 
 #[derive(Clone)]
 pub struct AppState {
     pub clients: Clients<SplitSink<WebSocket, Message>>,
-    pub event_queue: EventQueue,
+    pub package_queue: PackageQueue,
     pub db_sql_pool: PgPool,
     pub cache_pool: Pool,
     pub email_conn: Client,
@@ -34,7 +35,7 @@ impl AppState {
             cache_pool: cache::create_pool().await,
             config: Config::new(),
             clients: Arc::new(RwLock::new(HashMap::new())),
-            event_queue: Arc::new(RwLock::new(VecDeque::new())),
+            package_queue: Arc::new(RwLock::new(VecDeque::new())),
             email_conn: Client::new(&shared_config),
         }
     }

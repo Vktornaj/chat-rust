@@ -1,18 +1,12 @@
 use axum::{
-    extract::{
-        ws::{Message, WebSocket},
-        Query, State, WebSocketUpgrade,
-    },
     http::HeaderValue,
     http::{Method, StatusCode, Uri},
     middleware,
-    response::{IntoResponse, Response},
+    response::IntoResponse,
     routing::{delete, get, post, put},
     Router,
 };
-use futures_util::stream::SplitSink;
 use prometheus::Encoder;
-use schemas::AuthWebSocket;
 use sqlx::{migrate::Migrator, PgPool};
 use systemstat::{Platform, System};
 use tower::ServiceBuilder;
@@ -22,16 +16,14 @@ use tower_http::{
 };
 
 use common::adapter::state::AppState;
-use common::domain::models::{client::Clients, event::EventQueue};
 
 mod logs;
 mod metrics;
 mod schemas;
 mod ws;
-use auth::{
-    authenticate_single_use_token, handlers as auth_handlers, TokenCache
-};
+use auth::handlers as auth_handlers;
 use profile::handlers as profile_handlers;
+use ws::handler::ws_handler;
 
 
 pub async fn router() -> Router {
@@ -157,26 +149,6 @@ async fn handler_metrics() -> std::string::String {
     String::from_utf8(buffer.clone()).unwrap()
 }
 
-// Websocket handlers
-pub async fn ws_handler(
-    ws: WebSocketUpgrade,
-    State(state): State<AppState>,
-    Query(auth_websocket): Query<AuthWebSocket>,
-) -> Response {
-    let user_id = if let Ok(token_data) = authenticate_single_use_token::execute(
-        &state.config.secret,
-        &state.cache_pool,
-        &TokenCache(),
-        auth_websocket.auth_token,
-    ).await {
-        token_data.user_id
-    } else {
-        return StatusCode::UNAUTHORIZED.into_response();
-    };
-    ws.on_upgrade(move |socket| {
-        ws::client_connect::execute(state.clients, state.event_queue, user_id, socket)
-    })
-}
 
 // Metrics
 fn run_geting_metricts(sys: System) {
@@ -188,9 +160,7 @@ fn run_geting_metricts(sys: System) {
             match sys.cpu_load_aggregate() {
                 Ok(cpu) => {
                     let cpu = cpu.done().unwrap();
-                    metrics::CPU_USAGE.set(f64::trunc(
-                        ((cpu.system * 100.0) + (cpu.user * 100.0)).into(),
-                    ));
+                    metrics::CPU_USAGE.set(f64::trunc(((cpu.system * 100.0) + (cpu.user * 100.0)).into(),));
                 }
                 Err(x) => println!("\nCPU load: error: {}", x),
             }
@@ -205,11 +175,3 @@ fn run_geting_metricts(sys: System) {
         }
     });
 }
-
-// Event queue
-// async fn run_consumer_event_queue(
-//     event_queue: EventQueue<MessageDomain>,
-//     clients: Clients<SplitSink<WebSocket, Message>>,
-// ) {
-//     ws::consume_event::execute(clients, event_queue).await;
-// }

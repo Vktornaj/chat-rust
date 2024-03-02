@@ -1,4 +1,3 @@
-use axum::extract::ws::Message;
 use uuid::Uuid;
 
 use crate::domain::types::sender_type::Sender;
@@ -8,16 +7,15 @@ use crate::domain::types::{
     id::Id, 
     group::Group,
 };
-// use crate::domain::models::package::Package as MessageDomain;
-use super::protos_schemas::proto_message::{
+use crate::domain::protos_schemas::proto_package::{
     ProtoUuid, 
     ProtoGroup,
-    ProtoMessage,
+    ProtoPackage,
     ProtoSender,
     ProtoRecipient,
 };
-use super::protos_schemas::proto_message::{
-    proto_sender::Sender as ProtoSender2,
+use crate::domain::protos_schemas::proto_package::{
+    ProtoSender as ProtoSender2,
     proto_recipient::Recipient as ProtoRecipient2,
 };
 
@@ -128,7 +126,10 @@ impl From<Sender> for ProtoSender2 {
         match sender {
             Sender::User(user_id) => {
                 let user_id: ProtoUuid = user_id.into();
-                Self::User(user_id)
+                ProtoSender2 {
+                    user: protobuf::MessageField(Some(Box::new(user_id))),
+                    special_fields: protobuf::SpecialFields::default(),
+                }
             },
         }
     }

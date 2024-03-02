@@ -3,15 +3,16 @@ use futures_util::stream::SplitSink;
 use tokio::time::sleep;
 use std::time::Duration;
 
-use common::domain::{
-    models::{client::Clients, event::EventQueue},
+use common::{adapter::state::PackageQueue, domain::{
+    models::client::Clients,
     types::recipient::Recipient,
-};
+}};
 use message::handlers;
+
 
 pub async fn execute(
     clients: Clients<SplitSink<WebSocket, Message>>,
-    event_queue: EventQueue,
+    event_queue: PackageQueue,
 ) {
     // Spawn a task to listen for updates to the event queue
     tokio::spawn(async move {
@@ -34,7 +35,6 @@ pub async fn execute(
             //                         return Recipient::Group(group_clone);
             //                     }
             //                 };
-
             //                 event_queue.write().await.push_back(event);
             //             }
             //         }
@@ -48,4 +48,6 @@ pub async fn execute(
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+
+}

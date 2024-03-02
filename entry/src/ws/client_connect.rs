@@ -3,18 +3,19 @@ use protobuf;
 use futures_util::{StreamExt, stream::SplitSink};
 use uuid::Uuid;
 
-use common::domain::{models::{
-        client::{Client, Clients},
-        event::{Event, EventQueue}, 
-    }, 
-    types::id::Id
+use common::{
+    adapter::state::PackageQueue, 
+    domain::{
+        models::client::{Client, Clients}, 
+        types::id::Id
+    }
 };
-use common::adapter::protos_schemas::proto_message::ProtoMessage;
+use common::domain::protos_schemas::proto_package::ProtoPackage;
 
 
 pub async fn execute(
     clients: Clients<SplitSink<WebSocket, Message>>,
-    event_queue: EventQueue,
+    package_queue: PackageQueue,
     sender_id: Uuid,
     socket: WebSocket,
 ) {
@@ -29,6 +30,7 @@ pub async fn execute(
         return;
     };
     
+    // Create events
     let task = async move {
         while let Some(message) = receiver.next().await {
             println!("Message: {:?}", message);
@@ -39,7 +41,7 @@ pub async fn execute(
                 return;
             };
 
-            let proto_message: ProtoMessage = match message {
+            let proto_package: ProtoPackage = match message {
                 Message::Binary(bytes) => {
                     if let Ok (proto_message) = protobuf::Message::parse_from_bytes(&bytes) {
                         proto_message
@@ -54,26 +56,12 @@ pub async fn execute(
                 }
             };
 
-            // let message_domain = MessageDomain::new(
-            //     user_id.clone().into(),
-            //     if let Some(recipient) = proto_message.recipient.recipient.clone() {
-            //         if let Ok(recipient) = recipient.try_into() {
-            //             recipient
-            //         } else {
-            //             eprintln!("Error converting recipient");
-            //             continue;
-            //         }
-            //     } else {
-            //         eprintln!("Error getting recipient");
-            //         continue;
-            //     },
-            //     proto_message.content,
-            // );
-
-            // event_queue.write().await.push_back(Event {
-            //     recipient_id: message_domain.recipient.clone(), 
-            //     content: message_domain 
-            // });
+            if proto_package.package_type == String::from("MESSAGE") {
+                package_queue.write().await.push_back(proto_package);
+            } else {
+                eprintln!("Message error");
+                continue;
+            }
         }
     };
 

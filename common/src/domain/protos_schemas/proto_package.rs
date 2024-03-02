@@ -19,7 +19,7 @@
 #![allow(unused_results)]
 #![allow(unused_mut)]
 
-//! Generated file from `proto_message.proto`
+//! Generated file from `proto_package.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
@@ -589,8 +589,9 @@ pub mod proto_recipient {
 // @@protoc_insertion_point(message:ProtoSender)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct ProtoSender {
-    // message oneof groups
-    pub sender: ::std::option::Option<proto_sender::Sender>,
+    // message fields
+    // @@protoc_insertion_point(field:ProtoSender.user)
+    pub user: ::protobuf::MessageField<ProtoUuid>,
     // special fields
     // @@protoc_insertion_point(special_field:ProtoSender.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -607,122 +608,14 @@ impl ProtoSender {
         ::std::default::Default::default()
     }
 
-    // .ProtoUuid user = 1;
-
-    pub fn user(&self) -> &ProtoUuid {
-        match self.sender {
-            ::std::option::Option::Some(proto_sender::Sender::User(ref v)) => v,
-            _ => <ProtoUuid as ::protobuf::Message>::default_instance(),
-        }
-    }
-
-    pub fn clear_user(&mut self) {
-        self.sender = ::std::option::Option::None;
-    }
-
-    pub fn has_user(&self) -> bool {
-        match self.sender {
-            ::std::option::Option::Some(proto_sender::Sender::User(..)) => true,
-            _ => false,
-        }
-    }
-
-    // Param is passed by value, moved
-    pub fn set_user(&mut self, v: ProtoUuid) {
-        self.sender = ::std::option::Option::Some(proto_sender::Sender::User(v))
-    }
-
-    // Mutable pointer to the field.
-    pub fn mut_user(&mut self) -> &mut ProtoUuid {
-        if let ::std::option::Option::Some(proto_sender::Sender::User(_)) = self.sender {
-        } else {
-            self.sender = ::std::option::Option::Some(proto_sender::Sender::User(ProtoUuid::new()));
-        }
-        match self.sender {
-            ::std::option::Option::Some(proto_sender::Sender::User(ref mut v)) => v,
-            _ => panic!(),
-        }
-    }
-
-    // Take field
-    pub fn take_user(&mut self) -> ProtoUuid {
-        if self.has_user() {
-            match self.sender.take() {
-                ::std::option::Option::Some(proto_sender::Sender::User(v)) => v,
-                _ => panic!(),
-            }
-        } else {
-            ProtoUuid::new()
-        }
-    }
-
-    // .ProtoUuid group = 2;
-
-    pub fn group(&self) -> &ProtoUuid {
-        match self.sender {
-            ::std::option::Option::Some(proto_sender::Sender::Group(ref v)) => v,
-            _ => <ProtoUuid as ::protobuf::Message>::default_instance(),
-        }
-    }
-
-    pub fn clear_group(&mut self) {
-        self.sender = ::std::option::Option::None;
-    }
-
-    pub fn has_group(&self) -> bool {
-        match self.sender {
-            ::std::option::Option::Some(proto_sender::Sender::Group(..)) => true,
-            _ => false,
-        }
-    }
-
-    // Param is passed by value, moved
-    pub fn set_group(&mut self, v: ProtoUuid) {
-        self.sender = ::std::option::Option::Some(proto_sender::Sender::Group(v))
-    }
-
-    // Mutable pointer to the field.
-    pub fn mut_group(&mut self) -> &mut ProtoUuid {
-        if let ::std::option::Option::Some(proto_sender::Sender::Group(_)) = self.sender {
-        } else {
-            self.sender = ::std::option::Option::Some(proto_sender::Sender::Group(ProtoUuid::new()));
-        }
-        match self.sender {
-            ::std::option::Option::Some(proto_sender::Sender::Group(ref mut v)) => v,
-            _ => panic!(),
-        }
-    }
-
-    // Take field
-    pub fn take_group(&mut self) -> ProtoUuid {
-        if self.has_group() {
-            match self.sender.take() {
-                ::std::option::Option::Some(proto_sender::Sender::Group(v)) => v,
-                _ => panic!(),
-            }
-        } else {
-            ProtoUuid::new()
-        }
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
-        let mut oneofs = ::std::vec::Vec::with_capacity(1);
-        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ProtoUuid>(
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ProtoUuid>(
             "user",
-            ProtoSender::has_user,
-            ProtoSender::user,
-            ProtoSender::mut_user,
-            ProtoSender::set_user,
+            |m: &ProtoSender| { &m.user },
+            |m: &mut ProtoSender| { &mut m.user },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ProtoUuid>(
-            "group",
-            ProtoSender::has_group,
-            ProtoSender::group,
-            ProtoSender::mut_group,
-            ProtoSender::set_group,
-        ));
-        oneofs.push(proto_sender::Sender::generated_oneof_descriptor_data());
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ProtoSender>(
             "ProtoSender",
             fields,
@@ -742,10 +635,7 @@ impl ::protobuf::Message for ProtoSender {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.sender = ::std::option::Option::Some(proto_sender::Sender::User(is.read_message()?));
-                },
-                18 => {
-                    self.sender = ::std::option::Option::Some(proto_sender::Sender::Group(is.read_message()?));
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.user)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -759,17 +649,9 @@ impl ::protobuf::Message for ProtoSender {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let ::std::option::Option::Some(ref v) = self.sender {
-            match v {
-                &proto_sender::Sender::User(ref v) => {
-                    let len = v.compute_size();
-                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-                },
-                &proto_sender::Sender::Group(ref v) => {
-                    let len = v.compute_size();
-                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-                },
-            };
+        if let Some(v) = self.user.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -777,15 +659,8 @@ impl ::protobuf::Message for ProtoSender {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let ::std::option::Option::Some(ref v) = self.sender {
-            match v {
-                &proto_sender::Sender::User(ref v) => {
-                    ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
-                },
-                &proto_sender::Sender::Group(ref v) => {
-                    ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
-                },
-            };
+        if let Some(v) = self.user.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -804,14 +679,13 @@ impl ::protobuf::Message for ProtoSender {
     }
 
     fn clear(&mut self) {
-        self.sender = ::std::option::Option::None;
-        self.sender = ::std::option::Option::None;
+        self.user.clear();
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static ProtoSender {
         static instance: ProtoSender = ProtoSender {
-            sender: ::std::option::Option::None,
+            user: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -835,391 +709,460 @@ impl ::protobuf::reflect::ProtobufValue for ProtoSender {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-/// Nested message and enums of message `ProtoSender`
-pub mod proto_sender {
+// @@protoc_insertion_point(message:ProtoPackageContent)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct ProtoPackageContent {
+    // message fields
+    // @@protoc_insertion_point(field:ProtoPackageContent.content)
+    pub content: ::std::vec::Vec<u8>,
+    // special fields
+    // @@protoc_insertion_point(special_field:ProtoPackageContent.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a ProtoPackageContent {
+    fn default() -> &'a ProtoPackageContent {
+        <ProtoPackageContent as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl ProtoPackageContent {
+    pub fn new() -> ProtoPackageContent {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "content",
+            |m: &ProtoPackageContent| { &m.content },
+            |m: &mut ProtoPackageContent| { &mut m.content },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ProtoPackageContent>(
+            "ProtoPackageContent",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for ProtoPackageContent {
+    const NAME: &'static str = "ProtoPackageContent";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.content = is.read_bytes()?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if !self.content.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(1, &self.content);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if !self.content.is_empty() {
+            os.write_bytes(1, &self.content)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> ProtoPackageContent {
+        ProtoPackageContent::new()
+    }
+
+    fn clear(&mut self) {
+        self.content.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static ProtoPackageContent {
+        static instance: ProtoPackageContent = ProtoPackageContent {
+            content: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for ProtoPackageContent {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ProtoPackageContent").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for ProtoPackageContent {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ProtoPackageContent {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:ProtoPackage)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct ProtoPackage {
+    // message fields
+    // @@protoc_insertion_point(field:ProtoPackage.package_type)
+    pub package_type: ::std::string::String,
+    // @@protoc_insertion_point(field:ProtoPackage.content)
+    pub content: ::protobuf::MessageField<ProtoPackageContent>,
+    // message oneof groups
+    pub owner: ::std::option::Option<proto_package::Owner>,
+    // special fields
+    // @@protoc_insertion_point(special_field:ProtoPackage.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a ProtoPackage {
+    fn default() -> &'a ProtoPackage {
+        <ProtoPackage as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl ProtoPackage {
+    pub fn new() -> ProtoPackage {
+        ::std::default::Default::default()
+    }
+
+    // .ProtoSender sender = 1;
+
+    pub fn sender(&self) -> &ProtoSender {
+        match self.owner {
+            ::std::option::Option::Some(proto_package::Owner::Sender(ref v)) => v,
+            _ => <ProtoSender as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_sender(&mut self) {
+        self.owner = ::std::option::Option::None;
+    }
+
+    pub fn has_sender(&self) -> bool {
+        match self.owner {
+            ::std::option::Option::Some(proto_package::Owner::Sender(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_sender(&mut self, v: ProtoSender) {
+        self.owner = ::std::option::Option::Some(proto_package::Owner::Sender(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_sender(&mut self) -> &mut ProtoSender {
+        if let ::std::option::Option::Some(proto_package::Owner::Sender(_)) = self.owner {
+        } else {
+            self.owner = ::std::option::Option::Some(proto_package::Owner::Sender(ProtoSender::new()));
+        }
+        match self.owner {
+            ::std::option::Option::Some(proto_package::Owner::Sender(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_sender(&mut self) -> ProtoSender {
+        if self.has_sender() {
+            match self.owner.take() {
+                ::std::option::Option::Some(proto_package::Owner::Sender(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            ProtoSender::new()
+        }
+    }
+
+    // .ProtoRecipient recipient = 2;
+
+    pub fn recipient(&self) -> &ProtoRecipient {
+        match self.owner {
+            ::std::option::Option::Some(proto_package::Owner::Recipient(ref v)) => v,
+            _ => <ProtoRecipient as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_recipient(&mut self) {
+        self.owner = ::std::option::Option::None;
+    }
+
+    pub fn has_recipient(&self) -> bool {
+        match self.owner {
+            ::std::option::Option::Some(proto_package::Owner::Recipient(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_recipient(&mut self, v: ProtoRecipient) {
+        self.owner = ::std::option::Option::Some(proto_package::Owner::Recipient(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_recipient(&mut self) -> &mut ProtoRecipient {
+        if let ::std::option::Option::Some(proto_package::Owner::Recipient(_)) = self.owner {
+        } else {
+            self.owner = ::std::option::Option::Some(proto_package::Owner::Recipient(ProtoRecipient::new()));
+        }
+        match self.owner {
+            ::std::option::Option::Some(proto_package::Owner::Recipient(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_recipient(&mut self) -> ProtoRecipient {
+        if self.has_recipient() {
+            match self.owner.take() {
+                ::std::option::Option::Some(proto_package::Owner::Recipient(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            ProtoRecipient::new()
+        }
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(1);
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ProtoSender>(
+            "sender",
+            ProtoPackage::has_sender,
+            ProtoPackage::sender,
+            ProtoPackage::mut_sender,
+            ProtoPackage::set_sender,
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ProtoRecipient>(
+            "recipient",
+            ProtoPackage::has_recipient,
+            ProtoPackage::recipient,
+            ProtoPackage::mut_recipient,
+            ProtoPackage::set_recipient,
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "package_type",
+            |m: &ProtoPackage| { &m.package_type },
+            |m: &mut ProtoPackage| { &mut m.package_type },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ProtoPackageContent>(
+            "content",
+            |m: &ProtoPackage| { &m.content },
+            |m: &mut ProtoPackage| { &mut m.content },
+        ));
+        oneofs.push(proto_package::Owner::generated_oneof_descriptor_data());
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ProtoPackage>(
+            "ProtoPackage",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for ProtoPackage {
+    const NAME: &'static str = "ProtoPackage";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.owner = ::std::option::Option::Some(proto_package::Owner::Sender(is.read_message()?));
+                },
+                18 => {
+                    self.owner = ::std::option::Option::Some(proto_package::Owner::Recipient(is.read_message()?));
+                },
+                26 => {
+                    self.package_type = is.read_string()?;
+                },
+                34 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.content)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if !self.package_type.is_empty() {
+            my_size += ::protobuf::rt::string_size(3, &self.package_type);
+        }
+        if let Some(v) = self.content.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let ::std::option::Option::Some(ref v) = self.owner {
+            match v {
+                &proto_package::Owner::Sender(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
+                &proto_package::Owner::Recipient(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
+            };
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if !self.package_type.is_empty() {
+            os.write_string(3, &self.package_type)?;
+        }
+        if let Some(v) = self.content.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
+        }
+        if let ::std::option::Option::Some(ref v) = self.owner {
+            match v {
+                &proto_package::Owner::Sender(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+                },
+                &proto_package::Owner::Recipient(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+                },
+            };
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> ProtoPackage {
+        ProtoPackage::new()
+    }
+
+    fn clear(&mut self) {
+        self.owner = ::std::option::Option::None;
+        self.owner = ::std::option::Option::None;
+        self.package_type.clear();
+        self.content.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static ProtoPackage {
+        static instance: ProtoPackage = ProtoPackage {
+            package_type: ::std::string::String::new(),
+            content: ::protobuf::MessageField::none(),
+            owner: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for ProtoPackage {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ProtoPackage").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for ProtoPackage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ProtoPackage {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `ProtoPackage`
+pub mod proto_package {
 
     #[derive(Clone,PartialEq,Debug)]
     #[non_exhaustive]
-    // @@protoc_insertion_point(oneof:ProtoSender.sender)
-    pub enum Sender {
-        // @@protoc_insertion_point(oneof_field:ProtoSender.user)
-        User(super::ProtoUuid),
-        // @@protoc_insertion_point(oneof_field:ProtoSender.group)
-        Group(super::ProtoUuid),
+    // @@protoc_insertion_point(oneof:ProtoPackage.owner)
+    pub enum Owner {
+        // @@protoc_insertion_point(oneof_field:ProtoPackage.sender)
+        Sender(super::ProtoSender),
+        // @@protoc_insertion_point(oneof_field:ProtoPackage.recipient)
+        Recipient(super::ProtoRecipient),
     }
 
-    impl ::protobuf::Oneof for Sender {
+    impl ::protobuf::Oneof for Owner {
     }
 
-    impl ::protobuf::OneofFull for Sender {
+    impl ::protobuf::OneofFull for Owner {
         fn descriptor() -> ::protobuf::reflect::OneofDescriptor {
             static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::OneofDescriptor> = ::protobuf::rt::Lazy::new();
-            descriptor.get(|| <super::ProtoSender as ::protobuf::MessageFull>::descriptor().oneof_by_name("sender").unwrap()).clone()
+            descriptor.get(|| <super::ProtoPackage as ::protobuf::MessageFull>::descriptor().oneof_by_name("owner").unwrap()).clone()
         }
     }
 
-    impl Sender {
+    impl Owner {
         pub(in super) fn generated_oneof_descriptor_data() -> ::protobuf::reflect::GeneratedOneofDescriptorData {
-            ::protobuf::reflect::GeneratedOneofDescriptorData::new::<Sender>("sender")
+            ::protobuf::reflect::GeneratedOneofDescriptorData::new::<Owner>("owner")
         }
     }
-}
-
-// @@protoc_insertion_point(message:ProtoMessageContent)
-#[derive(PartialEq,Clone,Default,Debug)]
-pub struct ProtoMessageContent {
-    // message fields
-    // @@protoc_insertion_point(field:ProtoMessageContent.recipient)
-    pub recipient: ::protobuf::MessageField<ProtoRecipient>,
-    // @@protoc_insertion_point(field:ProtoMessageContent.content)
-    pub content: ::std::vec::Vec<u8>,
-    // special fields
-    // @@protoc_insertion_point(special_field:ProtoMessageContent.special_fields)
-    pub special_fields: ::protobuf::SpecialFields,
-}
-
-impl<'a> ::std::default::Default for &'a ProtoMessageContent {
-    fn default() -> &'a ProtoMessageContent {
-        <ProtoMessageContent as ::protobuf::Message>::default_instance()
-    }
-}
-
-impl ProtoMessageContent {
-    pub fn new() -> ProtoMessageContent {
-        ::std::default::Default::default()
-    }
-
-    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
-        let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ProtoRecipient>(
-            "recipient",
-            |m: &ProtoMessageContent| { &m.recipient },
-            |m: &mut ProtoMessageContent| { &mut m.recipient },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
-            "content",
-            |m: &ProtoMessageContent| { &m.content },
-            |m: &mut ProtoMessageContent| { &mut m.content },
-        ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ProtoMessageContent>(
-            "ProtoMessageContent",
-            fields,
-            oneofs,
-        )
-    }
-}
-
-impl ::protobuf::Message for ProtoMessageContent {
-    const NAME: &'static str = "ProtoMessageContent";
-
-    fn is_initialized(&self) -> bool {
-        true
-    }
-
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
-        while let Some(tag) = is.read_raw_tag_or_eof()? {
-            match tag {
-                10 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.recipient)?;
-                },
-                18 => {
-                    self.content = is.read_bytes()?;
-                },
-                tag => {
-                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
-                },
-            };
-        }
-        ::std::result::Result::Ok(())
-    }
-
-    // Compute sizes of nested messages
-    #[allow(unused_variables)]
-    fn compute_size(&self) -> u64 {
-        let mut my_size = 0;
-        if let Some(v) = self.recipient.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-        }
-        if !self.content.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(2, &self.content);
-        }
-        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
-        self.special_fields.cached_size().set(my_size as u32);
-        my_size
-    }
-
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.recipient.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
-        }
-        if !self.content.is_empty() {
-            os.write_bytes(2, &self.content)?;
-        }
-        os.write_unknown_fields(self.special_fields.unknown_fields())?;
-        ::std::result::Result::Ok(())
-    }
-
-    fn special_fields(&self) -> &::protobuf::SpecialFields {
-        &self.special_fields
-    }
-
-    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
-        &mut self.special_fields
-    }
-
-    fn new() -> ProtoMessageContent {
-        ProtoMessageContent::new()
-    }
-
-    fn clear(&mut self) {
-        self.recipient.clear();
-        self.content.clear();
-        self.special_fields.clear();
-    }
-
-    fn default_instance() -> &'static ProtoMessageContent {
-        static instance: ProtoMessageContent = ProtoMessageContent {
-            recipient: ::protobuf::MessageField::none(),
-            content: ::std::vec::Vec::new(),
-            special_fields: ::protobuf::SpecialFields::new(),
-        };
-        &instance
-    }
-}
-
-impl ::protobuf::MessageFull for ProtoMessageContent {
-    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
-        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("ProtoMessageContent").unwrap()).clone()
-    }
-}
-
-impl ::std::fmt::Display for ProtoMessageContent {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::protobuf::text_format::fmt(self, f)
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for ProtoMessageContent {
-    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
-}
-
-// @@protoc_insertion_point(message:ProtoMessage)
-#[derive(PartialEq,Clone,Default,Debug)]
-pub struct ProtoMessage {
-    // message fields
-    // @@protoc_insertion_point(field:ProtoMessage.id)
-    pub id: ::protobuf::MessageField<ProtoUuid>,
-    // @@protoc_insertion_point(field:ProtoMessage.sender)
-    pub sender: ::protobuf::MessageField<ProtoSender>,
-    // @@protoc_insertion_point(field:ProtoMessage.recipient)
-    pub recipient: ::protobuf::MessageField<ProtoRecipient>,
-    // @@protoc_insertion_point(field:ProtoMessage.content)
-    pub content: ::std::vec::Vec<u8>,
-    // @@protoc_insertion_point(field:ProtoMessage.timestamp)
-    pub timestamp: i64,
-    // special fields
-    // @@protoc_insertion_point(special_field:ProtoMessage.special_fields)
-    pub special_fields: ::protobuf::SpecialFields,
-}
-
-impl<'a> ::std::default::Default for &'a ProtoMessage {
-    fn default() -> &'a ProtoMessage {
-        <ProtoMessage as ::protobuf::Message>::default_instance()
-    }
-}
-
-impl ProtoMessage {
-    pub fn new() -> ProtoMessage {
-        ::std::default::Default::default()
-    }
-
-    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(5);
-        let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ProtoUuid>(
-            "id",
-            |m: &ProtoMessage| { &m.id },
-            |m: &mut ProtoMessage| { &mut m.id },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ProtoSender>(
-            "sender",
-            |m: &ProtoMessage| { &m.sender },
-            |m: &mut ProtoMessage| { &mut m.sender },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ProtoRecipient>(
-            "recipient",
-            |m: &ProtoMessage| { &m.recipient },
-            |m: &mut ProtoMessage| { &mut m.recipient },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
-            "content",
-            |m: &ProtoMessage| { &m.content },
-            |m: &mut ProtoMessage| { &mut m.content },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
-            "timestamp",
-            |m: &ProtoMessage| { &m.timestamp },
-            |m: &mut ProtoMessage| { &mut m.timestamp },
-        ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ProtoMessage>(
-            "ProtoMessage",
-            fields,
-            oneofs,
-        )
-    }
-}
-
-impl ::protobuf::Message for ProtoMessage {
-    const NAME: &'static str = "ProtoMessage";
-
-    fn is_initialized(&self) -> bool {
-        true
-    }
-
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
-        while let Some(tag) = is.read_raw_tag_or_eof()? {
-            match tag {
-                10 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.id)?;
-                },
-                18 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.sender)?;
-                },
-                26 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.recipient)?;
-                },
-                34 => {
-                    self.content = is.read_bytes()?;
-                },
-                40 => {
-                    self.timestamp = is.read_int64()?;
-                },
-                tag => {
-                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
-                },
-            };
-        }
-        ::std::result::Result::Ok(())
-    }
-
-    // Compute sizes of nested messages
-    #[allow(unused_variables)]
-    fn compute_size(&self) -> u64 {
-        let mut my_size = 0;
-        if let Some(v) = self.id.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-        }
-        if let Some(v) = self.sender.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-        }
-        if let Some(v) = self.recipient.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-        }
-        if !self.content.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(4, &self.content);
-        }
-        if self.timestamp != 0 {
-            my_size += ::protobuf::rt::int64_size(5, self.timestamp);
-        }
-        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
-        self.special_fields.cached_size().set(my_size as u32);
-        my_size
-    }
-
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.id.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
-        }
-        if let Some(v) = self.sender.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
-        }
-        if let Some(v) = self.recipient.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
-        }
-        if !self.content.is_empty() {
-            os.write_bytes(4, &self.content)?;
-        }
-        if self.timestamp != 0 {
-            os.write_int64(5, self.timestamp)?;
-        }
-        os.write_unknown_fields(self.special_fields.unknown_fields())?;
-        ::std::result::Result::Ok(())
-    }
-
-    fn special_fields(&self) -> &::protobuf::SpecialFields {
-        &self.special_fields
-    }
-
-    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
-        &mut self.special_fields
-    }
-
-    fn new() -> ProtoMessage {
-        ProtoMessage::new()
-    }
-
-    fn clear(&mut self) {
-        self.id.clear();
-        self.sender.clear();
-        self.recipient.clear();
-        self.content.clear();
-        self.timestamp = 0;
-        self.special_fields.clear();
-    }
-
-    fn default_instance() -> &'static ProtoMessage {
-        static instance: ProtoMessage = ProtoMessage {
-            id: ::protobuf::MessageField::none(),
-            sender: ::protobuf::MessageField::none(),
-            recipient: ::protobuf::MessageField::none(),
-            content: ::std::vec::Vec::new(),
-            timestamp: 0,
-            special_fields: ::protobuf::SpecialFields::new(),
-        };
-        &instance
-    }
-}
-
-impl ::protobuf::MessageFull for ProtoMessage {
-    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
-        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("ProtoMessage").unwrap()).clone()
-    }
-}
-
-impl ::std::fmt::Display for ProtoMessage {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::protobuf::text_format::fmt(self, f)
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for ProtoMessage {
-    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x13proto_message.proto\"!\n\tProtoUuid\x12\x14\n\x05value\x18\x01\x20\
+    \n\x13proto_package.proto\"!\n\tProtoUuid\x12\x14\n\x05value\x18\x01\x20\
     \x01(\x0cR\x05value\"b\n\nProtoGroup\x12\x1a\n\x02id\x18\x01\x20\x01(\
     \x0b2\n.ProtoUuidR\x02id\x12\x12\n\x04name\x18\x02\x20\x01(\tR\x04name\
     \x12$\n\x07members\x18\x03\x20\x03(\x0b2\n.ProtoUuidR\x07members\"d\n\
     \x0eProtoRecipient\x12\x20\n\x04user\x18\x01\x20\x01(\x0b2\n.ProtoUuidH\
     \0R\x04user\x12#\n\x05group\x18\x02\x20\x01(\x0b2\x0b.ProtoGroupH\0R\x05\
-    groupB\x0b\n\trecipient\"]\n\x0bProtoSender\x12\x20\n\x04user\x18\x01\
-    \x20\x01(\x0b2\n.ProtoUuidH\0R\x04user\x12\"\n\x05group\x18\x02\x20\x01(\
-    \x0b2\n.ProtoUuidH\0R\x05groupB\x08\n\x06sender\"^\n\x13ProtoMessageCont\
-    ent\x12-\n\trecipient\x18\x01\x20\x01(\x0b2\x0f.ProtoRecipientR\trecipie\
-    nt\x12\x18\n\x07content\x18\x02\x20\x01(\x0cR\x07content\"\xb7\x01\n\x0c\
-    ProtoMessage\x12\x1a\n\x02id\x18\x01\x20\x01(\x0b2\n.ProtoUuidR\x02id\
-    \x12$\n\x06sender\x18\x02\x20\x01(\x0b2\x0c.ProtoSenderR\x06sender\x12-\
-    \n\trecipient\x18\x03\x20\x01(\x0b2\x0f.ProtoRecipientR\trecipient\x12\
-    \x18\n\x07content\x18\x04\x20\x01(\x0cR\x07content\x12\x1c\n\ttimestamp\
-    \x18\x05\x20\x01(\x03R\ttimestampb\x06proto3\
+    groupB\x0b\n\trecipient\"-\n\x0bProtoSender\x12\x1e\n\x04user\x18\x01\
+    \x20\x01(\x0b2\n.ProtoUuidR\x04user\"/\n\x13ProtoPackageContent\x12\x18\
+    \n\x07content\x18\x01\x20\x01(\x0cR\x07content\"\xc3\x01\n\x0cProtoPacka\
+    ge\x12&\n\x06sender\x18\x01\x20\x01(\x0b2\x0c.ProtoSenderH\0R\x06sender\
+    \x12/\n\trecipient\x18\x02\x20\x01(\x0b2\x0f.ProtoRecipientH\0R\trecipie\
+    nt\x12!\n\x0cpackage_type\x18\x03\x20\x01(\tR\x0bpackageType\x12.\n\x07c\
+    ontent\x18\x04\x20\x01(\x0b2\x14.ProtoPackageContentR\x07contentB\x07\n\
+    \x05ownerb\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1242,8 +1185,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(ProtoGroup::generated_message_descriptor_data());
             messages.push(ProtoRecipient::generated_message_descriptor_data());
             messages.push(ProtoSender::generated_message_descriptor_data());
-            messages.push(ProtoMessageContent::generated_message_descriptor_data());
-            messages.push(ProtoMessage::generated_message_descriptor_data());
+            messages.push(ProtoPackageContent::generated_message_descriptor_data());
+            messages.push(ProtoPackage::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

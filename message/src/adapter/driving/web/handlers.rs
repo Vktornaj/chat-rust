@@ -1,5 +1,5 @@
 use axum::extract::ws::{WebSocket, Message};
-use common::domain::{models::{event::Event, client::Clients}, types::id::Id};
+use common::domain::{models::{client::Clients}, types::id::Id};
 use futures_util::stream::SplitSink;
 
 use crate::application::use_cases;
