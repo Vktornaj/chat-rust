@@ -189,6 +189,23 @@ paths:
         '500':
           $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
+  /api/auth/find_by_identifier:
+    post:
+      summary: Get user_id by identifier
+      operationId: handle_find_by_identifier
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseUuidWrapper'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
   /api/auth/password:
     put:

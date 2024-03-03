@@ -9,7 +9,10 @@ use common::adapter::response_schemas::JsonResponse;
 use crate::adapter::driven::cache::redis::auth_cache::AuthCache;
 use crate::adapter::driven::email_service::aws_ses_email_service::AWSEmailService;
 use crate::adapter::driven::persistence::sqlx::auth_repository::AuthRepository;
-use crate::application::use_cases::{create_auth_request, create_auth_confirm, is_data_in_use, login_auth, delete_auth, update_password, add_identy_request, add_identy_confirm, reset_password_request, reset_password_confirm};
+use crate::application::use_cases::{
+    create_auth_request, create_auth_confirm, is_data_in_use, login_auth, delete_auth, update_password, 
+    add_identy_request, add_identy_confirm, reset_password_request, reset_password_confirm, find_by_identifier
+};
 use crate::{create_single_use_token, TokenCache};
 use crate::schemas::{UuidWrapper, PasswordJson, JsonBool, ResOk};
 use common::adapter::state::AppState;
@@ -299,6 +302,30 @@ pub async fn handle_password_reset_confirmation(
             reset_password_confirm::ResetError::Unauthorized(err) => JsonResponse::new_unauthorized_err(0, err),
             reset_password_confirm::ResetError::NotFound(err) => JsonResponse::new_not_found_err(0, err),
             reset_password_confirm::ResetError::Unknown(err) => JsonResponse::new_int_ser_err(0, err),
+        }
+    }
+}
+
+pub async fn handle_find_by_identifier(
+    State(state): State<AppState>,
+    TypedHeader(token): TypedHeader<Authorization<Bearer>>,
+    Json(data): Json<IdentificationJson>,
+) -> JsonResponse<UuidWrapper> {
+    match find_by_identifier::execute(
+        &state.config.secret,
+        &state.db_sql_pool,
+        &AuthRepository {},
+        token.token().to_string(),
+        find_by_identifier::Payload {
+            identify_type: data.id_type,
+            identify_value: data.value,
+        }
+    ).await {
+        Ok(user_id) => JsonResponse::new_ok(UuidWrapper { uuid: user_id.into() }),
+        Err(err) => match err {
+            find_by_identifier::Error::NotFound => JsonResponse::new_not_found_err(0, "user not found".to_string()),
+            find_by_identifier::Error::Unauthorized => JsonResponse::new_unauthorized_err(0, "unauthorized".to_string()),
+            find_by_identifier::Error::Unknown(err) => JsonResponse::new_int_ser_err(0, err),
         }
     }
 }

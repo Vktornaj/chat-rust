@@ -23,7 +23,7 @@ mod schemas;
 mod ws;
 use auth::handlers as auth_handlers;
 use profile::handlers as profile_handlers;
-use ws::handler::ws_handler;
+use ws::handler::{run_consumer_event_queue, ws_handler};
 
 
 pub async fn router() -> Router {
@@ -34,7 +34,10 @@ pub async fn router() -> Router {
     run_migrations(&app_state.db_sql_pool).await;
 
     // new thread to listen to event queue
-    // run_consumer_event_queue(app_state.event_queue.clone(), app_state.clients.clone()).await;
+    run_consumer_event_queue(
+        app_state.package_queue.clone(), 
+        app_state.clients.clone()
+    ).await;
 
     // new thread to get metrics
     run_geting_metricts(sys);
@@ -78,6 +81,10 @@ pub async fn router() -> Router {
                 .route(
                     "/single-use-token",
                     get(auth_handlers::handle_single_use_token)
+                )
+                .route(
+                    "/find_by_identifier",
+                    post(auth_handlers::handle_find_by_identifier)
                 ),
         )
         // profile
@@ -148,7 +155,6 @@ async fn handler_metrics() -> std::string::String {
 
     String::from_utf8(buffer.clone()).unwrap()
 }
-
 
 // Metrics
 fn run_geting_metricts(sys: System) {

@@ -1,10 +1,14 @@
 use auth::{authenticate_single_use_token, TokenCache};
-use axum::{extract::{Query, State, WebSocketUpgrade}, http::StatusCode, response::{IntoResponse, Response}};
-use common::adapter::state::AppState;
+use axum::{
+    extract::{ws::{Message, WebSocket}, Query, State, WebSocketUpgrade}, 
+    http::StatusCode, 
+    response::{IntoResponse, Response}
+};
+use futures::stream::SplitSink;
 
+use common::{adapter::state::{AppState, PackageQueue}, domain::models::client::Clients};
 use crate::schemas::AuthWebSocket;
-
-use super::client_connect;
+use super::{client_connect, consume_event};
 
 
 // Websocket handlers
@@ -30,9 +34,9 @@ pub async fn ws_handler(
 
 
 // Event queue
-// async fn run_consumer_event_queue(
-//     event_queue: EventQueue<MessageDomain>,
-//     clients: Clients<SplitSink<WebSocket, Message>>,
-// ) {
-//     ws::consume_event::execute(clients, event_queue).await;
-// }
+pub async fn run_consumer_event_queue(
+    event_queue: PackageQueue,
+    clients: Clients<SplitSink<WebSocket, Message>>,
+) {
+    consume_event::execute(clients, event_queue).await;
+}

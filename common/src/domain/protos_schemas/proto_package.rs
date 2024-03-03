@@ -857,12 +857,12 @@ impl ProtoPackage {
         ::std::default::Default::default()
     }
 
-    // .ProtoSender sender = 1;
+    // .ProtoUuid sender = 1;
 
-    pub fn sender(&self) -> &ProtoSender {
+    pub fn sender(&self) -> &ProtoUuid {
         match self.owner {
             ::std::option::Option::Some(proto_package::Owner::Sender(ref v)) => v,
-            _ => <ProtoSender as ::protobuf::Message>::default_instance(),
+            _ => <ProtoUuid as ::protobuf::Message>::default_instance(),
         }
     }
 
@@ -878,15 +878,15 @@ impl ProtoPackage {
     }
 
     // Param is passed by value, moved
-    pub fn set_sender(&mut self, v: ProtoSender) {
+    pub fn set_sender(&mut self, v: ProtoUuid) {
         self.owner = ::std::option::Option::Some(proto_package::Owner::Sender(v))
     }
 
     // Mutable pointer to the field.
-    pub fn mut_sender(&mut self) -> &mut ProtoSender {
+    pub fn mut_sender(&mut self) -> &mut ProtoUuid {
         if let ::std::option::Option::Some(proto_package::Owner::Sender(_)) = self.owner {
         } else {
-            self.owner = ::std::option::Option::Some(proto_package::Owner::Sender(ProtoSender::new()));
+            self.owner = ::std::option::Option::Some(proto_package::Owner::Sender(ProtoUuid::new()));
         }
         match self.owner {
             ::std::option::Option::Some(proto_package::Owner::Sender(ref mut v)) => v,
@@ -895,23 +895,23 @@ impl ProtoPackage {
     }
 
     // Take field
-    pub fn take_sender(&mut self) -> ProtoSender {
+    pub fn take_sender(&mut self) -> ProtoUuid {
         if self.has_sender() {
             match self.owner.take() {
                 ::std::option::Option::Some(proto_package::Owner::Sender(v)) => v,
                 _ => panic!(),
             }
         } else {
-            ProtoSender::new()
+            ProtoUuid::new()
         }
     }
 
-    // .ProtoRecipient recipient = 2;
+    // .ProtoUuid recipient = 2;
 
-    pub fn recipient(&self) -> &ProtoRecipient {
+    pub fn recipient(&self) -> &ProtoUuid {
         match self.owner {
             ::std::option::Option::Some(proto_package::Owner::Recipient(ref v)) => v,
-            _ => <ProtoRecipient as ::protobuf::Message>::default_instance(),
+            _ => <ProtoUuid as ::protobuf::Message>::default_instance(),
         }
     }
 
@@ -927,15 +927,15 @@ impl ProtoPackage {
     }
 
     // Param is passed by value, moved
-    pub fn set_recipient(&mut self, v: ProtoRecipient) {
+    pub fn set_recipient(&mut self, v: ProtoUuid) {
         self.owner = ::std::option::Option::Some(proto_package::Owner::Recipient(v))
     }
 
     // Mutable pointer to the field.
-    pub fn mut_recipient(&mut self) -> &mut ProtoRecipient {
+    pub fn mut_recipient(&mut self) -> &mut ProtoUuid {
         if let ::std::option::Option::Some(proto_package::Owner::Recipient(_)) = self.owner {
         } else {
-            self.owner = ::std::option::Option::Some(proto_package::Owner::Recipient(ProtoRecipient::new()));
+            self.owner = ::std::option::Option::Some(proto_package::Owner::Recipient(ProtoUuid::new()));
         }
         match self.owner {
             ::std::option::Option::Some(proto_package::Owner::Recipient(ref mut v)) => v,
@@ -944,28 +944,28 @@ impl ProtoPackage {
     }
 
     // Take field
-    pub fn take_recipient(&mut self) -> ProtoRecipient {
+    pub fn take_recipient(&mut self) -> ProtoUuid {
         if self.has_recipient() {
             match self.owner.take() {
                 ::std::option::Option::Some(proto_package::Owner::Recipient(v)) => v,
                 _ => panic!(),
             }
         } else {
-            ProtoRecipient::new()
+            ProtoUuid::new()
         }
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(1);
-        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ProtoSender>(
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ProtoUuid>(
             "sender",
             ProtoPackage::has_sender,
             ProtoPackage::sender,
             ProtoPackage::mut_sender,
             ProtoPackage::set_sender,
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ProtoRecipient>(
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ProtoUuid>(
             "recipient",
             ProtoPackage::has_recipient,
             ProtoPackage::recipient,
@@ -1126,9 +1126,9 @@ pub mod proto_package {
     // @@protoc_insertion_point(oneof:ProtoPackage.owner)
     pub enum Owner {
         // @@protoc_insertion_point(oneof_field:ProtoPackage.sender)
-        Sender(super::ProtoSender),
+        Sender(super::ProtoUuid),
         // @@protoc_insertion_point(oneof_field:ProtoPackage.recipient)
-        Recipient(super::ProtoRecipient),
+        Recipient(super::ProtoUuid),
     }
 
     impl ::protobuf::Oneof for Owner {
@@ -1157,12 +1157,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \0R\x04user\x12#\n\x05group\x18\x02\x20\x01(\x0b2\x0b.ProtoGroupH\0R\x05\
     groupB\x0b\n\trecipient\"-\n\x0bProtoSender\x12\x1e\n\x04user\x18\x01\
     \x20\x01(\x0b2\n.ProtoUuidR\x04user\"/\n\x13ProtoPackageContent\x12\x18\
-    \n\x07content\x18\x01\x20\x01(\x0cR\x07content\"\xc3\x01\n\x0cProtoPacka\
-    ge\x12&\n\x06sender\x18\x01\x20\x01(\x0b2\x0c.ProtoSenderH\0R\x06sender\
-    \x12/\n\trecipient\x18\x02\x20\x01(\x0b2\x0f.ProtoRecipientH\0R\trecipie\
-    nt\x12!\n\x0cpackage_type\x18\x03\x20\x01(\tR\x0bpackageType\x12.\n\x07c\
-    ontent\x18\x04\x20\x01(\x0b2\x14.ProtoPackageContentR\x07contentB\x07\n\
-    \x05ownerb\x06proto3\
+    \n\x07content\x18\x01\x20\x01(\x0cR\x07content\"\xbc\x01\n\x0cProtoPacka\
+    ge\x12$\n\x06sender\x18\x01\x20\x01(\x0b2\n.ProtoUuidH\0R\x06sender\x12*\
+    \n\trecipient\x18\x02\x20\x01(\x0b2\n.ProtoUuidH\0R\trecipient\x12!\n\
+    \x0cpackage_type\x18\x03\x20\x01(\tR\x0bpackageType\x12.\n\x07content\
+    \x18\x04\x20\x01(\x0b2\x14.ProtoPackageContentR\x07contentB\x07\n\x05own\
+    erb\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

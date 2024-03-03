@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use async_trait::async_trait;
 use uuid::Uuid;
 
@@ -8,6 +9,16 @@ use crate::domain::types::identification::{IdentificationValue, NewIdentificatio
 pub enum RepoSelectError {
     NotFound(String),
     Unknown(String),
+}
+
+impl Display for RepoSelectError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RepoSelectError::NotFound(err) => write!(f, "Not found: {}", err),
+            RepoSelectError::Unknown(err) => write!(f, "Unknown: {}", err),
+        }
+    }
+
 }
 
 pub enum RepoCreateError {

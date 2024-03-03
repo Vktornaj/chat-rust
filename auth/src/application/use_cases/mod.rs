@@ -11,3 +11,4 @@ pub mod add_identy_confirm;
 pub mod update_password;
 pub mod create_single_use_token;
 pub mod authenticate_single_use_token;
+pub mod find_by_identifier;
