@@ -1,55 +1,33 @@
 openapi: 3.0.3
 info:
-  title: Profile
+  title: Contact
   version: 0.0.1
 tags:
-  - name: Profile
-    description: User profile API
+  - name: Contact
+    description: User contact API
 servers:
   - url: http://localhost
   - url: http://192.168.1.116
   - url: https://geduardo.com
 paths:
-  /api/profile/profile:
+  /api/contact/contact:
     get:
-      summary: Get user information
-      operationId: handle_get_user_info
+      summary: Get user contacts
+      operationId: handle_get_user_contacts
       tags:
-        - Profile
+        - Contact
       security:
         - bearerAuth: []
       responses:
         '200':
-          $ref: '#/components/responses/ResponseUserJson'
+          $ref: '#/components/responses/'
         '404':
           $ref: '../common/openapi.yml#/components/responses/NotFound'
         '401':
           $ref: '../common/openapi.yml#/components/responses/Unauthorized'
         '500':
           $ref: '../common/openapi.yml#/components/responses/InternalServerError'
-    put:
-      summary: Update user information
-      operationId: handle_update_user_info
-      tags:
-        - Profile
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserJson'
-      responses:
-        '200':
-          $ref: '#/components/responses/ResponseUserJson'
-        '400':
-          $ref: '../common/openapi.yml#/components/responses/BadRequest'
-        '401':
-          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
-        '500':
-          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
-          
+
 components:
   responses:
     ResponseUserJson:
@@ -65,9 +43,8 @@ components:
                 type: object
                 nullable: true
                 example: null
-
+                
   schemas:
-
     UserJson:
       type: object
       properties:
@@ -96,6 +73,24 @@ components:
             description: 'Language should be alpha-2 code (ISO 639-1)'
             pattern: '^[A-Z]{2}$'
             example: 'ES'
+
+    ContactsJson:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            type: object
+            properties:
+              alias:
+                type: string
+                example: 'Pepe'
+              firstname:
+                type: string
+                example: 'Pepe Garcia'
+              identifier:
+                type: string
+                example: 'pepe@some.com'
 
   securitySchemes:
     bearerAuth:

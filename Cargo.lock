@@ -1008,6 +1008,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28c122c3980598d243d63d9a704629a2d748d101f278052ff068be5a4423ab6f"
 
 [[package]]
+name = "contact"
+version = "0.1.0"
+dependencies = [
+ "async-imap",
+ "async-trait",
+ "auth",
+ "axum",
+ "axum-extra",
+ "common",
+ "lettre",
+ "serde",
+ "serde_json",
+ "serde_with 3.4.0",
+ "sqlx",
+ "tokio",
+ "toml",
+ "uuid",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

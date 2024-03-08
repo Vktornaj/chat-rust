@@ -1,0 +1,32 @@
+[package]
+name = "feature"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# locals
+auth = { path = "../auth"}
+common = { path = "../common"}
+#
+toml = "0.8.2"
+serde_with = "3.0.0"
+serde = "1.0.152"
+async-trait = "0.1.71"
+sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }
+# dotenv = "0.15.0"
+# chrono = { version = "0.4.24", features = ["serde"] }
+uuid = { version = "1.4.1", features = ["v4"] }
+# redis-async = "0.16.1"
+serde_json = "1.0.105"
+lettre = "0.11.1"
+# prometheus = "0.13.3"
+axum = { version = "0.7.1"}
+axum-extra = { version = "0.9.0", features = ["typed-header"] }
+tokio = { version = "1.32.0", features=["full"] }
+# futures = "0.3.28"
+# regex = "1.9.1"
+
+[dev-dependencies]
+async-imap = { version = "0.9.1", default-features = false, features = [ "runtime-tokio" ] }
