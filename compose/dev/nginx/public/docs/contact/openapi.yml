@@ -13,24 +13,95 @@ paths:
   /api/contact/contact:
     get:
       summary: Get user contacts
-      operationId: handle_get_user_contacts
+      operationId: handle_get_contacts
       tags:
         - Contact
       security:
         - bearerAuth: []
       responses:
         '200':
-          $ref: '#/components/responses/'
-        '404':
-          $ref: '../common/openapi.yml#/components/responses/NotFound'
+          $ref: '#/components/responses/ResponseContactJson'
         '401':
           $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+    post:
+      summary: Create a new contact
+      operationId: handle_create_contact
+      tags:
+        - Contact
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewContactJson'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseContactJson'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+    put:
+      summary: Update a contact
+      operationId: handle_update_contact
+      tags:
+        - Contact
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContactJson'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseContactJson'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
+        '500':
+          $ref: '../common/openapi.yml#/components/responses/InternalServerError'
+
+    delete:
+      summary: Delete a contact
+      operationId: handle_delete_contact
+      tags:
+        - Contact
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The ID of the contact to delete
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseContactJson'
+        '401':
+          $ref: '../common/openapi.yml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../common/openapi.yml#/components/responses/NotFound'
         '500':
           $ref: '../common/openapi.yml#/components/responses/InternalServerError'
 
 components:
   responses:
-    ResponseUserJson:
+    ResponseContactJson:
       description: Successful operation
       content:
         application/json:
@@ -38,59 +109,67 @@ components:
             type: object
             properties:
               data:
-                $ref: '#/components/schemas/UserJson'
+                $ref: '#/components/schemas/ContactsJson'
               error:
                 type: object
                 nullable: true
                 example: null
                 
   schemas:
-    UserJson:
+    ContactJson:
       type: object
       properties:
-        firstname:
+        id:
           type: string
-          pattern: '^[a-zA-Z\s]{1,50}$'
+          format: uuid
+          example: '123e4567-e89b-12d3-a456-426614174000'
+        alias:
+          type: string
           example: 'Pepe'
-        lastname:
+        is_blocked:
+          type: boolean
+          example: false
+        created_at:
           type: string
-          pattern: '^[a-zA-Z\s]{1,50}$'
-          example: 'Garcia'
-        nationality:
+          format: date-time
+          example: '2021-08-01T00:00:00.000Z'
+        updated_at:
           type: string
-          description: 'Nationality should be alpha-3 code (ISO 3166)'
-          pattern: '^[A-Z]{3}$'
-          example: 'MEX'
-        birthday:
-          type: string
-          format: date
-          description: 'You must be at least 13 years old'
-          example: '2000-01-01'
-        languages:
-          type: array
-          items:
-            type: string
-            description: 'Language should be alpha-2 code (ISO 639-1)'
-            pattern: '^[A-Z]{2}$'
-            example: 'ES'
+          format: date-time
+          example: '2021-08-01T00:00:00.000Z'
 
     ContactsJson:
+      type: array
+      items:
+        $ref: '#/components/schemas/ContactJson'
+
+    NewContactJson:
       type: object
       properties:
-        contacts:
-          type: array
-          items:
-            type: object
-            properties:
-              alias:
-                type: string
-                example: 'Pepe'
-              firstname:
-                type: string
-                example: 'Pepe Garcia'
-              identifier:
-                type: string
-                example: 'pepe@some.com'
+        id:
+          type: string
+          format: uuid
+          example: '123e4567-e89b-12d3-a456-426614174000'
+        alias:
+          type: string
+          example: 'Pepe'
+        isBlocked:
+          type: boolean
+          example: false
+
+    UpdateContactJson:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: '123e4567-e89b-12d3-a456-426614174000'
+        alias:
+          type: string
+          example: 'Pepe'
+        isBlocked:
+          type: boolean
+          example: true
 
   securitySchemes:
     bearerAuth:

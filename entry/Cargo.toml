@@ -11,6 +11,7 @@ profile = { path = "../profile"}
 message = { path = "../message"}
 auth = { path = "../auth"}
 common = { path = "../common"}
+contact ={ path = "../contact" }
 #
 toml = "0.8.2"
 sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid" ] }

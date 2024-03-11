@@ -23,6 +23,7 @@ mod schemas;
 mod ws;
 use auth::handlers as auth_handlers;
 use profile::handlers as profile_handlers;
+use contact::handlers as contact_handlers;
 use ws::handler::{run_consumer_event_queue, ws_handler};
 
 
@@ -95,6 +96,18 @@ pub async fn router() -> Router {
                 get(profile_handlers::handle_get_user_info)
                     .put(profile_handlers::handle_update_user_info),
             ),
+        )
+        // contact
+        .nest(
+            "/contact", 
+            Router::new()
+            .route(
+                "/contact", 
+                get(contact_handlers::handle_get_contacts)
+                .put(contact_handlers::handle_update_contact)
+                .post(contact_handlers::handle_create_contact)
+                .delete(contact_handlers::handle_delete_contact)
+            )
         )
         // message
         .nest("/message", Router::new().route("/ws", get(ws_handler)));

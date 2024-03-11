@@ -64,7 +64,7 @@ impl ContactRepositoryTrait<Pool<Postgres>> for ContactRepository {
 
         match contact {
             Ok(contact) => Ok(contact.to_contact()),
-            Err(_) => Err(contact_repository::Error::DatabaseError)
+            Err(err) => Err(contact_repository::Error::DatabaseError)
         }
     }
 
@@ -82,8 +82,10 @@ impl ContactRepositoryTrait<Pool<Postgres>> for ContactRepository {
         }
 
         // Add the WHERE clause with the user ID
-        separated.push_unseparated(" WHERE id =");
+        separated.push_unseparated(" WHERE user_id =");
         separated.push_bind_unseparated(Uuid::from(update_contact.user_id));
+        separated.push_unseparated(" AND id =");
+        separated.push_bind_unseparated(Uuid::from(update_contact.id));
 
         // Execute the update query
         match query_builder.build().execute(conn).await {
@@ -112,10 +114,7 @@ impl ContactRepositoryTrait<Pool<Postgres>> for ContactRepository {
         ).fetch_optional(conn).await;
 
         match result {
-            Ok(result) => match result {
-                Some(_) => Ok(()),
-                None => Err(contact_repository::Error::NotFound)
-            }
+            Ok(_) => Ok(()),
             Err(_) => Err(contact_repository::Error::DatabaseError)
         }
     }

@@ -50,7 +50,9 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"Gruntfuggly.todo-tree"
+				"Gruntfuggly.todo-tree",
+				"42Crunch.vscode-openapi",
+				"cweijan.vscode-database-client2"
 			]
 		}
 	}

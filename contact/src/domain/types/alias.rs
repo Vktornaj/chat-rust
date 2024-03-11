@@ -1,6 +1,6 @@
 
 use std::fmt::Display;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub enum Error {
@@ -17,6 +17,7 @@ impl Display for Error {
     }
 }
 
+#[derive(Serialize)]
 pub struct Alias(String);
 
 impl TryFrom<String> for Alias {
