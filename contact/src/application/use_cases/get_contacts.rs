@@ -22,7 +22,7 @@ pub async fn execute<T>(
         return Err(Error::Unauthorized);
     };
 
-    match repo.get_by_user_id(conn, id.try_into().unwrap()).await {
+    match repo.find_by_user_id(conn, id.try_into().unwrap()).await {
         Ok(contact) => Ok(contact),
         Err(e) => match e {
             ContactRepositoryError::DatabaseError => Err(Error::DatabaseError),

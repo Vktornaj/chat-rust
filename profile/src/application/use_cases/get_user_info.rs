@@ -1,6 +1,6 @@
 use auth::TokenData;
 use crate::domain::profile::Profile;
-use super::super::port::driven::user_repository::UserRepositoryTrait;
+use super::super::port::driven::user_repository::ProfileRepositoryTrait;
 
 
 #[derive(Debug)]
@@ -20,7 +20,7 @@ impl std::fmt::Display for FindError {
 
 pub async fn execute<T>(
     conn: &T,
-    repo: &impl UserRepositoryTrait<T>,
+    repo: &impl ProfileRepositoryTrait<T>,
     secret: &[u8],
     token: &String
 ) -> Result<Profile, FindError> {

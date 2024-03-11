@@ -3,7 +3,7 @@ use std::fmt::Display;
 use auth::TokenData;
 use common::domain::types::id::Id;
 
-use super::super::port::driven::user_repository::UserRepositoryTrait;
+use super::super::port::driven::user_repository::ProfileRepositoryTrait;
 use crate::{
     domain::{
         profile::{Profile, NewProfile}, types::{
@@ -48,7 +48,7 @@ pub struct Payload {
 
 pub async fn execute<T>(
     conn: &T, 
-    repo: &impl UserRepositoryTrait<T>,
+    repo: &impl ProfileRepositoryTrait<T>,
     secret: &[u8],
     token: &String,
     payload: Payload,

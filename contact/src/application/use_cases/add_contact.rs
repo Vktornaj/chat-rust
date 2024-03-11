@@ -34,7 +34,7 @@ pub async fn execute<T>(
         id: payload.id,
         user_id: id.try_into().unwrap(),
         alias: payload.alias,
-        blocked: false,
+        is_blocked: false,
     };
 
     match repo.create(conn, new_contact).await {

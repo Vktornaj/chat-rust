@@ -7,7 +7,7 @@ use crate::application::use_cases::{get_user_info, update_profile_info};
 use common::adapter::{state::AppState, response_schemas::JsonResponse};
 
 // Adapters
-use crate::adapter::driven::persistence::sqlx::user_repository::UserRepository;
+use crate::adapter::driven::persistence::sqlx::profile_repository::ProfileRepository;
 
 
 pub async fn handle_get_user_info(
@@ -16,7 +16,7 @@ pub async fn handle_get_user_info(
 ) -> JsonResponse<UserJson> {
     match get_user_info::execute(
         &state.db_sql_pool,
-        &UserRepository {},
+        &ProfileRepository {},
         &state.config.secret,
         &token.token().to_string(),
     )
@@ -36,7 +36,7 @@ pub async fn handle_update_user_info(
 ) -> JsonResponse<UserJson> {
     match update_profile_info::execute(
         &state.db_sql_pool, 
-        &UserRepository {}, 
+        &ProfileRepository {}, 
         &state.config.secret, 
         &token.token().to_string(), 
         update_profile_info::Payload {

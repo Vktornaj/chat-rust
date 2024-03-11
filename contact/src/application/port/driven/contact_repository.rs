@@ -1,7 +1,5 @@
-use async_trait::async_trait;
-
 use common::domain::types::id::Id;
-use crate::domain::contact::{Contact, NewContact};
+use crate::domain::{contact::{Contact, NewContact}, types::alias::Alias};
 
 
 pub enum Error {
@@ -12,11 +10,10 @@ pub enum Error {
 pub struct UpdateContact {
     pub id: Id,
     pub user_id: Id,
-    pub alias: Option<Option<String>>,
-    pub blocked: Option<bool>,
+    pub alias: Option<Option<Alias>>,
+    pub is_blocked: Option<bool>,
 }
 
-#[async_trait]
 pub trait ContactRepositoryTrait<T> {
     /// Get a contact by its id
     /// 
@@ -28,7 +25,7 @@ pub trait ContactRepositoryTrait<T> {
     /// # Returns
     /// - `Ok(Contact)` - The contact
     /// - `Err(Error)` - An error occurred
-    async fn get_by_id(&self, conn: &T, user_id: Id, id: Id) -> Result<Contact, Error>;
+    fn find_by_id(&self, conn: &T, user_id: Id, id: Id) -> impl std::future::Future<Output = Result<Contact, Error>> + Send;
 
     /// Get all contacts of a user
     /// 
@@ -39,7 +36,7 @@ pub trait ContactRepositoryTrait<T> {
     /// # Returns
     /// - `Ok(Vec<Contact>)` - The contacts
     /// - `Err(Error)` - An error occurred
-    async fn get_by_user_id(&self, conn: &T, user_id: Id) -> Result<Vec<Contact>, Error>;
+    fn find_by_user_id(&self, conn: &T, user_id: Id) -> impl std::future::Future<Output = Result<Vec<Contact>, Error>> + Send;
 
     /// Create a new contact
     /// 
@@ -50,7 +47,7 @@ pub trait ContactRepositoryTrait<T> {
     /// # Returns
     /// - `Ok(Contact)` - The created contact
     /// - `Err(Error)` - An error occurred
-    async fn create(&self, conn: &T, new_contact: NewContact) -> Result<Contact, Error>;
+    fn create(&self, conn: &T, new_contact: NewContact) -> impl std::future::Future<Output = Result<Contact, Error>> + Send;
 
     /// Update a contact
     /// 
@@ -61,7 +58,7 @@ pub trait ContactRepositoryTrait<T> {
     /// # Returns
     /// - `Ok(Contact)` - The updated contact
     /// - `Err(Error)` - An error occurred
-    async fn update(&self, conn: &T, update_contact: UpdateContact) -> Result<Contact, Error>;
+    fn update(&self, conn: &T, update_contact: UpdateContact) -> impl std::future::Future<Output = Result<Contact, Error>> + Send;
 
     /// Delete a contact
     /// 
@@ -73,5 +70,5 @@ pub trait ContactRepositoryTrait<T> {
     /// # Returns
     /// - `Ok(())` - The contact was deleted
     /// - `Err(Error)` - An error occurred
-    async fn delete(&self, conn: &T, user_id: Id, id: Id) -> Result<(), Error>;
+    fn delete(&self, conn: &T, user_id: Id, id: Id) -> impl std::future::Future<Output = Result<(), Error>> + Send;
 }

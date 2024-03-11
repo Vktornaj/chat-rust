@@ -42,7 +42,7 @@ pub struct UpdateUser {
 
 // TODO: improve criteria
 #[async_trait]
-pub trait UserRepositoryTrait<T> {
+pub trait ProfileRepositoryTrait<T> {
     /// Find and return one single record from the persistence system by id
     async fn find_by_id(&self, conn: &T, id: Uuid) -> Result<Profile, RepoSelectError>;
     

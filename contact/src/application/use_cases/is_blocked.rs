@@ -20,7 +20,7 @@ pub async fn execute<T>(
     payload: Payload,
 ) -> Result<bool, Error> {
     match repo
-        .get_by_id(
+        .find_by_id(
             conn,
             payload.user_id.try_into().unwrap(),
             payload.contact_id.try_into().unwrap(),

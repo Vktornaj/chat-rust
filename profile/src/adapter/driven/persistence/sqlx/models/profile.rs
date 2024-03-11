@@ -4,7 +4,7 @@ use sqlx::{postgres::PgRow, Row};
 use uuid::Uuid;
 
 use crate::domain::{
-    profile::Profile as UserDomain, types::{
+    profile::Profile as ProfileDomain, types::{
         first_name::FirstName, 
         last_name::LastName, 
         birthday::Birthday, 
@@ -14,7 +14,7 @@ use crate::domain::{
 };
 
 
-pub struct User {
+pub struct Profile {
     pub user_id: Uuid,
     pub first_name: String,
     pub last_name: String,
@@ -24,9 +24,9 @@ pub struct User {
     pub updated_at: DateTime<Utc>
 }
 
-impl User {
+impl Profile {
     pub fn from_pgrow(row: &PgRow) -> Result<Self, sqlx::Error> {
-        Ok(User {
+        Ok(Profile {
             user_id: row.try_get("user_id")?,
             first_name: row.try_get("first_name")?,
             last_name: row.try_get("last_name")?,
@@ -37,10 +37,10 @@ impl User {
         })
     }
 
-    pub fn to_user_domain(self, languages:Vec<String>) -> Result<UserDomain, ErrorMsg> {
+    pub fn to_user_domain(self, languages:Vec<String>) -> Result<ProfileDomain, ErrorMsg> {
         let languages: Result<Vec<Language>, ErrorMsg> = languages.into_iter()
             .map(|x| Language::try_from(x)).collect();
-        Ok(UserDomain {
+        Ok(ProfileDomain {
             id: Id::try_from(self.user_id)?,
             first_name: FirstName::try_from(self.first_name)?,
             last_name: LastName::try_from(self.last_name)?,

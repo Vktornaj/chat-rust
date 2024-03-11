@@ -16,5 +16,5 @@ pub struct NewContact {
     pub id: Id,
     pub user_id: Id,
     pub alias: Option<Alias>,
-    pub blocked: bool,
+    pub is_blocked: bool,
 }

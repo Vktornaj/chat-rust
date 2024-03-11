@@ -2,6 +2,7 @@
 use std::fmt::Display;
 use serde::Deserialize;
 
+#[derive(Debug)]
 pub enum Error {
     TooShort,
     TooLong,

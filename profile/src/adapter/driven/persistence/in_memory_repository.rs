@@ -12,7 +12,7 @@ use crate::{
     }, 
     application::port::driven::{
         errors, user_repository::{
-            UserRepositoryTrait, FindUser, UpdateUser
+            ProfileRepositoryTrait, FindUser, UpdateUser
         }
     }
 };
@@ -21,7 +21,7 @@ use crate::{
 pub struct InMemoryRepository();
 
 #[async_trait]
-impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
+impl ProfileRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
     async fn find_by_id(&self, conn: &Mutex<Vec<UserDomain>>, id: Uuid) -> Result<UserDomain, errors::RepoSelectError> {
         let lock = match conn.lock() {
             Ok(lock) => lock,

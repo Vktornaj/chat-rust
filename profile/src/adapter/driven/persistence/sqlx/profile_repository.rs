@@ -6,7 +6,7 @@ use sqlx::{Postgres, Pool};
 use uuid::Uuid;
 use futures::future::join_all;
 
-use crate::application::port::driven::user_repository::{UserRepositoryTrait, UpdateUser, FindUser};
+use crate::application::port::driven::user_repository::{ProfileRepositoryTrait, UpdateUser, FindUser};
 use crate::application::port::driven::errors::{
     RepoCreateError, 
     RepoDeleteError, 
@@ -14,30 +14,30 @@ use crate::application::port::driven::errors::{
     RepoUpdateError,
 };
 use crate::domain::profile::{Profile as UserDomain, NewProfile};
-use super::models::user::User as UserDB;
+use super::models::profile::Profile as UserDB;
 
 
-pub struct UserRepository();
+pub struct ProfileRepository();
 
 #[async_trait]
-impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
+impl ProfileRepositoryTrait<Pool<Postgres>> for ProfileRepository {
     async fn find_by_id(&self, conn: &Pool<Postgres>, id: Uuid) -> Result<UserDomain, RepoSelectError> {
-        let user = sqlx::query_as!(
+        let profile = sqlx::query_as!(
             UserDB,
             r#"
                 SELECT * FROM profiles WHERE user_id = $1
             "#,
             id
         ).fetch_one(conn).await;
-        match user {
-            Ok(user) => {
-                let user_id = user.user_id;
+        match profile {
+            Ok(profile) => {
+                let user_id = profile.user_id;
                 let languages = if let Ok(languages) = get_languages(conn, &user_id).await {
                     languages
                 } else {
                     return Err(RepoSelectError::Unknown("Error getting languages".to_string()));
                 };
-                match user.to_user_domain(languages) {
+                match profile.to_user_domain(languages) {
                     Ok(user) => Ok(user),
                     Err(err) => Err(RepoSelectError::Unknown(err.to_string())),
                 }
@@ -204,7 +204,11 @@ impl UserRepositoryTrait<Pool<Postgres>> for UserRepository {
                     Err(RepoUpdateError::NotFound)
                 }
             },
-            Err(err) => return Err(RepoUpdateError::Unknown(format!("Error updating user {} {}", err.to_string(), query_builder.into_sql()))),
+            Err(err) => return Err(
+                RepoUpdateError::Unknown(
+                    format!("Error updating user {} {}", err.to_string(), query_builder.into_sql())
+                )
+            ),
         }
     }
 

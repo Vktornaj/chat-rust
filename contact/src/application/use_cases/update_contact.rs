@@ -39,7 +39,7 @@ pub async fn execute<T>(
         id: payload.id,
         user_id: id.try_into().unwrap(),
         alias: payload.alias.map(|x| x.map(|x| x.into())),
-        blocked: payload.blocked,
+        is_blocked: payload.blocked,
     };
 
     match repo.update(conn, update_contact).await {
