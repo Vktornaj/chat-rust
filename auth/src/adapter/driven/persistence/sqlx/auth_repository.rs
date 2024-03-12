@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::{Postgres, Pool};
 use uuid::Uuid;
 
-use crate::application::port::driven::auth_repository::{AuthRepositoryTrait, RepoSelectError, UpdateIdentify};
+use crate::application::port::driven::auth_repository::{self, AuthRepositoryTrait, UpdateIdentify};
 use crate::domain::auth::{Auth, NewAuth};
 use crate::domain::types::identification::{IdentificationValue, NewIdentification};
 use super::models::auth::{AuthSQL, IdentificationSQL, TokenMetadataSQL};
@@ -12,7 +12,7 @@ pub struct AuthRepository();
 
 #[async_trait]
 impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
-    async fn find_by_id(&self, conn: &Pool<Postgres>, user_id: Uuid) -> Result<Auth, String> {
+    async fn find_by_id(&self, conn: &Pool<Postgres>, user_id: Uuid) -> Result<Auth, auth_repository::Error> {
         let auth: Result<AuthSQL, sqlx::Error> = sqlx::query_as!(
             AuthSQL,
             r#"
@@ -29,7 +29,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
                 ).await {
                     identifications
                 } else {
-                    return Err("Error getting identifications".to_string());
+                    return Err(auth_repository::Error::Unknown("Error getting identifications".to_string()));
                 };
                 let tokens_metadata = if let Ok(tokens_metadata) = get_tokens_metadata(
                     conn, 
@@ -37,26 +37,25 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
                 ).await {
                     tokens_metadata
                 } else {
-                    return Err("Error getting tokens metadata".to_string());
+                    return Err(auth_repository::Error::Unknown("Error getting tokens metadata".to_string()));
                 };
                 match auth.to_auth_domain(identifications, tokens_metadata) {
                     Ok(user) => Ok(user),
-                    Err(err) => Err(err.to_string()),
+                    Err(err) => Err(auth_repository::Error::Unknown(err.to_string())),
                 }
             },
             Err(err) => match err {
-                sqlx::Error::RowNotFound => Err("User not found".to_string()),
-                _ => Err(err.to_string()),
+                sqlx::Error::RowNotFound => Err(auth_repository::Error::Unknown("User not found".to_string())),
+                _ => Err(auth_repository::Error::Unknown(err.to_string())),
             }
         }
     }
 
-    // TODO: test this function
     async fn find_by_identification(
         &self, 
         conn: &Pool<Postgres>,
         identification_value: IdentificationValue,
-    ) -> Result<Option<Auth>, RepoSelectError> {
+    ) -> Result<Option<Auth>, auth_repository::Error> {
         let identification_value: String = match identification_value {
             IdentificationValue::Email(email) => email.into(),
             IdentificationValue::PhoneNumber(phone_number) => phone_number.into(),
@@ -79,11 +78,11 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             ).await {
                 identifications
             } else {
-                return Err(RepoSelectError::Unknown("Error getting identifications".to_string()));
+                return Err(auth_repository::Error::Unknown("Error getting identifications".to_string()));
             },
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
-                _ => return Err(RepoSelectError::Unknown(err.to_string())),
+                sqlx::Error::RowNotFound => return Err(auth_repository::Error::NotFound),
+                _ => return Err(auth_repository::Error::Unknown(err.to_string())),
             }
         };
 
@@ -94,20 +93,20 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             ).await {
                 tokens_metadata
             } else {
-                return Err(RepoSelectError::Unknown("Error getting tokens metadata".to_string()));
+                return Err(auth_repository::Error::Unknown("Error getting tokens metadata".to_string()));
             },
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
-                _ => return Err(RepoSelectError::Unknown(err.to_string())),
+                sqlx::Error::RowNotFound => return Err(auth_repository::Error::NotFound),
+                _ => return Err(auth_repository::Error::Unknown(err.to_string())),
             }
         };
 
         match auth_sql {
             Ok(auth) => Some(auth.to_auth_domain(identifications, tokens_metadata)
-                .map_err(|err| RepoSelectError::Unknown(err.to_string()))).transpose(),
+                .map_err(|err| auth_repository::Error::Unknown(err.to_string()))).transpose(),
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err(RepoSelectError::NotFound("User not found".to_string())),
-                _ => return Err(RepoSelectError::Unknown(err.to_string())),
+                sqlx::Error::RowNotFound => return Err(auth_repository::Error::NotFound),
+                _ => return Err(auth_repository::Error::Unknown(err.to_string())),
             }
         }
     }
@@ -116,7 +115,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         &self, 
         conn: &Pool<Postgres>, 
         auth: NewAuth, 
-    ) -> Result<Auth, String> {
+    ) -> Result<Auth, auth_repository::Error> {
         let res_auth = sqlx::query_as!(
             AuthSQL,
             r#"
@@ -128,7 +127,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
 
         let auth_sql = match res_auth {
             Ok(res_auth) => res_auth,
-            Err(err) => return Err(err.to_string()),
+            Err(err) => return Err(auth_repository::Error::Unknown(err.to_string())),
         };
 
         let res_identification_id: Result<IdentificationSQL, sqlx::Error> = sqlx::query_as!(
@@ -151,12 +150,12 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
                     "#,
                     auth_sql.user_id,
                 ).execute(conn).await;
-                return Err(err.to_string());
+                return Err(auth_repository::Error::Unknown(err.to_string()));
             },
         };
 
         auth_sql.to_auth_domain(vec![identification], vec!())
-            .map_err(|err| err.to_string())
+            .map_err(|err| auth_repository::Error::Unknown(err.to_string()))
     }
 
     async fn update_password(
@@ -164,7 +163,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         conn: &Pool<Postgres>, 
         user_id: Uuid,
         new_hashed_password: String,
-    ) -> Result<Auth, String> {
+    ) -> Result<Auth, auth_repository::Error> {
         let auth = sqlx::query_as!(
             AuthSQL,
             r#"
@@ -182,7 +181,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
                 ).await {
                     identifications
                 } else {
-                    return Err("Error getting identifications".to_string());
+                    return Err(auth_repository::Error::Unknown("Error getting identifications".to_string()));
                 };
                 let tokens_metadata = if let Ok(tokens_metadata) = get_tokens_metadata(
                     conn, 
@@ -190,16 +189,16 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
                 ).await {
                     tokens_metadata
                 } else {
-                    return Err("Error getting tokens metadata".to_string());
+                    return Err(auth_repository::Error::Unknown("Error getting tokens metadata".to_string()));
                 };
                 match auth.to_auth_domain(identifications, tokens_metadata) {
                     Ok(user) => Ok(user),
-                    Err(err) => Err(err.to_string()),
+                    Err(err) => Err(auth_repository::Error::Unknown(err.to_string())),
                 }
             },
             Err(err) => match err {
-                sqlx::Error::RowNotFound => Err("User not found".to_string()),
-                _ => Err(err.to_string()),
+                sqlx::Error::RowNotFound => Err(auth_repository::Error::NotFound),
+                _ => Err(auth_repository::Error::Unknown(err.to_string())),
             }
         }
     }
@@ -208,7 +207,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         &self,
         conn: &Pool<Postgres>, 
         identification_operation: UpdateIdentify<NewIdentification, Uuid>,
-    ) -> Result<Auth, String> {
+    ) -> Result<Auth, auth_repository::Error> {
         let res_user_id = match identification_operation {
             UpdateIdentify::Add(new_identification) => {
                 sqlx::query!(
@@ -234,8 +233,8 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         let user_id = match res_user_id {
             Ok(res_user_id) => res_user_id,
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err("User not found".to_string()),
-                _ => return Err(err.to_string()),
+                sqlx::Error::RowNotFound => return Err(auth_repository::Error::NotFound),
+                _ => return Err(auth_repository::Error::Unknown(err.to_string())),
             }
         };
 
@@ -248,21 +247,21 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         ).fetch_one(conn).await;
 
         let identifications = get_identifications(conn, &user_id)
-            .await.map_err(|err| err.to_string())?;
+            .await.map_err(|err| auth_repository::Error::Unknown(err.to_string()))?;
         let tokens_metadata = get_tokens_metadata(conn, &user_id)
-            .await.map_err(|err| err.to_string())?;
+            .await.map_err(|err| auth_repository::Error::Unknown(err.to_string()))?;
 
         match res_auth {
             Ok(auth) => Ok(auth.to_auth_domain(identifications, tokens_metadata)
-                .map_err(|err| err.to_string())?),
+                .map_err(|err| auth_repository::Error::Unknown(err.to_string()))?),
             Err(err) => match err {
-                sqlx::Error::RowNotFound => Err("User not found".to_string()),
-                _ => Err(err.to_string()),
+                sqlx::Error::RowNotFound => Err(auth_repository::Error::NotFound),
+                _ => Err(auth_repository::Error::Unknown(err.to_string())),
             }
         }
     }
 
-    async fn delete(&self, conn: &Pool<Postgres>, user_id: Uuid) -> Result<Auth, String> {
+    async fn delete(&self, conn: &Pool<Postgres>, user_id: Uuid) -> Result<Auth, auth_repository::Error> {
 
         if sqlx::query!(
             r#"
@@ -270,7 +269,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             "#,
             user_id
         ).fetch_all(conn).await.is_err() {
-            return Err("Error deleting identifications".to_string());
+            return Err(auth_repository::Error::Unknown("Error deleting identifications".to_string()));
         }
 
         if sqlx::query!(
@@ -279,7 +278,7 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
             "#,
             user_id
         ).fetch_all(conn).await .is_err() {
-            return Err("Error deleting tokens metadata".to_string());
+            return Err(auth_repository::Error::Unknown("Error deleting tokens metadata".to_string()));
         }
 
         let auth_sql = match sqlx::query_as!(
@@ -291,18 +290,18 @@ impl AuthRepositoryTrait<Pool<Postgres>> for AuthRepository {
         ).fetch_one(conn).await {
             Ok(auth_sql) => auth_sql,
             Err(err) => match err {
-                sqlx::Error::RowNotFound => return Err("User not found".to_string()),
-                _ => return Err(err.to_string()),
+                sqlx::Error::RowNotFound => return Err(auth_repository::Error::NotFound),
+                _ => return Err(auth_repository::Error::Unknown(err.to_string())),
             }
         };
 
         let indentifications = get_identifications(conn, &user_id).await
-            .map_err(|err| err.to_string())?;
+            .map_err(|err| auth_repository::Error::Unknown(err.to_string()))?;
         let tokens_metadata = get_tokens_metadata(conn, &user_id).await
-            .map_err(|err| err.to_string())?;
+            .map_err(|err| auth_repository::Error::Unknown(err.to_string()))?;
 
         auth_sql.to_auth_domain(indentifications, tokens_metadata)
-            .map_err(|err| err.to_string())
+            .map_err(|err| auth_repository::Error::Unknown(err.to_string()))
     }
 }
 

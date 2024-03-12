@@ -6,33 +6,19 @@ use crate::domain::auth::{Auth, NewAuth};
 use crate::domain::types::identification::{IdentificationValue, NewIdentification};
 
 
-pub enum RepoSelectError {
-    NotFound(String),
+pub enum Error {
+    NotFound,
     Unknown(String),
 }
 
-impl Display for RepoSelectError {
+impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RepoSelectError::NotFound(err) => write!(f, "Not found: {}", err),
-            RepoSelectError::Unknown(err) => write!(f, "Unknown: {}", err),
+            Error::NotFound => write!(f, "Not found"),
+            Error::Unknown(err) => write!(f, "Unknown: {}", err),
         }
     }
 
-}
-
-pub enum RepoCreateError {
-    Unknown,
-}
-
-pub enum RepoUpdateError {
-    NotFound,
-    Unknown,
-}
-
-pub enum RepoDeleteError {
-    NotFound,
-    Unknown,
 }
 
 // #[derive(Default)]
@@ -56,12 +42,12 @@ pub enum UpdateIdentify<T, U> {
 #[async_trait]
 pub trait AuthRepositoryTrait<T> {
     /// Find and return one single record from the persistence system by id
-    async fn find_by_id(&self, conn: &T, user_id: Uuid) -> Result<Auth, String>;
+    async fn find_by_id(&self, conn: &T, user_id: Uuid) -> Result<Auth, Error>;
 
-    async fn find_by_identification(&self, conn: &T, identification: IdentificationValue) -> Result<Option<Auth>, RepoSelectError>;
+    async fn find_by_identification(&self, conn: &T, identification: IdentificationValue) -> Result<Option<Auth>, Error>;
 
     /// Insert the received entity in the persistence system
-    async fn create(&self, conn: &T, auth: NewAuth) -> Result<Auth, String>;
+    async fn create(&self, conn: &T, auth: NewAuth) -> Result<Auth, Error>;
 
     /// Update one single record already present in the persistence system
     async fn update_password(
@@ -69,15 +55,15 @@ pub trait AuthRepositoryTrait<T> {
         conn: &T, 
         user_id: Uuid, 
         new_hashed_password: String
-    ) -> Result<Auth, String>;
+    ) -> Result<Auth, Error>;
    
     /// Update one single record already present in the persistence system
     async fn update_identifications(
         &self, 
         conn: &T, 
         identification_operation: UpdateIdentify<NewIdentification, Uuid>,
-    ) -> Result<Auth, String>;
+    ) -> Result<Auth, Error>;
 
     /// Delete one single record from the persistence system
-    async fn delete(&self, conn: &T, user_id: Uuid) -> Result<Auth, String>;
+    async fn delete(&self, conn: &T, user_id: Uuid) -> Result<Auth, Error>;
 }

@@ -55,7 +55,7 @@ pub async fn execute<T>(
     // delete auth
     match repo.delete(conn, user_id.into()).await {
         Ok(auth) => Ok(auth),
-        Err(error) => Err(DeleteError::Unknown(format!("Unknown error: {:?}", error))),
+        Err(error) => Err(DeleteError::Unknown(format!("Unknown error: {:?}", error.to_string()))),
     }
 }
 

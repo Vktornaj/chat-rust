@@ -1,5 +1,5 @@
 use crate::{
-    application::port::driven::auth_repository::{AuthRepositoryTrait, RepoSelectError},
+    application::port::driven::auth_repository::{self, AuthRepositoryTrait},
     domain::types::identification::IdentificationValue,
 };
 
@@ -19,8 +19,8 @@ pub async fn execute<T>(
     match repo.find_by_identification(conn, identification).await {
         Ok(_) => Ok(true),
         Err(err) => match err {
-            RepoSelectError::NotFound(_) => Ok(false),
-            RepoSelectError::Unknown(err) => Err(err),
+            auth_repository::Error::NotFound => Ok(false),
+            auth_repository::Error::Unknown(err) => Err(err),
         },
     }
 }

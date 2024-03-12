@@ -116,7 +116,7 @@ pub async fn handle_delete_contact(
     )
     .await
     {
-        Ok(_) => JsonResponse::new_ok(String::from("Done")),
+        Ok(_) => JsonResponse::new_ok(String::from("OK")),
         Err(err) => match err {
             remove_contact::Error::Unauthorized => {
                 JsonResponse::new_unauthorized_err(0, "".to_string())

@@ -6,6 +6,8 @@ tags:
   - name: Auth
     description: Auth API
 servers:
+  - url: http://localhost
+  - url: http://192.168.1.116
   - url: https://geduardo.com
 paths:
 
