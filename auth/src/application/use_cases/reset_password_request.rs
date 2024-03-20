@@ -32,8 +32,11 @@ pub async fn execute<T, U>(
         ResetError::InvalidData("Invalid identifier".to_string())
     })?;
     let auth = match repo.find_by_identification(conn, identifier.clone()).await {
-        Ok(auth) => auth,
-        Err(_) => return Err(ResetError::NotFound("Unknown error".to_string())),
+        Ok(auth) => match auth {
+            Some(auth) => auth,
+            None => return Err(ResetError::NotFound("User not found".to_string())),
+        },
+        Err(_) => return Err(ResetError::NotFound("User not found".to_string())),
     };
     // Generate link
     let token = TokenData::new_reset_password_token(&auth.user_id.into());

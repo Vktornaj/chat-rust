@@ -1,11 +1,11 @@
 use std::fmt::Display;
-
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
+
 use super::error::ErrorMsg;
 
 
-#[derive(PartialEq, Clone, Serialize, Deserialize, Debug, Copy)]
+#[derive(PartialEq, Clone, Debug, Copy)]
 pub struct Id(Uuid);
 
 impl TryFrom<Uuid> for Id {
@@ -46,6 +46,18 @@ impl Display for Id {
     }
 }
 
+impl Serialize for Id {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.0.to_string().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Id {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de> {
+        let id = String::deserialize(deserializer)?;
+        Self::try_from(id).map_err(serde::de::Error::custom)
+    }
+}
 
 #[cfg(test)]
 mod tests_id {

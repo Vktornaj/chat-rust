@@ -12,7 +12,7 @@ use crate::application::port::driven::email_service::{EmailServiceTrait, EmailSe
 
 pub struct AWSEmailService();
 
-const FROM_ADDRESS: &'static str = "verification_email@geduardo.com";
+const FROM_ADDRESS: &'static str = "no-reply@geduardo.com";
 
 #[async_trait]
 impl EmailServiceTrait<Client> for AWSEmailService {
@@ -105,7 +105,7 @@ mod tests {
 
         let email_service = AWSEmailService();
 
-        let address = String::from("vktornajpro@gmail.com");
+        let address = String::from("felover496@evvgo.com");
         let code = String::from("123456");
 
         let result = email_service.send_confirmation_email(&client, address, code).await;

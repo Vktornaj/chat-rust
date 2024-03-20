@@ -1,6 +1,5 @@
 use crate::{application::port::driven::{
-    auth_repository::AuthRepositoryTrait, auth_cache::{AuthCacheTrait, CreateAuthRequest}}, 
-    domain::auth::Auth
+    auth_repository::AuthRepositoryTrait, auth_cache::{AuthCacheTrait, CreateAuthRequest}}, domain::{auth::Auth, types::code::Code}, TokenData
 };
 
 
@@ -14,7 +13,7 @@ pub enum CreateError {
 
 pub struct Payload {
     pub transaction_id: String,
-    pub confirmation_code: String,
+    pub confirmation_code: Code,
 }
 
 // TODO: add attempt limit
@@ -23,17 +22,16 @@ pub async fn execute<T, U>(
     cache_conn: &U,
     repo: &impl AuthRepositoryTrait<T>, 
     repo_cache: &impl AuthCacheTrait<U>,
+    secret: &[u8],
     payload: Payload,
-) -> Result<Auth, CreateError> {
+) -> Result<String, CreateError> {
     // validate confirmation code
     let new_auth = match repo_cache
         .find_by_id::<CreateAuthRequest>(cache_conn, payload.transaction_id.clone()).await 
     {
         Ok(auth) => match auth {
             Some(auth) => {
-                if Into::<String>::into(auth.confirmation_code.clone()) == payload.confirmation_code {
-                    println!("confirmation code {}", Into::<String>::into(auth.confirmation_code.clone()));
-                    println!("payload code {}", payload.confirmation_code);
+                if auth.confirmation_code == payload.confirmation_code {
                     auth.to_new_auth()
                 } else {
                     return Err(CreateError::InvalidData("invalid confirmation code".to_string()));
@@ -49,10 +47,12 @@ pub async fn execute<T, U>(
         Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
     };
     // create auth
-    match repo.create(conn, new_auth).await {
-        Ok(user) => Ok(user),
-        Err(error) => Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
-    }
+    let auth = match repo.create(conn, new_auth).await {
+        Ok(auth) => auth,
+        Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error.to_string()))),
+    };
+
+    Ok(TokenData::new(&auth.user_id.into()).token(secret))
 }
 
 #[cfg(test)]

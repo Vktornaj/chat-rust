@@ -7,7 +7,7 @@
 ################################################################################
 # Create a stage for building the application.
 
-ARG RUST_VERSION=1.74.0
+ARG RUST_VERSION=1.76.0
 ARG APP_NAME=entry
 ARG SQLX_OFFLINE=true
 FROM rust:${RUST_VERSION}-slim-bookworm AS build
@@ -26,14 +26,15 @@ WORKDIR /app
 # Leverage a bind mount to the src directory to avoid having to copy the
 # source code into the container. Once built, copy the executable to an
 # output directory before the cache mounted /app/target is unmounted.
-RUN --mount=type=bind,source=auth,target=auth \
-    --mount=type=bind,source=common,target=common \
-    --mount=type=bind,source=entry,target=entry \
-    --mount=type=bind,source=message,target=message \
-    --mount=type=bind,source=user,target=user \
-    --mount=type=bind,source=.sqlx,target=.sqlx \
-    --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
-    --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
+RUN --mount=type=bind,source=./auth,target=/app/auth \
+    --mount=type=bind,source=./common,target=/app/common \
+    --mount=type=bind,source=./entry,target=/app/entry \
+    --mount=type=bind,source=./message,target=/app/message \
+    --mount=type=bind,source=./contact,target=/app/contact \
+    --mount=type=bind,source=./profile,target=/app/profile \
+    --mount=type=bind,source=./.sqlx,target=/app/.sqlx \
+    --mount=type=bind,source=./Cargo.toml,target=/app/Cargo.toml \
+    --mount=type=bind,source=./Cargo.lock,target=/app/Cargo.lock \
     --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     <<EOF

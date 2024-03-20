@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use common::domain::models::message::Message;
+use crate::domain::message::Message;
 use super::errors::QueueAddError;
 
 

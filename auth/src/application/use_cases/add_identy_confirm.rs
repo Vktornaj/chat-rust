@@ -3,22 +3,20 @@ use crate::{
         auth_cache::{AuthCacheTrait, AddIdentificationRequest}, 
         auth_repository::{AuthRepositoryTrait, UpdateIdentify},
     }, 
-    domain::{types::{token_data::TokenData, identification::NewIdentification}, auth::Auth},
+    domain::{types::{token_data::TokenData, identification::NewIdentification, code::Code}, auth::Auth},
 };
 
 
 #[derive(Debug)]
 pub enum UpdateError {
-    NotFound,
-    Unautorized,
+    Unauthorized(String),
     Unknown(String),
-    Conflict(String),
     InvalidData(String),
 }
 
 pub struct Payload {
     pub transaction_id: String,
-    pub confirmation_code: String,
+    pub confirmation_code: Code,
 }
 
 pub async fn execute<T, U>(
@@ -32,7 +30,7 @@ pub async fn execute<T, U>(
 ) -> Result<Auth, UpdateError> {
     // verify token is valid
     if TokenData::from_token(token, &secret).is_err() {
-        return Err(UpdateError::Unautorized);
+        return Err(UpdateError::Unauthorized("Invalid token".to_string()));
     };
     // validate confirmation code
     let add_identify: AddIdentificationRequest = match repo_cache
@@ -62,7 +60,7 @@ pub async fn execute<T, U>(
     });
     match repo.update_identifications(conn, identification_operation).await {
         Ok(user) => Ok(user),
-        Err(error) => Err(UpdateError::Unknown(format!("Unknown error: {:?}", error))),
+        Err(error) => Err(UpdateError::Unknown(format!("Unknown error: {:?}", error.to_string()))),
     }
 }
 
@@ -86,6 +84,4 @@ pub async fn execute<T, U>(
 //         domain::user::Id
 //     };
 //     use crate::adapter::driven::persistence::in_memory_repository::InMemoryRepository;
-
-    
 // }

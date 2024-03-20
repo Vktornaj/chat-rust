@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::NaiveDate;
 use uuid::Uuid;
 
 use super::errors::{
@@ -10,7 +10,7 @@ use super::errors::{
 };
 
 use crate::domain::{
-    user::{User, NewUser}, 
+    profile::{Profile, NewProfile}, 
     types::{
         language::Language, 
         nationality::Nationality, 
@@ -20,7 +20,7 @@ use crate::domain::{
     }
 };
 
-pub struct DateRange(pub Option<DateTime<Utc>>, pub Option<DateTime<Utc>>);
+pub struct DateRange(pub Option<NaiveDate>, pub Option<NaiveDate>);
 
 #[derive(Default)]
 pub struct FindUser {
@@ -42,9 +42,9 @@ pub struct UpdateUser {
 
 // TODO: improve criteria
 #[async_trait]
-pub trait UserRepositoryTrait<T> {
+pub trait ProfileRepositoryTrait<T> {
     /// Find and return one single record from the persistence system by id
-    async fn find_by_id(&self, conn: &T, id: Uuid) -> Result<User, RepoSelectError>;
+    async fn find_by_id(&self, conn: &T, id: Uuid) -> Result<Profile, RepoSelectError>;
     
     /// Find and return some records from the persistence system by criteria
     async fn find_by_criteria(
@@ -53,14 +53,14 @@ pub trait UserRepositoryTrait<T> {
         find_user: FindUser,
         offset: i64,
         limit: i64,
-    ) -> Result<Vec<User>, RepoSelectError>;
+    ) -> Result<Vec<Profile>, RepoSelectError>;
 
     /// Insert the received entity in the persistence system
-    async fn create(&self, conn: &T, user: NewUser) -> Result<User, RepoCreateError>;
+    async fn create(&self, conn: &T, user: NewProfile) -> Result<Profile, RepoCreateError>;
 
     /// Update one single record already present in the persistence system
-    async fn update(&self, conn: &T, user: UpdateUser) -> Result<User, RepoUpdateError>;
+    async fn update(&self, conn: &T, user: UpdateUser) -> Result<Profile, RepoUpdateError>;
 
     /// Delete one single record from the persistence system
-    async fn delete(&self, conn: &T, id: Uuid) -> Result<User, RepoDeleteError>;
+    async fn delete(&self, conn: &T, id: Uuid) -> Result<Profile, RepoDeleteError>;
 }

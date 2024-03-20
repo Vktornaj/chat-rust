@@ -1,0 +1,99 @@
+version: "3.9"
+
+services:  
+  swag:
+    image: linuxserver/swag:2.8.0
+    environment: 
+      - PUID=1000 
+      - PGID=1000 
+      - TZ=Europe/London
+      - URL=geduardo.com
+      - VALIDATION=http
+      - SUBDOMAINS=api,
+      - CERTPROVIDER= #optional 
+      - DNSPLUGIN=cloudflare #optional 
+      - PROPAGATION= #optional
+      - EMAIL=victor2211812@gmail.com
+      - ONLY_SUBDOMAINS=false #optional 
+      - EXTRA_DOMAINS= #optional
+      - STAGING=false #optional 
+    ports: 
+      - 443:443
+      - 80:80
+    volumes:
+      - config:/config
+      - ./nginx/site-confs:/config/nginx/site-confs
+      - ./nginx/public/:/var/www/public/
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+
+  web:
+    image: 569233066229.dkr.ecr.us-east-2.amazonaws.com/chat-rust:latest
+    env_file:
+      - ./config/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  db:
+    image: postgres
+    restart: unless-stopped
+    user: postgres
+    env_file:
+      - ./config/.env
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-d", "chat" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes: 
+      - db:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7.2-alpine
+    restart: unless-stopped
+    command: redis-server --save 20 1 --loglevel warning
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes: 
+      - cache:/data
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command: --config.file=/etc/prometheus/prometheus.yaml
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - prometheus:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    volumes:
+      - ./grafana.ini:/etc/grafana/grafana.ini
+      - grafana:/var/lib/grafana
+
+volumes:
+  db:
+    driver: local
+  cache:
+    driver: local
+  config:
+  grafana:
+    driver: local
+  prometheus:
+    driver: local

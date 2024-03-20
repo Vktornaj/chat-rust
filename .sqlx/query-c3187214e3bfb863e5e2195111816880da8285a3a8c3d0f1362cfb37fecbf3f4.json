@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                        INSERT INTO identifications (user_id, identification_type, identification_value) \n                        VALUES ($1, $2, $3) RETURNING user_id;\n                    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c3187214e3bfb863e5e2195111816880da8285a3a8c3d0f1362cfb37fecbf3f4"
+}

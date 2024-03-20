@@ -8,7 +8,7 @@ use common::domain::types::{
 use serde::{Serialize, Deserialize};
 
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum IdentificationValue {
     Email(Email),
     PhoneNumber(PhoneNumber),
@@ -17,8 +17,8 @@ pub enum IdentificationValue {
 impl IdentificationValue {
     pub fn get_type(&self) -> String {
         match self {
-            Self::Email(_) => "EMAIL".to_string(),
-            Self::PhoneNumber(_) => "PHONE_NUMBER".to_string(),
+            Self::Email(_) => "email".to_string(),
+            Self::PhoneNumber(_) => "phone_number".to_string(),
         }
     }
 
@@ -45,9 +45,9 @@ impl IdentificationValue {
 
     pub fn from_string(value: String, identifier_type: String) -> Result<Self, String> {
         match identifier_type.as_str() {
-            "EMAIL" => Ok(Self::Email(Email::try_from(value)
+            "email" => Ok(Self::Email(Email::try_from(value)
                 .map_err(|err| err.to_string())?)),
-            "PHONE_NUMBER" => Ok(Self::PhoneNumber(PhoneNumber::try_from(value)
+            "phone_number" => Ok(Self::PhoneNumber(PhoneNumber::try_from(value)
                 .map_err(|err| err.to_string())?)),
             _ => Err("Invalid identification value type".to_string()),
         }

@@ -1,0 +1,59 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-outside-of-docker-compose
+{
+	"name": "Rust Chat",
+	"dockerComposeFile": "../compose/dev/compose.yml",
+	"service": "web",
+	"workspaceFolder": "/home/app",
+	// "remoteUser": "root",
+	// "containerUser": "root",
+
+	"remoteEnv": {
+		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+	},
+
+	"features": {
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+			"version": "latest",
+			"enableNonRootDocker": "true",
+			"moby": "true"
+		},
+		"ghcr.io/devcontainers/features/rust:1": {
+			"version": "latest",
+			"profile": "default"
+		}
+	},
+
+	"mounts": [
+		"source=${localWorkspaceFolder},target=/home/app,type=bind,consistency=cached"
+	],
+
+	// "mounts": [
+	// 	"source=${localWorkspaceFolder}/auth,target=/home/app/auth,type=bind",
+	// 	"source=${localWorkspaceFolder}/common,target=/home/app/common,type=bind",
+	// 	"source=${localWorkspaceFolder}/entry,target=/home/app/entry,type=bind",
+	// 	"source=${localWorkspaceFolder}/message,target=/home/app/message,type=bind",
+	// 	"source=${localWorkspaceFolder}/profile,target=/home/app/profile,type=bind",
+	// 	"source=${localWorkspaceFolder}/.sqlx,target=/home/app/.sqlx,type=bind",
+	// 	"source=${localWorkspaceFolder}/Cargo.toml,target=/home/app/Cargo.toml,type=bind",
+	// 	"source=${localWorkspaceFolder}/Cargo.lock,target=/home/app/Cargo.lock,type=bind",
+	// 	"target=/home/app/target/,type=cache",
+	// 	"target=/usr/local/cargo/registry/,type=cache"
+	// ],
+
+	// "postCreateCommand": "sudo chown -R vscode:vscode /home/app /usr/local/cargo",
+	
+	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+	"forwardPorts": [
+		80
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"Gruntfuggly.todo-tree",
+				"42Crunch.vscode-openapi",
+				"cweijan.vscode-database-client2"
+			]
+		}
+	}
+}

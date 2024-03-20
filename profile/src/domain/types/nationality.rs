@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 
 // alpha-3 code (ISO 3166)
-#[derive(PartialEq, Debug, Clone, Deserialize, Serialize)]
+#[derive(PartialEq, Debug, Clone, Serialize)]
 pub struct Nationality(String);
 
 impl TryFrom<String> for Nationality {
@@ -22,6 +22,16 @@ impl TryFrom<String> for Nationality {
         Ok(Self(value))
     }
 }
+
+impl<'de> Deserialize<'de> for Nationality {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de> {
+        let nationality = String::deserialize(deserializer)?;
+        Self::try_from(nationality).map_err(serde::de::Error::custom)
+    }
+}
+
 
 impl From<Nationality> for String {
     fn from(value: Nationality) -> Self {

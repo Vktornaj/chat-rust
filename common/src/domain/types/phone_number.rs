@@ -23,6 +23,8 @@ impl TryFrom<String> for PhoneNumber {
     }
 }
 
+// TODO: implement Display trait
+
 impl From<PhoneNumber> for String {
     fn from(phone_number: PhoneNumber) -> Self {
         phone_number.0
