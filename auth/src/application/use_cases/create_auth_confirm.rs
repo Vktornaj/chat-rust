@@ -49,7 +49,7 @@ pub async fn execute<T, U>(
     // create auth
     let auth = match repo.create(conn, new_auth).await {
         Ok(auth) => auth,
-        Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error))),
+        Err(error) => return Err(CreateError::Unknown(format!("Unknown error: {:?}", error.to_string()))),
     };
 
     Ok(TokenData::new(&auth.user_id.into()).token(secret))

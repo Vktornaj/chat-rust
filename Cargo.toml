@@ -5,6 +5,7 @@ members = [
   "profile",
   "message",
   "entry",
+  "contact",
 ]
 
 resolver = "2"

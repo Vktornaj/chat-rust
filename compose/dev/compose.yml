@@ -56,6 +56,8 @@ services:
     user: postgres
     env_file:
       - ./config/.env
+    ports:
+      - 5432:5432
     healthcheck:
       test: [ "CMD", "pg_isready", "-d", "chat" ]
       interval: 10s

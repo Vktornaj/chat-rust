@@ -95,16 +95,6 @@ components:
             pattern: '^[A-Z]{2}$'
             example: 'ES'
 
-    ResponseUserJson:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/UserJson'
-        error:
-          type: object
-          nullable: true
-          example: null
-
   securitySchemes:
     bearerAuth:
       type: http

@@ -1,4 +1,3 @@
-use axum::extract::ws::Message;
 use uuid::Uuid;
 
 use crate::domain::types::sender_type::Sender;
@@ -8,16 +7,15 @@ use crate::domain::types::{
     id::Id, 
     group::Group,
 };
-use crate::domain::models::message::Message as MessageDomain;
-use super::protos_schemas::proto_message::{
+use crate::domain::protos_schemas::proto_package::{
     ProtoUuid, 
     ProtoGroup,
-    ProtoMessage,
+    ProtoPackage,
     ProtoSender,
     ProtoRecipient,
 };
-use super::protos_schemas::proto_message::{
-    proto_sender::Sender as ProtoSender2,
+use crate::domain::protos_schemas::proto_package::{
+    ProtoSender as ProtoSender2,
     proto_recipient::Recipient as ProtoRecipient2,
 };
 
@@ -84,6 +82,13 @@ impl From<Id> for ProtoUuid {
     }
 }
 
+impl From<Uuid> for ProtoUuid {
+    fn from(uuid: Uuid) -> Self {
+        let id = uuid.to_bytes_le();
+        protobuf::Message::parse_from_bytes(&id).unwrap()
+    }
+}
+
 impl From<Group> for ProtoGroup {
     fn from(group: Group) -> Self {
         let id: ProtoUuid = group.id.into();
@@ -121,56 +126,55 @@ impl From<Sender> for ProtoSender2 {
         match sender {
             Sender::User(user_id) => {
                 let user_id: ProtoUuid = user_id.into();
-                Self::User(user_id)
-            },
-            Sender::Group(group_id) => {
-                let group_id: ProtoUuid = group_id.into();
-                Self::Group(group_id)
+                ProtoSender2 {
+                    user: protobuf::MessageField(Some(Box::new(user_id))),
+                    special_fields: protobuf::SpecialFields::default(),
+                }
             },
         }
     }
 }
 
-impl TryFrom<MessageDomain> for ProtoMessage {
-    type Error = String;
+// impl TryFrom<MessageDomain> for ProtoMessage {
+//     type Error = String;
 
-    fn try_from(message: MessageDomain) -> Result<Self, Self::Error> {
-        let id: ProtoUuid = message.id.into();
-        let sender: ProtoSender2 = message.sender.into();
-        let recipient: ProtoRecipient2 = message.recipient.into();
-        let content = message.content;
-        let timestamp = message.timestamp;
-        let special_fields = protobuf::SpecialFields::default();
+//     fn try_from(message: MessageDomain) -> Result<Self, Self::Error> {
+//         let id: ProtoUuid = message.id.into();
+//         let sender: ProtoSender2 = message.sender.into();
+//         let recipient: ProtoRecipient2 = message.recipient.into();
+//         let content = message.content;
+//         let timestamp = message.timestamp;
+//         let special_fields = protobuf::SpecialFields::default();
 
-        let sender: ProtoSender = ProtoSender {
-            sender: Some(sender),
-            special_fields: protobuf::SpecialFields::default(),
-        };
+//         let sender: ProtoSender = ProtoSender {
+//             sender: Some(sender),
+//             special_fields: protobuf::SpecialFields::default(),
+//         };
 
-        let recipient: ProtoRecipient = ProtoRecipient {
-            recipient: Some(recipient),
-            special_fields: protobuf::SpecialFields::default(),
-        };
+//         let recipient: ProtoRecipient = ProtoRecipient {
+//             recipient: Some(recipient),
+//             special_fields: protobuf::SpecialFields::default(),
+//         };
 
-        Ok(Self { 
-            id: protobuf::MessageField(Some(Box::new(id))), 
-            sender: protobuf::MessageField(Some(Box::new(sender))), 
-            recipient: protobuf::MessageField(Some(Box::new(recipient))), 
-            content, 
-            timestamp: timestamp as i64,
-            special_fields 
-        })
-    }
-}
+//         Ok(Self { 
+//             id: protobuf::MessageField(Some(Box::new(id))), 
+//             sender: protobuf::MessageField(Some(Box::new(sender))), 
+//             recipient: protobuf::MessageField(Some(Box::new(recipient))), 
+//             content, 
+//             timestamp: timestamp as i64,
+//             special_fields 
+//         })
+//     }
+// }
 
-impl TryFrom<MessageDomain> for Message {
-    type Error = String;
+// impl TryFrom<MessageDomain> for Message {
+//     type Error = String;
 
-    fn try_from(message: MessageDomain) -> Result<Self, Self::Error> {
-        let message: ProtoMessage = message.try_into()?;
-        let proto_message: Vec<u8> = protobuf::Message::write_to_bytes(&message)
-            .map_err(|_| "Error encoding message".to_string())?;
-        Ok(Self::Binary(proto_message))
-    }
-}
+//     fn try_from(message: MessageDomain) -> Result<Self, Self::Error> {
+//         let message: ProtoMessage = message.try_into()?;
+//         let proto_message: Vec<u8> = protobuf::Message::write_to_bytes(&message)
+//             .map_err(|_| "Error encoding message".to_string())?;
+//         Ok(Self::Binary(proto_message))
+//     }
+// }
 

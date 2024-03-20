@@ -7,7 +7,7 @@
 ################################################################################
 # Create a stage for building the application.
 
-ARG RUST_VERSION=1.75.0
+ARG RUST_VERSION=1.76.0
 ARG APP_NAME=entry
 ARG SQLX_OFFLINE=true
 FROM rust:${RUST_VERSION}-slim-bookworm AS build
@@ -30,6 +30,7 @@ RUN --mount=type=bind,source=./auth,target=/app/auth \
     --mount=type=bind,source=./common,target=/app/common \
     --mount=type=bind,source=./entry,target=/app/entry \
     --mount=type=bind,source=./message,target=/app/message \
+    --mount=type=bind,source=./contact,target=/app/contact \
     --mount=type=bind,source=./profile,target=/app/profile \
     --mount=type=bind,source=./.sqlx,target=/app/.sqlx \
     --mount=type=bind,source=./Cargo.toml,target=/app/Cargo.toml \

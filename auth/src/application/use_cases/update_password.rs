@@ -51,7 +51,7 @@ pub async fn execute<T>(
     // update password
     match repo.update_password(conn, user_id, new_hashed_password).await {
         Ok(user) => Ok(user),
-        Err(e) => Err(UpdateError::Unknown(format!("{:?}", e))),
+        Err(e) => Err(UpdateError::Unknown(format!("{:?}", e.to_string()))),
     }
 }
 

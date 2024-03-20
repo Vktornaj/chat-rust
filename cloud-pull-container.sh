@@ -16,7 +16,7 @@ docker compose -f ${remote_path_app}/compose.yml down || true
 exit
 EOF
 
-# upadte source code
+# upadte compose code
 echo "Cleaning"
 ssh -i ${ssh_key} ${remote_user}@${remote_host} rm -rf ${remote_path_app}
 echo "Sending data"

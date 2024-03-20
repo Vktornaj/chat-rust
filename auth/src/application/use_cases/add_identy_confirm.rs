@@ -60,7 +60,7 @@ pub async fn execute<T, U>(
     });
     match repo.update_identifications(conn, identification_operation).await {
         Ok(user) => Ok(user),
-        Err(error) => Err(UpdateError::Unknown(format!("Unknown error: {:?}", error))),
+        Err(error) => Err(UpdateError::Unknown(format!("Unknown error: {:?}", error.to_string()))),
     }
 }
 

@@ -7,12 +7,12 @@ use uuid::Uuid;
 // use super::{user_repository::{UserRepositoryTrait, NewUser, UpdateUser, FindUser}, errors};
 use crate::{
     domain::{
-        user::{User as UserDomain, NewUser}, 
+        profile::{Profile as UserDomain, NewProfile}, 
         types::birthday::Birthday
     }, 
     application::port::driven::{
         errors, user_repository::{
-            UserRepositoryTrait, FindUser, UpdateUser
+            ProfileRepositoryTrait, FindUser, UpdateUser
         }
     }
 };
@@ -21,7 +21,7 @@ use crate::{
 pub struct InMemoryRepository();
 
 #[async_trait]
-impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
+impl ProfileRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
     async fn find_by_id(&self, conn: &Mutex<Vec<UserDomain>>, id: Uuid) -> Result<UserDomain, errors::RepoSelectError> {
         let lock = match conn.lock() {
             Ok(lock) => lock,
@@ -85,7 +85,7 @@ impl UserRepositoryTrait<Mutex<Vec<UserDomain>>> for InMemoryRepository {
         Ok(res)
     }
 
-    async fn create(&self, conn: &Mutex<Vec<UserDomain>>, mut new_user: NewUser) -> Result<UserDomain, errors::RepoCreateError> {
+    async fn create(&self, conn: &Mutex<Vec<UserDomain>>, mut new_user: NewProfile) -> Result<UserDomain, errors::RepoCreateError> {
         let mut lock: std::sync::MutexGuard<'_, Vec<UserDomain>> = match conn.lock() {
             Ok(lock) => lock,
             Err(_) => return Err(errors::RepoCreateError::Unknown("Failed to lock mutex".to_string()))

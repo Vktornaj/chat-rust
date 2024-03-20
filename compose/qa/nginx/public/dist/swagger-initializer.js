@@ -15,6 +15,10 @@ window.onload = function() {
       {
         name: "Profile",
         url: `${origin}/api/openapi-files/profile/openapi.yml`
+      },
+      {
+        name: "Contact",
+        url: `${origin}/api/openapi-files/contact/openapi.yml`
       }
     ],
     dom_id: '#swagger-ui',
